@@ -52,6 +52,11 @@ Item {
 
     signal startShow()
 
+    function launchShow() {
+        if (controller.imageCount === 0) return
+        launchAnim.restart()
+    }
+
     Keys.onPressed: function(event) {
         switch (event.key) {
         case Qt.Key_F:
@@ -69,7 +74,7 @@ Item {
         case Qt.Key_Return:
         case Qt.Key_Enter:
             if (controller.imageCount > 0)
-                root.startShow()
+                launchShow()
             break
         case Qt.Key_T: {
             var styles = ["fade", "slide", "zoom", "fadeblack"]
@@ -614,7 +619,7 @@ Item {
                             anchors.fill: parent
                             enabled: controller.imageCount > 0
                             cursorShape: controller.imageCount > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
-                            onClicked: root.startShow()
+                            onClicked: launchShow()
                         }
                     }
 
@@ -1059,9 +1064,6 @@ Item {
                 }
             }
 
-            // Hold a moment
-            PauseAnimation { duration: 700 }
-
             // Logo drifts up to its header position (overlay stays opaque)
             NumberAnimation {
                 target: splashLogo; property: "y"
@@ -1078,4 +1080,78 @@ Item {
             }
         }
     }
+    // ── Launch transition overlay ──────────────────────────────────────────
+    Rectangle {
+        id: launchOverlay
+        anchors.fill: parent
+        z: 200
+        visible: false
+        opacity: 0
+
+        gradient: Gradient {
+            GradientStop { position: 0.0; color: Theme.bgDeep }
+            GradientStop { position: 1.0; color: Theme.bgGradEnd }
+        }
+
+        Image {
+            id: launchLogo
+            source: "../img/logo.svg"
+            fillMode: Image.PreserveAspectFit
+            width: 500; height: 150
+            smooth: true; mipmap: true
+        }
+    }
+
+    SequentialAnimation {
+        id: launchAnim
+
+        // Snap logo to header position, make overlay ready
+        ScriptAction {
+            script: {
+                var pos = headerLogo.mapToItem(root, 0, 0)
+                launchLogo.x = pos.x
+                launchLogo.y = pos.y
+                launchLogo.scale = 1.0
+                launchLogo.opacity = 1.0
+                launchOverlay.opacity = 0
+                launchOverlay.visible = true
+            }
+        }
+
+        // Fade overlay in to cover settings content
+        NumberAnimation {
+            target: launchOverlay; property: "opacity"
+            from: 0; to: 1; duration: 250; easing.type: Easing.OutQuad
+        }
+
+        // Logo drifts to vertical centre of screen
+        NumberAnimation {
+            target: launchLogo; property: "y"
+            to: root.height / 2 - launchLogo.height / 2
+            duration: 450; easing.type: Easing.InOutCubic
+        }
+
+        PauseAnimation { duration: 100 }
+
+        // Logo zooms toward the spectator and fades out
+        ParallelAnimation {
+            NumberAnimation {
+                target: launchLogo; property: "scale"
+                to: 2.8; duration: 500; easing.type: Easing.InCubic
+            }
+            NumberAnimation {
+                target: launchLogo; property: "opacity"
+                to: 0; duration: 500; easing.type: Easing.InCubic
+            }
+        }
+
+        // Hand off to slideshow — hide overlay first so it's gone when we return
+        ScriptAction {
+            script: {
+                launchOverlay.visible = false
+                root.startShow()
+            }
+        }
+    }
+
 }

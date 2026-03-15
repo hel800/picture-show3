@@ -32,13 +32,11 @@ ApplicationWindow {
         id: stack
         anchors.fill: parent
 
-        // Soft cross-fade between pages
-        pushEnter: Transition {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 280; easing.type: Easing.OutQuad }
-        }
-        pushExit: Transition {
-            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200 }
-        }
+        // Push is instant — SettingsPage.launchAnim handles the visual transition
+        pushEnter: Transition { }
+        pushExit:  Transition { }
+
+        // Pop (exit show → settings) cross-fades softly
         popEnter: Transition {
             NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 280; easing.type: Easing.OutQuad }
         }

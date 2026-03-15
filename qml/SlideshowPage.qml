@@ -366,9 +366,29 @@ Rectangle {
         }
     }
 
+    // ── Intro fade-in (black overlay that fades away to reveal first image) ──
+    Rectangle {
+        id: introOverlay
+        anchors.fill: parent
+        color: "black"
+        z: 50
+        opacity: 1
+
+        NumberAnimation {
+            id: introFadeOut
+            target: introOverlay
+            property: "opacity"
+            from: 1; to: 0
+            duration: 700
+            easing.type: Easing.InQuad
+            onStopped: introOverlay.visible = false
+        }
+    }
+
     // ── Initialise first image ────────────────────────────────────────────────
     Component.onCompleted: {
         showImage(false)
+        introFadeOut.start()
         root.forceActiveFocus()
     }
 }
