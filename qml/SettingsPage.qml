@@ -784,14 +784,15 @@ Item {
                                 // Custom toggle switch
                                 Rectangle {
                                     width: 44; height: 24; radius: 12
-                                    color: controller.loop ? Theme.accent : Theme.textDisabled
+                                    color: controller.loop ? Theme.accent : Theme.surfaceHover
                                     Behavior on color { ColorAnimation { duration: 180 } }
 
                                     Rectangle {
                                         width: 18; height: 18; radius: 9
-                                        color: "white"
+                                        color: controller.loop ? "white" : Theme.textMuted
                                         x: controller.loop ? parent.width - width - 3 : 3
                                         anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 180 } }
                                         Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
                                     }
 
@@ -826,14 +827,15 @@ Item {
 
                                 Rectangle {
                                     width: 44; height: 24; radius: 12
-                                    color: controller.autoplay ? Theme.accent : Theme.textDisabled
+                                    color: controller.autoplay ? Theme.accent : Theme.surfaceHover
                                     Behavior on color { ColorAnimation { duration: 180 } }
 
                                     Rectangle {
                                         width: 18; height: 18; radius: 9
-                                        color: "white"
+                                        color: controller.autoplay ? "white" : Theme.textMuted
                                         x: controller.autoplay ? parent.width - width - 3 : 3
                                         anchors.verticalCenter: parent.verticalCenter
+                                        Behavior on color { ColorAnimation { duration: 180 } }
                                         Behavior on x { NumberAnimation { duration: 180; easing.type: Easing.OutQuad } }
                                     }
 
