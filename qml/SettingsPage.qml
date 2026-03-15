@@ -24,20 +24,6 @@ Item {
     focus: true
 
     // ── Inline reusable components ───────────────────────────────────────────
-    component KeyHint: Rectangle {
-        property string label: ""
-        width: 20; height: 20; radius: 5
-        color: Theme.surface
-        border.color: Theme.textSubtle
-        border.width: 1
-        Text {
-            anchors.centerIn: parent
-            text: parent.label
-            color: Theme.textSecondary
-            font.pixelSize: 11
-            font.weight: Font.Medium
-        }
-    }
     property bool   hasStarted    : false
     property string _folderAtStart: ""
 

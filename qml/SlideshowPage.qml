@@ -312,9 +312,6 @@ Rectangle {
                 visible: text.length > 0
             }
 
-            // separator
-            Text { text: "|"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale) }
-
             // ▶/⏸ play state
             Text {
                 text: controller.isPlaying ? "▶  Playing" : "⏸  Paused"
@@ -328,10 +325,12 @@ Rectangle {
             }
 
             // ⌨ keyboard hints
-            Text {
-                text: "F  fullscreen    I  info    Esc  exit"
-                color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale)
-            }
+            KeyHint { label: "F"; uiScale: root.hudScale; Layout.leftMargin: Math.round(10 * root.hudScale) }
+            Text { text: "fullscreen"; color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
+            KeyHint { label: "I";   uiScale: root.hudScale }
+            Text { text: "info";       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
+            KeyHint { label: "Esc"; uiScale: root.hudScale }
+            Text { text: "exit";       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
         }
     }
 
