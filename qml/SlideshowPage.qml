@@ -33,6 +33,7 @@ Rectangle {
     property bool   hudVisible: controller.hudVisible  // restored from settings
     property real   hudScale  : controller.hudSize / 100.0
     property string hudCaption: controller.imageCaption(controller.currentIndex)
+    property int    hudRating : controller.imageRating(controller.currentIndex)
 
     // ── Cursor: permanently hidden over the slideshow ─────────────────────────
     MouseArea {
@@ -302,8 +303,23 @@ Rectangle {
                 }
             }
 
+            // star rating (hidden when 0 / unset)
+            Row {
+                spacing: Math.round(2 * root.hudScale)
+                visible: root.hudRating > 0
+                Repeater {
+                    model: 5
+                    ThemedIcon {
+                        source: "../img/icon_star.svg"
+                        size: Math.round(12 * root.hudScale)
+                        iconColor: index < root.hudRating ? Theme.accentLight : Theme.starInactive
+                    }
+                }
+            }
+
             // date taken (hidden when unavailable)
             Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: dateText.visible && captionText.truncated }
+            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: root.hudRating > 0 && dateText.visible }
             ThemedIcon { source: "../img/icon_clock.svg"; size: Math.round(13 * root.hudScale); iconColor: Theme.textSubtle; visible: dateText.visible }
             Text {
                 id: dateText

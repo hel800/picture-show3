@@ -27,6 +27,8 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
+import xml.etree.ElementTree as ET
+
 from PIL import Image, IptcImagePlugin, UnidentifiedImageError
 from PySide6.QtCore import Property, QObject, QSettings, QTimer, Signal, Slot
 
@@ -75,6 +77,7 @@ class SlideshowController(QObject):
         self._folder_history  : list[str]        = []
         self._remote_enabled  : bool             = False
         self._remote_port     : int              = 8765
+        self._rating_cache    : dict[str, int]   = {}
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
@@ -215,6 +218,7 @@ class SlideshowController(QObject):
         self._sort(images)
         self._images        = images
         self._current_index = 0
+        self._rating_cache  = {}
         self.imagesChanged.emit()
         self.currentIndexChanged.emit()
 
@@ -398,6 +402,43 @@ class SlideshowController(QObject):
         except Exception:
             pass
         return ""
+
+    @Slot(int, result=int)
+    def imageRating(self, index: int) -> int:
+        """Return XMP Rating (0–5), or 0 if unset or unreadable."""
+        path = self.imagePath(index)
+        if not path:
+            return 0
+        if path in self._rating_cache:
+            return self._rating_cache[path]
+        rating = self._read_xmp_rating(path)
+        self._rating_cache[path] = rating
+        return rating
+
+    @staticmethod
+    def _read_xmp_rating(path: str) -> int:
+        try:
+            with Image.open(path) as img:
+                xmp_data = img.info.get("xmp")
+            if not xmp_data:
+                return 0
+            if isinstance(xmp_data, bytes):
+                xmp_data = xmp_data.decode("utf-8", errors="replace")
+            root = ET.fromstring(xmp_data)
+            for elem in root.iter():
+                local = elem.tag.split("}")[-1] if "}" in elem.tag else elem.tag
+                if local == "Description":
+                    # Rating as attribute: <rdf:Description xmp:Rating="4" ...>
+                    for attr, val in elem.attrib.items():
+                        if attr.split("}")[-1] == "Rating":
+                            return max(0, min(5, int(val)))
+                elif local == "Rating":
+                    # Rating as element: <xmp:Rating>4</xmp:Rating>
+                    if elem.text and elem.text.strip():
+                        return max(0, min(5, int(elem.text.strip())))
+        except Exception:
+            pass
+        return 0
 
     @Slot(int, result=str)
     def imageDateTaken(self, index: int) -> str:
