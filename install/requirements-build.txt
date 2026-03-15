@@ -1,0 +1,3 @@
+# Build-time dependencies (not needed to run from source)
+# Install with: pip install -r install/requirements-build.txt
+pyinstaller>=6.0
