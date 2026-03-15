@@ -27,7 +27,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-from PIL import Image, UnidentifiedImageError
+from PIL import Image, IptcImagePlugin, UnidentifiedImageError
 from PySide6.QtCore import Property, QObject, QSettings, QTimer, Signal, Slot
 
 # EXIF tag id for DateTimeOriginal (when the shutter was pressed)
@@ -379,6 +379,25 @@ class SlideshowController(QObject):
     @Slot(result=str)
     def currentImagePath(self) -> str:
         return self.imagePath(self._current_index)
+
+    @Slot(int, result=str)
+    def imageCaption(self, index: int) -> str:
+        """Return IPTC Caption/Abstract (tag 2:120), or '' if unavailable."""
+        path = self.imagePath(index)
+        if not path:
+            return ""
+        try:
+            with Image.open(path) as img:
+                iptc = IptcImagePlugin.getiptcinfo(img)
+                if iptc:
+                    raw = iptc.get((2, 120))
+                    if raw:
+                        if isinstance(raw, bytes):
+                            return raw.decode("utf-8", errors="replace").strip()
+                        return str(raw).strip()
+        except Exception:
+            pass
+        return ""
 
     @Slot(int, result=str)
     def imageDateTaken(self, index: int) -> str:

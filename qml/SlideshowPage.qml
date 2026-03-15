@@ -30,8 +30,9 @@ Rectangle {
     property bool showingA  : true   // which layer is currently the foreground
     property int  navDir    : 1      // +1 forward, -1 backward (for slide direction)
     property int  transDur  : controller.transitionDuration
-    property bool hudVisible: controller.hudVisible  // restored from settings
-    property real hudScale  : controller.hudSize / 100.0
+    property bool   hudVisible: controller.hudVisible  // restored from settings
+    property real   hudScale  : controller.hudSize / 100.0
+    property string hudCaption: controller.imageCaption(controller.currentIndex)
 
     // ── Cursor: permanently hidden over the slideshow ─────────────────────────
     MouseArea {
@@ -270,26 +271,39 @@ Rectangle {
             spacing: Math.round(6 * root.hudScale)
 
             // index counter
-            Text { text: "#"; color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale) }
             Text {
                 text: (controller.currentIndex + 1) + " / " + controller.imageCount
-                color: "white"; font.pixelSize: Math.round(14 * root.hudScale); font.weight: Font.Bold
+                color: "white"; font.pixelSize: Math.round(16 * root.hudScale); font.weight: Font.Bold
             }
 
-            // separator
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale) }
-
             // filename
-            Text { text: "≡"; color: Theme.textSubtle; font.pixelSize: Math.round(14 * root.hudScale) }
+            Text { text: "≡"; color: Theme.textSubtle; font.pixelSize: Math.round(14 * root.hudScale); Layout.leftMargin: Math.round(10 * root.hudScale) }
             Text {
                 text: controller.imagePath(controller.currentIndex).split(/[/\\]/).pop()
                 color: Theme.textSecondary; font.pixelSize: Math.round(13 * root.hudScale)
-                Layout.fillWidth: true
                 elide: Text.ElideMiddle
+                Layout.maximumWidth: Math.round(220 * root.hudScale)
+            }
+
+            // caption — always-present filler; text shown only when available
+            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: root.hudCaption.length > 0 }
+            Text { text: "✎"; color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale); visible: root.hudCaption.length > 0 }
+            Item {
+                Layout.fillWidth: true
+                implicitHeight: captionText.implicitHeight
+                Text {
+                    id: captionText
+                    anchors { left: parent.left; verticalCenter: parent.verticalCenter }
+                    width: parent.width
+                    text: root.hudCaption
+                    color: Theme.textSecondary; font.pixelSize: Math.round(13 * root.hudScale)
+                    visible: root.hudCaption.length > 0
+                    elide: Text.ElideRight
+                }
             }
 
             // date taken (hidden when unavailable)
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: dateText.visible }
+            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: dateText.visible && captionText.truncated }
             Text { text: "◷"; color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale); visible: dateText.visible }
             Text {
                 id: dateText
@@ -299,7 +313,7 @@ Rectangle {
             }
 
             // separator
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale) }
+            Text { text: "|"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale) }
 
             // ▶/⏸ play state
             Text {
