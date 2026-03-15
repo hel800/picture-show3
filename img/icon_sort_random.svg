@@ -1,0 +1,17 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Shuffle / crossing arrows -->
+  <!-- Top path: left → crosses → right, arrow at right -->
+  <path d="M3 7 Q9 7 12 12 Q15 17 21 17"
+        fill="none" stroke="white" stroke-width="2"
+        stroke-linecap="round"/>
+  <path d="M18 14.5 L21 17 L18 19.5"
+        fill="none" stroke="white" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Bottom path: left → crosses → right, arrow at right -->
+  <path d="M3 17 Q9 17 12 12 Q15 7 21 7"
+        fill="none" stroke="white" stroke-width="2"
+        stroke-linecap="round"/>
+  <path d="M18 4.5 L21 7 L18 9.5"
+        fill="none" stroke="white" stroke-width="2"
+        stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

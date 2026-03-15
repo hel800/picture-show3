@@ -645,10 +645,10 @@ Item {
 
                         Repeater {
                             model: [
-                                { id: "fade",      label: "Fade",       icon: "✦" },
-                                { id: "slide",     label: "Slide",      icon: "→" },
-                                { id: "zoom",      label: "Zoom",       icon: "⊕" },
-                                { id: "fadeblack", label: "Fade/Black", icon: "◑" }
+                                { id: "fade",      label: "Fade",       icon: "../img/icon_trans_fade.svg"      },
+                                { id: "slide",     label: "Slide",      icon: "../img/icon_trans_slide.svg"     },
+                                { id: "zoom",      label: "Zoom",       icon: "../img/icon_trans_zoom.svg"      },
+                                { id: "fadeblack", label: "Fade/Black", icon: "../img/icon_trans_fadeblack.svg" }
                             ]
 
                             delegate: Rectangle {
@@ -665,10 +665,13 @@ Item {
                                 Column {
                                     anchors.centerIn: parent
                                     spacing: 3
-                                    Text {
+                                    ThemedIcon {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: modelData.icon; font.pixelSize: 20
-                                        color: Theme.textPrimary
+                                        source: modelData.icon
+                                        size: 20
+                                        iconColor: controller.transitionStyle === modelData.id
+                                                   ? Theme.accentLight : Theme.textMuted
+                                        Behavior on iconColor { ColorAnimation { duration: 150 } }
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter
@@ -707,9 +710,9 @@ Item {
 
                         Repeater {
                             model: [
-                                { id: "name",   label: "By Name", icon: "🔤" },
-                                { id: "date",   label: "By Date", icon: "📅" },
-                                { id: "random", label: "Random",  icon: "🔀" }
+                                { id: "name",   label: "By Name", icon: "../img/icon_sort_name.svg"   },
+                                { id: "date",   label: "By Date", icon: "../img/icon_sort_date.svg"   },
+                                { id: "random", label: "Random",  icon: "../img/icon_sort_random.svg" }
                             ]
 
                             delegate: Rectangle {
@@ -726,9 +729,13 @@ Item {
                                 Column {
                                     anchors.centerIn: parent
                                     spacing: 3
-                                    Text {
+                                    ThemedIcon {
                                         anchors.horizontalCenter: parent.horizontalCenter
-                                        text: modelData.icon; font.pixelSize: 20
+                                        source: modelData.icon
+                                        size: 20
+                                        iconColor: controller.sortOrder === modelData.id
+                                                   ? Theme.accentLight : Theme.textMuted
+                                        Behavior on iconColor { ColorAnimation { duration: 150 } }
                                     }
                                     Text {
                                         anchors.horizontalCenter: parent.horizontalCenter

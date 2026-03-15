@@ -1,0 +1,5 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Two overlapping rectangles, left opaque, right semi-transparent via opacity -->
+  <rect x="2"  y="5" width="13" height="14" rx="2" fill="white" opacity="1.0"/>
+  <rect x="9"  y="5" width="13" height="14" rx="2" fill="white" opacity="0.35"/>
+</svg>

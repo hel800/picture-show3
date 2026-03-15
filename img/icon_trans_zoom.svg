@@ -1,0 +1,10 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Small inner frame (outgoing) -->
+  <rect x="7" y="7" width="10" height="10" rx="1.5" fill="white" opacity="0.35"/>
+  <!-- Large outer frame (incoming, zoomed in) -->
+  <rect x="2" y="3" width="20" height="18" rx="2" fill="none" stroke="white" stroke-width="2"/>
+  <!-- Corner arrows pointing outward -->
+  <path d="M7 7 L3 3 M17 7 L21 3 M7 17 L3 21 M17 17 L21 21"
+        fill="none" stroke="white" stroke-width="1.6"
+        stroke-linecap="round"/>
+</svg>
