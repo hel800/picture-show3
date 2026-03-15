@@ -271,17 +271,13 @@ Rectangle {
             spacing: Math.round(6 * root.hudScale)
 
             // index counter
-            Text { text: "#"; color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale) }
             Text {
                 text: (controller.currentIndex + 1) + " / " + controller.imageCount
-                color: "white"; font.pixelSize: Math.round(14 * root.hudScale); font.weight: Font.Bold
+                color: "white"; font.pixelSize: Math.round(16 * root.hudScale); font.weight: Font.Bold
             }
 
-            // separator
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale) }
-
             // filename
-            Text { text: "≡"; color: Theme.textSubtle; font.pixelSize: Math.round(14 * root.hudScale) }
+            Text { text: "≡"; color: Theme.textSubtle; font.pixelSize: Math.round(14 * root.hudScale); Layout.leftMargin: Math.round(10 * root.hudScale) }
             Text {
                 text: controller.imagePath(controller.currentIndex).split(/[/\\]/).pop()
                 color: Theme.textSecondary; font.pixelSize: Math.round(13 * root.hudScale)
@@ -307,7 +303,7 @@ Rectangle {
             }
 
             // date taken (hidden when unavailable)
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: dateText.visible }
+            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: dateText.visible && captionText.truncated }
             Text { text: "◷"; color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale); visible: dateText.visible }
             Text {
                 id: dateText
@@ -317,7 +313,7 @@ Rectangle {
             }
 
             // separator
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale) }
+            Text { text: "|"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale) }
 
             // ▶/⏸ play state
             Text {
