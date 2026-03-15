@@ -189,7 +189,76 @@ Popup {
             Text { text: "200 %"; color: Theme.textDisabled; font.pixelSize: 11 }
         }
 
-        // ── (more settings can be added here) ─────────────────────────────────
+        // ── Smartphone Remote ─────────────────────────────────────────────────
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
+
+        Text {
+            text: "SMARTPHONE REMOTE"
+            color: Theme.textMuted
+            font.pixelSize: 11
+            font.weight: Font.Medium
+            font.letterSpacing: 1.4
+            Layout.bottomMargin: 14
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 16
+
+            Text { text: "Enable remote control"; color: Theme.textPrimary; font.pixelSize: 14 }
+            Item { Layout.fillWidth: true }
+            Switch {
+                id: remoteSwitch
+                checked: controller.remoteEnabled
+                onToggled: controller.setRemoteEnabled(checked)
+
+                indicator: Rectangle {
+                    implicitWidth: 44; implicitHeight: 24; radius: 12
+                    color: remoteSwitch.checked ? Theme.accent : Theme.surface
+                    Behavior on color { ColorAnimation { duration: 120 } }
+                    Rectangle {
+                        x: remoteSwitch.checked ? parent.width - width - 3 : 3
+                        anchors.verticalCenter: parent.verticalCenter
+                        width: 18; height: 18; radius: 9
+                        color: remoteSwitch.checked ? "white" : Theme.textMuted
+                        Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                    }
+                }
+            }
+        }
+
+        RowLayout {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 28
+            opacity: controller.remoteEnabled ? 1.0 : 0.35
+
+            Text { text: "Port"; color: Theme.textPrimary; font.pixelSize: 14 }
+            Item { Layout.fillWidth: true }
+            Rectangle {
+                width: 90; height: 32; radius: 8
+                color: Theme.surface
+                border.color: portField.activeFocus ? Theme.accent : Theme.borderMuted
+                border.width: 1
+                Behavior on border.color { ColorAnimation { duration: 100 } }
+
+                TextInput {
+                    id: portField
+                    anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                    verticalAlignment: TextInput.AlignVCenter
+                    text: controller.remotePort.toString()
+                    color: Theme.textPrimary
+                    font.pixelSize: 13
+                    enabled: controller.remoteEnabled
+                    inputMethodHints: Qt.ImhDigitsOnly
+                    validator: IntValidator { bottom: 1024; top: 65535 }
+                    onEditingFinished: {
+                        if (acceptableInput)
+                            controller.setRemotePort(parseInt(text))
+                    }
+                }
+            }
+        }
+
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
 
         // ── Close button ─────────────────────────────────────────────────────

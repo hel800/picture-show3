@@ -185,6 +185,17 @@ class RemoteServer(QObject):
             if self._server.listen(QHostAddress.Any, self._port):
                 self.serverStarted.emit(self.url)
 
+    @Slot(int)
+    def setPort(self, port: int) -> None:
+        if port == self._port:
+            return
+        was_listening = self._server.isListening()
+        if was_listening:
+            self.stop()
+        self._port = port
+        if was_listening:
+            self.start()
+
     @Slot()
     def stop(self) -> None:
         for client in list(self._clients):

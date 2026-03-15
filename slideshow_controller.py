@@ -58,6 +58,8 @@ class SlideshowController(QObject):
         self._autoplay           : bool           = False
         self._interval           : int            = 5_000   # milliseconds
         self._folder_history  : list[str]        = []
+        self._remote_enabled  : bool             = False
+        self._remote_port     : int              = 8765
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
@@ -72,9 +74,11 @@ class SlideshowController(QObject):
         self._hud_size            = s.value("hudSize",            100, type=int)
         self._hud_visible         = s.value("hudVisible",         False, type=bool)
         self._sort_order          = s.value("sort",               "name")
-        self._loop             = s.value("loop",       True,  type=bool)
-        self._autoplay         = s.value("autoplay",   False, type=bool)
-        self._interval         = s.value("interval",   5_000, type=int)
+        self._loop             = s.value("loop",          True,  type=bool)
+        self._autoplay         = s.value("autoplay",      False, type=bool)
+        self._interval         = s.value("interval",      5_000, type=int)
+        self._remote_enabled   = s.value("remoteEnabled", False, type=bool)
+        self._remote_port      = s.value("remotePort",    8765,  type=int)
 
         # QSettings returns a str for single-item lists, list for multiple
         raw = s.value("folderHistory", [])
@@ -98,9 +102,11 @@ class SlideshowController(QObject):
         s.setValue("hudVisible",          self._hud_visible)
         s.setValue("sort",          self._sort_order)
         s.setValue("loop",          self._loop)
-        s.setValue("autoplay",      self._autoplay)
-        s.setValue("interval",      self._interval)
-        s.setValue("folderHistory", self._folder_history)
+        s.setValue("autoplay",       self._autoplay)
+        s.setValue("interval",       self._interval)
+        s.setValue("remoteEnabled",  self._remote_enabled)
+        s.setValue("remotePort",     self._remote_port)
+        s.setValue("folderHistory",  self._folder_history)
 
     # ── Properties ───────────────────────────────────────────────────────────
     @Property(str, notify=settingsChanged)
@@ -138,6 +144,12 @@ class SlideshowController(QObject):
 
     @Property(int, notify=settingsChanged)
     def interval(self) -> int: return self._interval
+
+    @Property(bool, notify=settingsChanged)
+    def remoteEnabled(self) -> bool: return self._remote_enabled
+
+    @Property(int, notify=settingsChanged)
+    def remotePort(self) -> int: return self._remote_port
 
     @Property(list, notify=folderHistoryChanged)
     def folderHistory(self) -> list[str]: return list(self._folder_history)
@@ -259,6 +271,18 @@ class SlideshowController(QObject):
     @Slot(bool)
     def setAutoplay(self, value: bool) -> None:
         self._autoplay = value
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(bool)
+    def setRemoteEnabled(self, enabled: bool) -> None:
+        self._remote_enabled = enabled
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(int)
+    def setRemotePort(self, port: int) -> None:
+        self._remote_port = port
         self._save_settings()
         self.settingsChanged.emit()
 

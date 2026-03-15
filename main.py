@@ -145,7 +145,7 @@ def main() -> None:
     app.controller    = SlideshowController()
     app.provider      = SlideshowImageProvider(app.controller)
     app.qr_provider   = QrImageProvider()
-    app.remote        = RemoteServer(app.controller)
+    app.remote        = RemoteServer(app.controller, port=app.controller.remotePort)
     app.window_helper = WindowHelper()
 
     engine.addImageProvider("slides", app.provider)

@@ -34,13 +34,26 @@ ApplicationWindow {
         initialItem: settingsComp
     }
 
+    // ── React to remote enable/port changes ───────────────────────────────────
+    Connections {
+        target: controller
+        function onSettingsChanged() {
+            remoteServer.setPort(controller.remotePort)
+            if (controller.remoteEnabled)
+                remoteServer.start()
+            else
+                remoteServer.stop()
+        }
+    }
+
     // ── Pages ─────────────────────────────────────────────────────────────────
     Component {
         id: settingsComp
         SettingsPage {
             Component.onCompleted: {
                 forceActiveFocus()
-                remoteServer.start()
+                if (controller.remoteEnabled)
+                    remoteServer.start()
             }
             onStartShow: {
                 controller.startShow()

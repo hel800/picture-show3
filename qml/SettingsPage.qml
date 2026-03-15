@@ -295,7 +295,7 @@ Item {
                 color: Theme.bgCard
                 border.color: Theme.surface
                 border.width: 1
-                height: cardCol.implicitHeight + 56
+                implicitHeight: cardCol.implicitHeight + 56
 
                 ColumnLayout {
                     id: cardCol
@@ -865,10 +865,11 @@ Item {
                     }
 
                     // ── Divider ───────────────────────────────────────────────
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; visible: controller.remoteEnabled }
 
                     // ── Remote info ───────────────────────────────────────────
                     RowLayout {
+                        visible: controller.remoteEnabled
                         Layout.fillWidth: true
                         spacing: 14
 
