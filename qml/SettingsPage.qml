@@ -1131,17 +1131,17 @@ Item {
             duration: 450; easing.type: Easing.InOutCubic
         }
 
-        PauseAnimation { duration: 100 }
+        PauseAnimation { duration: 400 }
 
         // Logo zooms toward the spectator and fades out
         ParallelAnimation {
             NumberAnimation {
                 target: launchLogo; property: "scale"
-                to: 2.8; duration: 500; easing.type: Easing.InCubic
+                to: 4.5; duration: 300; easing.type: Easing.InQuart
             }
             NumberAnimation {
                 target: launchLogo; property: "opacity"
-                to: 0; duration: 500; easing.type: Easing.InCubic
+                to: 0; duration: 300; easing.type: Easing.InQuart
             }
         }
 
