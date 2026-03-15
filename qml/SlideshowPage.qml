@@ -304,7 +304,7 @@ Rectangle {
 
             // date taken (hidden when unavailable)
             Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: dateText.visible && captionText.truncated }
-            Text { text: "◷"; color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale); visible: dateText.visible }
+            ThemedIcon { source: "../img/icon_clock.svg"; size: Math.round(13 * root.hudScale); iconColor: Theme.textSubtle; visible: dateText.visible }
             Text {
                 id: dateText
                 text: controller.imageDateTaken(controller.currentIndex)

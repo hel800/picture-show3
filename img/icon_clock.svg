@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!-- Created with Inkscape (http://www.inkscape.org/) -->
+
+<svg
+   width="79.427757mm"
+   height="79.447861mm"
+   viewBox="0 0 79.427757 79.447861"
+   version="1.1"
+   id="svg1"
+   xml:space="preserve"
+   sodipodi:docname="icon_clock.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg"><sodipodi:namedview
+     id="namedview1"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:document-units="mm"
+     inkscape:zoom="2.0899411"
+     inkscape:cx="349.29214"
+     inkscape:cy="157.18146"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="layer1" /><defs
+     id="defs1" /><g
+     inkscape:label="Ebene 1"
+     inkscape:groupmode="layer"
+     id="layer1"
+     transform="translate(-32.887416,-22.509572)"><g
+       id="g579"
+       transform="translate(37.852941,-9.8746806)" /><path
+       id="path585"
+       style="fill:#a6cee0;fill-opacity:1;stroke:none;stroke-width:1.5;stroke-linecap:round;stroke-opacity:1"
+       d="M 72.639512 22.762787 C 50.824866 22.762697 33.140541 40.447022 33.140631 62.261668 C 33.140828 84.07611 50.825069 101.76012 72.639512 101.76003 C 94.453754 101.75984 112.13768 84.07591 112.13788 62.261668 C 112.13797 40.447222 94.453957 22.76298 72.639512 22.762787 z M 72.639512 30.232098 C 90.328779 30.232255 104.66863 44.572399 104.66856 62.261668 C 104.6684 79.950771 90.328614 94.290565 72.639512 94.29072 C 54.950245 94.290792 40.610102 79.950933 40.609942 62.261668 C 40.609869 44.572237 54.950081 30.232026 72.639512 30.232098 z " /><rect
+       style="fill:#a6cee0;fill-opacity:1;stroke:none;stroke-width:1.53676;stroke-linecap:round;stroke-opacity:0"
+       id="rect585"
+       width="6.3299232"
+       height="27.851662"
+       x="69.436333"
+       y="35.929008" /><rect
+       style="fill:#a6cee0;fill-opacity:1;stroke:none;stroke-width:1.35485;stroke-linecap:round;stroke-opacity:0"
+       id="rect585-0"
+       width="6.3299232"
+       height="21.648336"
+       x="-4.2104664"
+       y="94.184029"
+       transform="rotate(-49.990644)" /></g></svg>

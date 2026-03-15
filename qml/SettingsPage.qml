@@ -420,10 +420,11 @@ Item {
                             Row {
                                 anchors.centerIn: parent
                                 spacing: 8
-                                Text {
+                                ThemedIcon {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: "🕐"
-                                    font.pixelSize: 18
+                                    source: "../img/icon_clock.svg"
+                                    size: 18
+                                    iconColor: Theme.accentLight
                                 }
                                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "H" }
                             }
