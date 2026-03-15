@@ -26,12 +26,14 @@ Item {
     // ── Inline reusable components ───────────────────────────────────────────
     property bool   hasStarted    : false
     property string _folderAtStart: ""
+    property string _sortAtStart  : ""
 
-    // Reset to "Start" when the user picks a different folder after a show
+    // Reset to "Start" when the user picks a different folder or sort order after a show
     Connections {
         target: controller
         function onSettingsChanged() {
-            if (root.hasStarted && controller.folder !== root._folderAtStart)
+            if (root.hasStarted && (controller.folder    !== root._folderAtStart ||
+                                    controller.sortOrder !== root._sortAtStart))
                 root.hasStarted = false
         }
     }

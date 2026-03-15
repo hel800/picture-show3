@@ -88,6 +88,7 @@ ApplicationWindow {
                 var sp = stack.get(0)
                 sp.hasStarted     = true
                 sp._folderAtStart = controller.folder
+                sp._sortAtStart   = controller.sortOrder
                 stack.pop()
                 sp.triggerSlideIn()
             }
