@@ -40,7 +40,10 @@ Item {
 
     function launchShow() {
         if (controller.imageCount === 0) return
-        launchAnim.restart()
+        if (root.hasStarted)
+            root.startShow()   // resume: skip fancy transition, show fades in via SlideshowPage intro
+        else
+            launchAnim.restart()
     }
 
     function triggerSlideIn() {
