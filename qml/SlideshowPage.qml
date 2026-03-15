@@ -207,6 +207,9 @@ Rectangle {
             break
         case Qt.Key_Space:
             controller.togglePlay()
+            playIcon.visible  = controller.isPlaying
+            pauseIcon.visible = !controller.isPlaying
+            playPauseAnim.restart()
             break
         case Qt.Key_Escape:
             root.exitShow()
@@ -356,14 +359,6 @@ Rectangle {
             NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 400; easing.type: Easing.InQuad }
         }
 
-        Connections {
-            target: controller
-            function onIsPlayingChanged() {
-                playIcon.visible  = controller.isPlaying
-                pauseIcon.visible = !controller.isPlaying
-                playPauseAnim.restart()
-            }
-        }
     }
 
     // ── Intro fade-in (black overlay that fades away to reveal first image) ──
