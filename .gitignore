@@ -1,0 +1,40 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+ENV/
+
+# PyInstaller build output
+build/
+dist/
+
+# Generated files (reproducible from source)
+img/icon.ico
+resources_rc.py
+
+# IDE / editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+CLAUDE.md
+
+# OS
+Thumbs.db
+Desktop.ini
+.DS_Store
+
+# Test / coverage
+.pytest_cache/
+.coverage
+htmlcov/

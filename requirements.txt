@@ -1,0 +1,4 @@
+# picture-show3 — Python >= 3.14 required
+PySide6>=6.7.0
+Pillow>=10.0.0
+qrcode[pil]>=7.4
