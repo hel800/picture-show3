@@ -54,6 +54,7 @@ Item {
     }
 
     Keys.onPressed: function(event) {
+        if (launchAnim.running || splashAnim.running) { event.accepted = true; return }
         switch (event.key) {
         case Qt.Key_F:
             var win = Window.window
@@ -1046,6 +1047,7 @@ Item {
         }
 
         SequentialAnimation {
+            id: splashAnim
             running: true
 
             // Wait for window to settle
