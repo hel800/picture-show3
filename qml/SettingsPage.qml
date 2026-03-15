@@ -57,6 +57,11 @@ Item {
         launchAnim.restart()
     }
 
+    function triggerSlideIn() {
+        scrollTranslate.y = 20
+        scrollSlideIn.start()
+    }
+
     Keys.onPressed: function(event) {
         switch (event.key) {
         case Qt.Key_F:
@@ -277,9 +282,11 @@ Item {
 
     // ── Scroll area ────────────────────────────────────────────────────────────
     ScrollView {
+        id: mainScrollView
         anchors.fill: parent
         contentWidth: parent.width
         ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+        transform: Translate { id: scrollTranslate; y: 0 }
 
         ColumnLayout {
             id: mainCol
@@ -303,6 +310,7 @@ Item {
                 smooth: true
                 mipmap: true
                 opacity: 0
+                transform: Translate { id: logoTranslate; y: 0 }
             }
 
             Item { Layout.preferredHeight: 32 }
@@ -1071,16 +1079,27 @@ Item {
                 duration: 500; easing.type: Easing.InOutCubic
             }
 
-            // Swap: reveal header logo then instantly hide the overlay
+            // Swap: reveal header logo then instantly hide the overlay,
+            // then slide the content up from its offset position
             ScriptAction {
                 script: {
                     headerLogo.opacity = 1
                     splashOverlay.visible = false
+                    scrollSlideIn.start()
                 }
             }
         }
     }
-    // ── Launch transition overlay ──────────────────────────────────────────
+    // Slide the scroll content up after the splash (and after returning from show)
+    ParallelAnimation {
+        id: scrollSlideIn
+        // Scroll content drifts up
+        NumberAnimation { target: scrollTranslate; property: "y"; from: 40; to: 0; duration: 350; easing.type: Easing.OutQuad }
+        // Logo counter-translates so it stays visually fixed
+        NumberAnimation { target: logoTranslate;   property: "y"; from: -40; to: 0; duration: 350; easing.type: Easing.OutQuad }
+    }
+
+    // ── Launch transition overlay (background only) ────────────────────────
     Rectangle {
         id: launchOverlay
         anchors.fill: parent
@@ -1092,14 +1111,18 @@ Item {
             GradientStop { position: 0.0; color: Theme.bgDeep }
             GradientStop { position: 1.0; color: Theme.bgGradEnd }
         }
+    }
 
-        Image {
-            id: launchLogo
-            source: "../img/logo.svg"
-            fillMode: Image.PreserveAspectFit
-            width: 500; height: 150
-            smooth: true; mipmap: true
-        }
+    // Logo is a sibling of the overlay (z: 201) so it is never affected
+    // by the overlay's opacity — it stays at full opacity throughout
+    Image {
+        id: launchLogo
+        source: "../img/logo.svg"
+        fillMode: Image.PreserveAspectFit
+        width: 500; height: 150
+        smooth: true; mipmap: true
+        z: 201
+        visible: false
     }
 
     SequentialAnimation {
@@ -1115,13 +1138,26 @@ Item {
                 launchLogo.opacity = 1.0
                 launchOverlay.opacity = 0
                 launchOverlay.visible = true
+                launchLogo.visible = true
+                scrollTranslate.y = 0   // ensure clean start
+                logoTranslate.y = 0
             }
         }
 
-        // Fade overlay in to cover settings content
-        NumberAnimation {
-            target: launchOverlay; property: "opacity"
-            from: 0; to: 1; duration: 250; easing.type: Easing.OutQuad
+        // Fade overlay in while drifting settings content downward (logo counter-animated)
+        ParallelAnimation {
+            NumberAnimation {
+                target: launchOverlay; property: "opacity"
+                from: 0; to: 1; duration: 250; easing.type: Easing.OutQuad
+            }
+            NumberAnimation {
+                target: scrollTranslate; property: "y"
+                from: 0; to: 40; duration: 250; easing.type: Easing.InQuad
+            }
+            NumberAnimation {
+                target: logoTranslate; property: "y"
+                from: 0; to: -40; duration: 250; easing.type: Easing.InQuad
+            }
         }
 
         // Logo drifts to vertical centre of screen
@@ -1145,10 +1181,14 @@ Item {
             }
         }
 
-        // Hand off to slideshow — hide overlay first so it's gone when we return
+        // Hand off to slideshow — hide overlay and reset translates so
+        // the page is clean when the user returns via Esc
         ScriptAction {
             script: {
                 launchOverlay.visible = false
+                launchLogo.visible = false
+                scrollTranslate.y = 0
+                logoTranslate.y = 0
                 root.startShow()
             }
         }

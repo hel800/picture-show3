@@ -36,12 +36,15 @@ ApplicationWindow {
         pushEnter: Transition { }
         pushExit:  Transition { }
 
-        // Pop (exit show → settings) cross-fades softly
+        // Pop (exit show → settings): fade + subtle upward drift
         popEnter: Transition {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 280; easing.type: Easing.OutQuad }
+            ParallelAnimation {
+                NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 300; easing.type: Easing.OutQuad }
+                NumberAnimation { property: "y"; from: 48; to: 0;  duration: 300; easing.type: Easing.OutQuad }
+            }
         }
         popExit: Transition {
-            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200 }
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 220 }
         }
 
         initialItem: settingsComp
@@ -86,6 +89,7 @@ ApplicationWindow {
                 sp.hasStarted     = true
                 sp._folderAtStart = controller.folder
                 stack.pop()
+                sp.triggerSlideIn()
             }
         }
     }
