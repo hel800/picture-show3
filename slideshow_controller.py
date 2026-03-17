@@ -77,6 +77,8 @@ class SlideshowController(QObject):
         self._folder_history  : list[str]        = []
         self._remote_enabled  : bool             = False
         self._remote_port     : int              = 8765
+        self._all_images      : list[str]        = []
+        self._min_rating      : int              = 0
         self._rating_cache    : dict[str, int]   = {}
 
         self._timer = QTimer(self)
@@ -97,6 +99,7 @@ class SlideshowController(QObject):
         self._interval         = s.value("interval",      5_000, type=int)
         self._remote_enabled   = s.value("remoteEnabled", False, type=bool)
         self._remote_port      = s.value("remotePort",    8765,  type=int)
+        self._min_rating       = s.value("minRating",     0,     type=int)
 
         # QSettings returns a str for single-item lists, list for multiple
         raw = s.value("folderHistory", [])
@@ -124,6 +127,7 @@ class SlideshowController(QObject):
         s.setValue("interval",       self._interval)
         s.setValue("remoteEnabled",  self._remote_enabled)
         s.setValue("remotePort",     self._remote_port)
+        s.setValue("minRating",      self._min_rating)
         s.setValue("folderHistory",  self._folder_history)
 
     # ── Properties ───────────────────────────────────────────────────────────
@@ -132,6 +136,9 @@ class SlideshowController(QObject):
 
     @Property(int, notify=imagesChanged)
     def imageCount(self) -> int: return len(self._images)
+
+    @Property(int, notify=imagesChanged)
+    def totalImageCount(self) -> int: return len(self._all_images)
 
     @Property(int, notify=currentIndexChanged)
     def currentIndex(self) -> int: return self._current_index
@@ -168,6 +175,9 @@ class SlideshowController(QObject):
 
     @Property(int, notify=settingsChanged)
     def remotePort(self) -> int: return self._remote_port
+
+    @Property(int, notify=settingsChanged)
+    def minRating(self) -> int: return self._min_rating
 
     @Property(list, notify=folderHistoryChanged)
     def folderHistory(self) -> list[str]: return list(self._folder_history)
@@ -216,11 +226,9 @@ class SlideshowController(QObject):
             ]
 
         self._sort(images)
-        self._images        = images
-        self._current_index = 0
-        self._rating_cache  = {}
-        self.imagesChanged.emit()
-        self.currentIndexChanged.emit()
+        self._all_images   = images
+        self._rating_cache = {}
+        self._apply_filter()
 
     def _sort(self, images: list[str]) -> None:
         match self._sort_order:
@@ -230,6 +238,23 @@ class SlideshowController(QObject):
                 images.sort(key=self._date_key)
             case "random":
                 random.shuffle(images)
+
+    def _apply_filter(self) -> None:
+        if self._min_rating == 0:
+            self._images = list(self._all_images)
+        else:
+            self._images = [
+                p for p in self._all_images
+                if self._get_cached_rating(p) >= self._min_rating
+            ]
+        self._current_index = 0
+        self.imagesChanged.emit()
+        self.currentIndexChanged.emit()
+
+    def _get_cached_rating(self, path: str) -> int:
+        if path not in self._rating_cache:
+            self._rating_cache[path] = self._read_xmp_rating(path)
+        return self._rating_cache[path]
 
     @staticmethod
     def _date_key(path: str) -> datetime:
@@ -273,11 +298,19 @@ class SlideshowController(QObject):
     @Slot(str)
     def setSortOrder(self, order: SortOrder) -> None:
         self._sort_order = order
-        if self._images:
-            self._sort(self._images)
-            self._current_index = 0
-            self.imagesChanged.emit()
-            self.currentIndexChanged.emit()
+        if self._all_images:
+            self._sort(self._all_images)
+            self._apply_filter()   # emits imagesChanged + currentIndexChanged
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(int)
+    def setMinRating(self, rating: int) -> None:
+        clamped = max(0, min(5, rating))
+        if clamped == self._min_rating:
+            return
+        self._min_rating = clamped
+        self._apply_filter()   # emits imagesChanged + currentIndexChanged
         self._save_settings()
         self.settingsChanged.emit()
 
@@ -409,11 +442,7 @@ class SlideshowController(QObject):
         path = self.imagePath(index)
         if not path:
             return 0
-        if path in self._rating_cache:
-            return self._rating_cache[path]
-        rating = self._read_xmp_rating(path)
-        self._rating_cache[path] = rating
-        return rating
+        return self._get_cached_rating(path)
 
     @staticmethod
     def _read_xmp_rating(path: str) -> int:

@@ -86,9 +86,10 @@ ApplicationWindow {
                 controller.stopShow()
                 remoteServer.setShowActive(false)
                 var sp = stack.get(0)
-                sp.hasStarted     = true
-                sp._folderAtStart = controller.folder
-                sp._sortAtStart   = controller.sortOrder
+                sp.hasStarted          = true
+                sp._folderAtStart      = controller.folder
+                sp._sortAtStart        = controller.sortOrder
+                sp._minRatingAtStart   = controller.minRating
                 stack.pop()
                 sp.triggerSlideIn()
             }
