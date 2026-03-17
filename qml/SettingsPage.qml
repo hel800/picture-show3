@@ -277,6 +277,22 @@ Item {
         }
     }
 
+    // ── Background sun watermark ───────────────────────────────────────────────
+    Image {
+        id: sunWatermark
+        source: "../img/logo_sun.svg"
+        width: Math.min(root.width, root.height) * 0.9
+        height: width
+        sourceSize.width: width; sourceSize.height: height
+        anchors { top: parent.top; right: parent.right
+                  topMargin: -width * 0.1; rightMargin: -width * 0.35 }
+        rotation: 0
+        opacity: 0
+        scale: 0.9
+        transformOrigin: Item.Center
+        fillMode: Image.PreserveAspectFit
+    }
+
     // ── Scroll area ────────────────────────────────────────────────────────────
     ScrollView {
         id: mainScrollView
@@ -1350,6 +1366,10 @@ Item {
         NumberAnimation { target: scrollTranslate; property: "y"; from: 40; to: 0; duration: 350; easing.type: Easing.OutQuad }
         // Logo counter-translates so it stays visually fixed
         NumberAnimation { target: logoTranslate;   property: "y"; from: -40; to: 0; duration: 350; easing.type: Easing.OutQuad }
+        // Sun watermark fades and zooms in
+        NumberAnimation { target: sunWatermark; property: "opacity";  from: 0;   to: 0.5;  duration: 700; easing.type: Easing.OutCubic }
+        NumberAnimation { target: sunWatermark; property: "scale";    from: 0.9; to: 1.0;  duration: 700; easing.type: Easing.OutCubic }
+        NumberAnimation { target: sunWatermark; property: "rotation"; from: 0;   to: 25;   duration: 700; easing.type: Easing.OutCubic }
     }
 
     // ── Launch transition overlay (background only) ────────────────────────
@@ -1442,6 +1462,9 @@ Item {
                 launchLogo.visible = false
                 scrollTranslate.y = 0
                 logoTranslate.y = 0
+                sunWatermark.opacity = 0
+                sunWatermark.scale = 0.9
+                sunWatermark.rotation = 0
                 root.startShow()
             }
         }

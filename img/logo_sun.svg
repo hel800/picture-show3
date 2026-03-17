@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 200 200"
+   version="1.1"
+   id="svg8"
+   sodipodi:docname="logo_sun.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs8" />
+  <sodipodi:namedview
+     id="namedview8"
+     pagecolor="#000000"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="false"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="11.73"
+     inkscape:cx="112.70247"
+     inkscape:cy="104.64621"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg8" />
+  <!-- Center circle -->
+  <circle
+     cx="100"
+     cy="100"
+     r="36"
+     fill="#131E2A"
+     id="circle1" />
+  <!-- 8 elongated rays (outer r=98, inner r=40, half-angle=12°) -->
+  <!-- 0° -->
+  <!-- 45° -->
+  <!-- 90° -->
+  <!-- 135° -->
+  <!-- 180° -->
+  <!-- 225° -->
+  <!-- 270° -->
+  <!-- 315° -->
+  <path
+     d="M 66.623047,78.076172 A 40.177326,40.177326 0 0 1 78.076172,66.623047 L 78.199219,66.5 l -47.5,-35.800781 35.800781,47.5 z"
+     style="fill:#131E2A"
+     id="path39" />
+  <path
+     d="M 60.755859,108.28125 A 40.177326,40.177326 0 0 1 59.822266,100 40.177326,40.177326 0 0 1 60.755859,91.71875 L 2,100 Z"
+     style="fill:#131E2A"
+     id="path37" />
+  <path
+     d="M 78.076172,133.37695 A 40.177326,40.177326 0 0 1 66.623047,121.92383 L 66.5,121.80078 l -35.800781,47.5 47.5,-35.80078 z"
+     style="fill:#131E2A"
+     id="path35" />
+  <path
+     d="M 108.28125,139.24414 A 40.177326,40.177326 0 0 1 100,140.17773 40.177326,40.177326 0 0 1 91.71875,139.24414 L 100,198 Z"
+     style="fill:#131E2A"
+     id="path33" />
+  <path
+     d="m 133.37695,121.92383 a 40.177326,40.177326 0 0 1 -11.45312,11.45312 l -0.12305,0.12305 47.5,35.80078 -35.80078,-47.5 z"
+     style="fill:#131E2A"
+     id="path31" />
+  <path
+     d="M 139.29687,91.726562 A 40.177326,40.177326 0 0 1 140.17773,100 a 40.177326,40.177326 0 0 1 -0.93359,8.28125 L 198,100 Z"
+     style="fill:#131E2A"
+     id="path29" />
+  <path
+     d="m 121.95898,66.380859 a 40.177326,40.177326 0 0 1 11.66016,11.660157 l 35.68164,-47.341797 z"
+     style="fill:#131E2A"
+     id="path27" />
+  <path
+     d="M 100,2 91.71875,60.755859 A 40.177326,40.177326 0 0 1 100,59.822266 a 40.177326,40.177326 0 0 1 8.27344,0.880859 z"
+     style="fill:#131E2A"
+     id="path24" />
+</svg>
