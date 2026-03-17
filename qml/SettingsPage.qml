@@ -427,7 +427,7 @@ Item {
                                 spacing: 8
                                 ThemedIcon {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    source: "../img/icon_clock.svg"
+                                    source: "../img/icon_history.svg"
                                     size: 18
                                     iconColor: Theme.accentLight
                                 }

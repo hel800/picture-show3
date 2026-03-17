@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg
+   viewBox="0 0 24 24"
+   version="1.1"
+   id="svg3"
+   sodipodi:docname="icon_history.svg"
+   inkscape:version="1.3.2 (091e20e, 2023-11-25, custom)"
+   xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
+   xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
+   xmlns="http://www.w3.org/2000/svg"
+   xmlns:svg="http://www.w3.org/2000/svg">
+  <defs
+     id="defs3" />
+  <sodipodi:namedview
+     id="namedview3"
+     pagecolor="#ffffff"
+     bordercolor="#000000"
+     borderopacity="0.25"
+     inkscape:showpageshadow="2"
+     inkscape:pageopacity="0.0"
+     inkscape:pagecheckerboard="0"
+     inkscape:deskcolor="#d1d1d1"
+     inkscape:zoom="34.559844"
+     inkscape:cx="17.476931"
+     inkscape:cy="12.138365"
+     inkscape:window-width="2560"
+     inkscape:window-height="1369"
+     inkscape:window-x="-8"
+     inkscape:window-y="-8"
+     inkscape:window-maximized="1"
+     inkscape:current-layer="svg3" />
+  <!-- Clock arc — almost full circle, gap at top-left for the arrow -->
+  <path
+     d="M5.6 5.6 A9 9 0 1 1 5.6 18.4"
+     fill="none"
+     stroke="white"
+     stroke-width="1.8"
+     stroke-linecap="round"
+     id="path1" />
+  <!-- Counter-clockwise arrowhead at the start of the arc -->
+  <path
+     d="M 4.885891,2.6007951 3.9648333,6.7807057 8.015738,7.548932"
+     fill="none"
+     stroke="#ffffff"
+     stroke-width="1.8"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path2" />
+  <!-- Clock hands (minute pointing up to 12, hour pointing to ~4) -->
+  <path
+     d="M12 7 L12 12 L15 14"
+     fill="none"
+     stroke="white"
+     stroke-width="1.8"
+     stroke-linecap="round"
+     stroke-linejoin="round"
+     id="path3" />
+</svg>
