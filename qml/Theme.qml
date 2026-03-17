@@ -47,6 +47,9 @@ QtObject {
     readonly property color textDisabled: "#6d84a5"  // disabled button text, HUD separators
     readonly property color textGhost:    "#6e6e85"  // keyboard hint line (barely visible)
 
+    // ── Misc ─────────────────────────────────────────────────────────────────
+    readonly property color starInactive:  "#30303b"  // disabled star for rating
+
     // ── Status ───────────────────────────────────────────────────────────────
     readonly property color statusOk:   "#34d399"  // ✓ images found
     readonly property color statusWarn: "#f59e0b"  // ⚠ no images found

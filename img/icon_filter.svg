@@ -1,0 +1,6 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Funnel outline -->
+  <path d="M3 4h18l-7 8v7l-4-2V12Z"
+        fill="none" stroke="white" stroke-width="1.8"
+        stroke-linejoin="round" stroke-linecap="round"/>
+</svg>

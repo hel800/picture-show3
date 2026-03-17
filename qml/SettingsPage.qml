@@ -24,16 +24,18 @@ Item {
     focus: true
 
     // ── Inline reusable components ───────────────────────────────────────────
-    property bool   hasStarted    : false
-    property string _folderAtStart: ""
-    property string _sortAtStart  : ""
+    property bool   hasStarted       : false
+    property string _folderAtStart   : ""
+    property string _sortAtStart     : ""
+    property int    _minRatingAtStart: 0
 
-    // Reset to "Start" when the user picks a different folder or sort order after a show
+    // Reset to "Start" when the user picks a different folder, sort order, or filter after a show
     Connections {
         target: controller
         function onSettingsChanged() {
-            if (root.hasStarted && (controller.folder    !== root._folderAtStart ||
-                                    controller.sortOrder !== root._sortAtStart))
+            if (root.hasStarted && (controller.folder     !== root._folderAtStart  ||
+                                    controller.sortOrder  !== root._sortAtStart    ||
+                                    controller.minRating  !== root._minRatingAtStart))
                 root.hasStarted = false
         }
     }
@@ -78,6 +80,9 @@ Item {
             controller.setTransitionStyle(styles[(styles.indexOf(controller.transitionStyle) + 1) % styles.length])
             break
         }
+        case Qt.Key_R:
+            filterPopup.opened ? filterPopup.close() : filterPopup.open()
+            break
         case Qt.Key_S: {
             var orders = ["name", "date", "random"]
             controller.setSortOrder(orders[(orders.indexOf(controller.sortOrder) + 1) % orders.length])
@@ -580,13 +585,22 @@ Item {
                         }
                     }
 
-                    Text {
+                    Row {
                         visible: controller.folder.length > 0
-                        text: controller.imageCount > 0
-                              ? "✓  " + controller.imageCount + " images found"
-                              : "⚠  No supported images found in this folder"
-                        color: controller.imageCount > 0 ? Theme.statusOk : Theme.statusWarn
-                        font.pixelSize: 12
+                        spacing: 0
+                        Text {
+                            text: controller.imageCount > 0
+                                  ? "✓  " + controller.imageCount + " images found"
+                                  : "⚠  No supported images found in this folder"
+                            color: controller.imageCount > 0 ? Theme.statusOk : Theme.statusWarn
+                            font.pixelSize: 12
+                        }
+                        Text {
+                            visible: controller.imageCount < controller.totalImageCount
+                            text: "  ·  filter active"
+                            color: Theme.textMuted
+                            font.pixelSize: 12
+                        }
                     }
 
                     // ── Start button ──────────────────────────────────────────
@@ -692,62 +706,247 @@ Item {
                     // ── Divider ───────────────────────────────────────────────
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
 
-                    // ── Sort order ────────────────────────────────────────────
-                    RowLayout {
-                        Layout.fillWidth: true
-                        Text {
-                            text: "SORT ORDER"
-                            color: Theme.textMuted; font.pixelSize: 11
-                            font.weight: Font.Medium; font.letterSpacing: 1.4
-                        }
-                        Item { Layout.fillWidth: true }
-                        KeyHint { label: "S" }
-                    }
-
+                    // ── Sort order + Filter (shared outer row for perfect heading alignment) ──
                     RowLayout {
                         Layout.fillWidth: true
                         spacing: 8
 
-                        Repeater {
-                            model: [
-                                { id: "name",   label: "By Name", icon: "../img/icon_sort_name.svg"   },
-                                { id: "date",   label: "By Date", icon: "../img/icon_sort_date.svg"   },
-                                { id: "random", label: "Random",  icon: "../img/icon_sort_random.svg" }
-                            ]
+                        // Sort order column — heading + chips
+                        ColumnLayout {
+                            Layout.fillWidth: true
+                            spacing: 6
 
-                            delegate: Rectangle {
+                            RowLayout {
                                 Layout.fillWidth: true
-                                height: 58
-                                radius: 12
-                                color: controller.sortOrder === modelData.id
-                                       ? Theme.accentDeep : Theme.surface
-                                border.color: controller.sortOrder === modelData.id
-                                              ? Theme.accent : "transparent"
-                                border.width: 1
-                                Behavior on color { ColorAnimation { duration: 150 } }
+                                Text {
+                                    text: "SORT ORDER"
+                                    color: Theme.textMuted; font.pixelSize: 11
+                                    font.weight: Font.Medium; font.letterSpacing: 1.4
+                                }
+                                Item { Layout.fillWidth: true }
+                                KeyHint { label: "S" }
+                            }
 
-                                Column {
-                                    anchors.centerIn: parent
-                                    spacing: 3
-                                    ThemedIcon {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        source: modelData.icon
-                                        size: 20
-                                        iconColor: controller.sortOrder === modelData.id
-                                                   ? Theme.accentLight : Theme.textMuted
-                                        Behavior on iconColor { ColorAnimation { duration: 150 } }
-                                    }
-                                    Text {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        text: modelData.label; font.pixelSize: 11
+                            RowLayout {
+                                Layout.fillWidth: true
+                                spacing: 8
+
+                                Repeater {
+                                    model: [
+                                        { id: "name",   label: "By Name", icon: "../img/icon_sort_name.svg"   },
+                                        { id: "date",   label: "By Date", icon: "../img/icon_sort_date.svg"   },
+                                        { id: "random", label: "Random",  icon: "../img/icon_sort_random.svg" }
+                                    ]
+
+                                    delegate: Rectangle {
+                                        Layout.fillWidth: true
+                                        height: 58
+                                        radius: 12
                                         color: controller.sortOrder === modelData.id
-                                               ? Theme.textPrimary : Theme.textMuted
+                                               ? Theme.accentDeep : Theme.surface
+                                        border.color: controller.sortOrder === modelData.id
+                                                      ? Theme.accent : "transparent"
+                                        border.width: 1
+                                        Behavior on color { ColorAnimation { duration: 150 } }
+
+                                        Column {
+                                            anchors.centerIn: parent
+                                            spacing: 3
+                                            ThemedIcon {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                source: modelData.icon
+                                                size: 20
+                                                iconColor: controller.sortOrder === modelData.id
+                                                           ? Theme.accentLight : Theme.textMuted
+                                                Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                            }
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: modelData.label; font.pixelSize: 11
+                                                color: controller.sortOrder === modelData.id
+                                                       ? Theme.textPrimary : Theme.textMuted
+                                            }
+                                        }
+                                        MouseArea {
+                                            anchors.fill: parent
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: controller.setSortOrder(modelData.id)
+                                        }
                                     }
                                 }
+                            }
+                        }
+
+                        // Filter column — heading + button
+                        ColumnLayout {
+                            Layout.preferredWidth: 20
+                            Layout.leftMargin: 20
+                            spacing: 6
+
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text {
+                                    text: "FILTER"
+                                    color: Theme.textMuted; font.pixelSize: 11
+                                    font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Layout.fillWidth: true
+                                }
+                                KeyHint { label: "R" }
+                            }
+
+                            // ── Filter button ──────────────────────────────────
+                            Rectangle {
+                                id: filterBtn
+                                Layout.fillWidth: true; height: 58
+                                radius: 12
+                                color: Theme.surface
+                                border.color: (filterPopup.opened || controller.minRating > 0) ? Theme.accent : "transparent"
+                                border.width: 1
+                                Behavior on border.color { ColorAnimation { duration: 150 } }
+
+                                ThemedIcon {
+                                    anchors.centerIn: parent
+                                    source: "../img/icon_filter.svg"
+                                    size: 20
+                                    iconColor: controller.minRating > 0 ? Theme.accentLight : Theme.textMuted
+                                    Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                }
+
+                                // Active-filter indicator dot
+                                Rectangle {
+                                    width: 8; height: 8; radius: 4
+                                    anchors { top: parent.top; right: parent.right; margins: 7 }
+                                    color: Theme.accent
+                                    visible: controller.minRating > 0
+                                }
+
                                 MouseArea {
                                     anchors.fill: parent
                                     cursorShape: Qt.PointingHandCursor
-                                    onClicked: controller.setSortOrder(modelData.id)
+                                    onClicked: filterPopup.opened ? filterPopup.close() : filterPopup.open()
+                                }
+
+                                // ── Filter popup ──────────────────────────────
+                                Popup {
+                                    id: filterPopup
+                                    x: filterBtn.width - width
+                                    y: -height - 6
+                                    width: 230
+                                    padding: 14
+                                    closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutsideParent
+
+                                    property int highlightIndex: 0
+                                    onOpened: {
+                                        highlightIndex = controller.minRating
+                                        popupColumn.forceActiveFocus()
+                                    }
+
+                                    Timer {
+                                        id: closeTimer
+                                        interval: 180
+                                        onTriggered: filterPopup.close()
+                                    }
+
+                                    background: Rectangle {
+                                        color: Theme.bgCard
+                                        radius: 12
+                                        border.color: Theme.borderMuted
+                                        border.width: 1
+                                    }
+
+                                    Column {
+                                        id: popupColumn
+                                        width: parent.width
+                                        spacing: 10
+                                        focus: true
+
+                                        Keys.onPressed: function(event) {
+                                            switch (event.key) {
+                                            case Qt.Key_Up:
+                                                if (filterPopup.highlightIndex > 0) filterPopup.highlightIndex--
+                                                event.accepted = true; break
+                                            case Qt.Key_Down:
+                                                if (filterPopup.highlightIndex < 5) filterPopup.highlightIndex++
+                                                event.accepted = true; break
+                                            case Qt.Key_Return:
+                                            case Qt.Key_Enter:
+                                                controller.setMinRating(filterPopup.highlightIndex)
+                                                closeTimer.restart()
+                                                event.accepted = true; break
+                                            }
+                                        }
+
+                                        // Star rating label
+                                        Text {
+                                            text: "STAR RATING"
+                                            color: Theme.textMuted; font.pixelSize: 10
+                                            font.weight: Font.Medium; font.letterSpacing: 1.4
+                                        }
+
+                                        // Star rating options
+                                        Column {
+                                            width: parent.width
+                                            spacing: 2
+
+                                            Repeater {
+                                                model: [
+                                                    { rating: 0, label: "All"              },
+                                                    { rating: 1, label: "1 star and above" },
+                                                    { rating: 2, label: "2 stars and above"},
+                                                    { rating: 3, label: "3 stars and above"},
+                                                    { rating: 4, label: "4 stars and above"},
+                                                    { rating: 5, label: "5 stars"          }
+                                                ]
+
+                                                delegate: Rectangle {
+                                                    width: parent.width; height: 32; radius: 6
+                                                    color: controller.minRating === modelData.rating
+                                                           ? Theme.accentDeep
+                                                           : (index === filterPopup.highlightIndex || rowHover.containsMouse
+                                                              ? Theme.surface : "transparent")
+                                                    Behavior on color { ColorAnimation { duration: 100 } }
+
+                                                    RowLayout {
+                                                        anchors { fill: parent; leftMargin: 8; rightMargin: 8 }
+                                                        spacing: 6
+
+                                                        Row {
+                                                            spacing: 2
+                                                            visible: modelData.rating > 0
+                                                            Repeater {
+                                                                model: modelData.rating
+                                                                ThemedIcon {
+                                                                    source: "../img/icon_star.svg"
+                                                                    size: 10
+                                                                    iconColor: controller.minRating === modelData.rating
+                                                                               ? Theme.accentLight : Theme.textMuted
+                                                                }
+                                                            }
+                                                        }
+
+                                                        Text {
+                                                            Layout.fillWidth: true
+                                                            text: modelData.label
+                                                            font.pixelSize: 13
+                                                            color: controller.minRating === modelData.rating
+                                                                   ? Theme.textPrimary : Theme.textSecondary
+                                                        }
+                                                    }
+
+                                                    MouseArea {
+                                                        id: rowHover
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            controller.setMinRating(modelData.rating)
+                                                            filterPopup.close()
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
                                 }
                             }
                         }
