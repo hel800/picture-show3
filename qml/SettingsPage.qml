@@ -1205,20 +1205,71 @@ Item {
             AdvancedSettingsDialog { id: advancedDialog }
 
             // ── Keyboard hint ─────────────────────────────────────────────────
-            Text {
+            Row {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 14
-                text: "← →  Navigate    Space  Play/Pause    F  Fullscreen    Esc  Exit"
-                color: Theme.textGhost
-                font.pixelSize: 11
-                font.letterSpacing: 0.3
+                spacing: 6
+
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "In show commands:"
+                    color: Theme.textGhost
+                    font.pixelSize: 11
+                }
+                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "←" }
+                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "→" }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Navigate"
+                    color: Theme.textGhost
+                    font.pixelSize: 11
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "·"
+                    color: Theme.textGhost
+                    font.pixelSize: 11
+                }
+                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Space" }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Play/Pause"
+                    color: Theme.textGhost
+                    font.pixelSize: 11
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "·"
+                    color: Theme.textGhost
+                    font.pixelSize: 11
+                }
+                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "F" }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Fullscreen"
+                    color: Theme.textGhost
+                    font.pixelSize: 11
+                }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "·"
+                    color: Theme.textGhost
+                    font.pixelSize: 11
+                }
+                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
+                Text {
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: "Exit"
+                    color: Theme.textGhost
+                    font.pixelSize: 11
+                }
             }
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
                 Layout.topMargin: 6
                 text: "v" + appVersion
-                color: Theme.textGhost
+                color: Theme.borderMuted
                 font.pixelSize: 10
                 font.letterSpacing: 0.3
             }
