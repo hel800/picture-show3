@@ -7,6 +7,7 @@
     <file>qml/AdvancedSettingsDialog.qml</file>
     <file>qml/QrCodeDialog.qml</file>
     <file>qml/KeyHint.qml</file>
+    <file>qml/HelpOverlay.qml</file>
     <file>qml/ThemedIcon.qml</file>
     <file>qml/Theme.qml</file>
     <file>qml/qmldir</file>

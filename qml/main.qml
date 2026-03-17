@@ -15,6 +15,7 @@
 // along with picture-show3.  If not, see <https://www.gnu.org/licenses/>.
 import QtQuick
 import QtQuick.Controls
+import QtQuick.Effects
 import "."
 
 ApplicationWindow {
@@ -27,10 +28,21 @@ ApplicationWindow {
     title: "picture show 3"
     color: Theme.bgDeep
 
+    // Set to true by AdvancedSettingsDialog (via SettingsPage) to blur the stack
+    property bool advancedOpen: false
+
     // ── Page stack ────────────────────────────────────────────────────────────
     StackView {
         id: stack
         anchors.fill: parent
+
+        // Blur the stack behind any modal dialog — uses scene-graph layer, survives fullscreen
+        layer.enabled: root.advancedOpen || helpOverlay.visible
+        layer.effect: MultiEffect {
+            blurEnabled: true
+            blur: 0.8
+            blurMax: 48
+        }
 
         // Push is instant — SettingsPage.launchAnim handles the visual transition
         pushEnter: Transition { }
@@ -62,6 +74,12 @@ ApplicationWindow {
         }
     }
 
+    // ── Help overlay (above all pages) ───────────────────────────────────────
+    HelpOverlay {
+        id: helpOverlay
+        onClosed: stack.currentItem.forceActiveFocus()
+    }
+
     // ── Pages ─────────────────────────────────────────────────────────────────
     Component {
         id: settingsComp
@@ -76,6 +94,7 @@ ApplicationWindow {
                 remoteServer.setShowActive(true)
                 stack.push(slideshowComp)
             }
+            onOpenHelp: helpOverlay.open()
         }
     }
 
@@ -93,6 +112,7 @@ ApplicationWindow {
                 stack.pop()
                 sp.triggerSlideIn()
             }
+            onOpenHelp: helpOverlay.open()
         }
     }
 }

@@ -41,6 +41,7 @@ Item {
     }
 
     signal startShow()
+    signal openHelp()
 
     function launchShow() {
         if (controller.imageCount === 0) return
@@ -102,6 +103,12 @@ Item {
         case Qt.Key_H:
             if (controller.folderHistory.length > 0)
                 recentPopup.open()
+            break
+        case Qt.Key_V:
+            advancedDialog.open()
+            break
+        case Qt.Key_Question:
+            root.openHelp()
             break
         default:
             break
@@ -1185,24 +1192,56 @@ Item {
                     // ── Divider ───────────────────────────────────────────────
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
 
-                    // ── Advanced settings link ────────────────────────────────
+                    // ── Advanced settings link + Help link ────────────────────
                     RowLayout {
                         Layout.fillWidth: true
+
+                        Rectangle {
+                            height: 32; radius: 8
+                            width: helpRow.implicitWidth + 24
+                            color: helpArea.containsMouse ? Theme.surfaceHover : "transparent"
+                            Behavior on color { ColorAnimation { duration: 120 } }
+
+                            Row {
+                                id: helpRow
+                                anchors.centerIn: parent
+                                spacing: 6
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "Help"
+                                    color: Theme.textMuted
+                                    font.pixelSize: 12
+                                }
+                                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "?" }
+                            }
+                            MouseArea {
+                                id: helpArea
+                                anchors.fill: parent
+                                hoverEnabled: true
+                                cursorShape: Qt.PointingHandCursor
+                                onClicked: root.openHelp()
+                            }
+                        }
 
                         Item { Layout.fillWidth: true }
 
                         Rectangle {
                             height: 32; radius: 8
-                            width: advancedLabel.implicitWidth + 24
+                            width: advancedRow.implicitWidth + 24
                             color: advancedArea.containsMouse ? Theme.surfaceHover : "transparent"
                             Behavior on color { ColorAnimation { duration: 120 } }
 
-                            Text {
-                                id: advancedLabel
+                            Row {
+                                id: advancedRow
                                 anchors.centerIn: parent
-                                text: "Advanced settings ›"
-                                color: Theme.textMuted
-                                font.pixelSize: 12
+                                spacing: 6
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "Advanced settings ›"
+                                    color: Theme.textMuted
+                                    font.pixelSize: 12
+                                }
+                                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "V" }
                             }
                             MouseArea {
                                 id: advancedArea

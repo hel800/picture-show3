@@ -25,6 +25,7 @@ Rectangle {
     clip: true   // keep sliding layers from painting outside the window
 
     signal exitShow()
+    signal openHelp()
 
     // ── State ─────────────────────────────────────────────────────────────────
     property bool showingA  : true   // which layer is currently the foreground
@@ -222,6 +223,9 @@ Rectangle {
         case Qt.Key_I:
             root.hudVisible = !root.hudVisible
             controller.setHudVisible(root.hudVisible)
+            break
+        case Qt.Key_Question:
+            root.openHelp()
             break
         default:
             break

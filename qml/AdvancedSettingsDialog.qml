@@ -26,6 +26,9 @@ Popup {
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
+    onOpened: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = true  }
+    onClosed:  { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = false }
+
     background: Rectangle {
         radius: 20
         color: Theme.bgCard
@@ -33,9 +36,7 @@ Popup {
         border.width: 1
     }
 
-    Overlay.modal: Rectangle {
-        color: Qt.rgba(0, 0, 0, 0.5)
-    }
+    Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.5) }
 
     contentItem: ColumnLayout {
         spacing: 0
