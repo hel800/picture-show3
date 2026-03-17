@@ -30,6 +30,9 @@ from pathlib import Path
 import xml.etree.ElementTree as ET
 
 from PIL import Image, IptcImagePlugin, UnidentifiedImageError
+
+# Allow very large images (e.g. high-res panoramas) without a decompression bomb warning
+Image.MAX_IMAGE_PIXELS = 500_000_000
 from PySide6.QtCore import Property, QObject, QSettings, QTimer, Signal, Slot
 
 # EXIF tag id for DateTimeOriginal (when the shutter was pressed)
