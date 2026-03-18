@@ -36,11 +36,12 @@ Rectangle {
     property string hudCaption: controller.imageCaption(controller.currentIndex)
     property int    hudRating : controller.imageRating(controller.currentIndex)
 
-    // ── Cursor: permanently hidden over the slideshow ─────────────────────────
+    // ── Cursor: hidden only in fullscreen ──────────────────────────────────────
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Qt.BlankCursor
+        cursorShape: Window.window && Window.window.visibility === Window.FullScreen
+                     ? Qt.BlankCursor : Qt.ArrowCursor
         acceptedButtons: Qt.LeftButton
         onPressed: root.forceActiveFocus()
         onDoubleClicked: toggleFullscreen()
