@@ -311,6 +311,7 @@ Item {
         ColumnLayout {
             id: mainCol
             width: Math.min(root.width - 32, 680)
+            height: Math.max(implicitHeight, mainScrollView.height)
             anchors.horizontalCenter: parent.horizontalCenter
             spacing: 0
 
@@ -333,7 +334,7 @@ Item {
                 transform: Translate { id: logoTranslate; y: 0 }
             }
 
-            Item { Layout.preferredHeight: 32 }
+            Item { Layout.fillHeight: true; Layout.minimumHeight: 32 }
 
             // ── Settings card ─────────────────────────────────────────────────
             Rectangle {
@@ -1338,7 +1339,7 @@ Item {
                 font.letterSpacing: 0.3
             }
 
-            Item { Layout.preferredHeight: 48 }
+            Item { Layout.fillHeight: true; Layout.minimumHeight: 48 }
         }
     }
 
