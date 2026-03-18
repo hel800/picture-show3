@@ -497,7 +497,7 @@ Item {
 
                         contentItem: Item {
                             id: recentContentItem
-                            implicitHeight: recentCol.implicitHeight + 32
+                            implicitHeight: Math.min(recentOuterCol.implicitHeight + 32, root.height / 2)
                             focus: true
 
                             Keys.onPressed: function(event) {
@@ -505,10 +505,12 @@ Item {
                                 switch (event.key) {
                                 case Qt.Key_Up:
                                     if (recentPopup.selectedIndex > 0) recentPopup.selectedIndex--
+                                    recentFlick.ensureVisible(recentPopup.selectedIndex)
                                     event.accepted = true
                                     break
                                 case Qt.Key_Down:
                                     if (recentPopup.selectedIndex < count - 1) recentPopup.selectedIndex++
+                                    recentFlick.ensureVisible(recentPopup.selectedIndex)
                                     event.accepted = true
                                     break
                                 case Qt.Key_Return:
@@ -526,7 +528,7 @@ Item {
                             }
 
                             Column {
-                                id: recentCol
+                                id: recentOuterCol
                                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
                                 spacing: 6
 
@@ -539,50 +541,88 @@ Item {
                                     bottomPadding: 4
                                 }
 
-                                Repeater {
-                                    model: controller.folderHistory
+                                Flickable {
+                                    id: recentFlick
+                                    width: recentOuterCol.width
+                                    height: Math.min(recentListCol.implicitHeight,
+                                                     root.height / 2 - recentHeaderHeight - 32)
+                                    contentHeight: recentListCol.implicitHeight
+                                    clip: true
+                                    boundsBehavior: Flickable.StopAtBounds
 
-                                    delegate: Rectangle {
-                                        width: recentCol.width
-                                        height: 40
-                                        radius: 10
-                                        color: (recentPopup.selectedIndex === index)
-                                               ? Theme.accentDeep
-                                               : (recentItemArea.containsMouse ? Theme.surface : "transparent")
-                                        Behavior on color { ColorAnimation { duration: 100 } }
-                                        border.color: recentPopup.selectedIndex === index ? Theme.accent : "transparent"
-                                        border.width: 1
-
-                                        Text {
-                                            anchors { left: parent.left; right: parent.right
-                                                      verticalCenter: parent.verticalCenter
-                                                      leftMargin: 12; rightMargin: 12 }
-                                            text: modelData
-                                            color: recentPopup.selectedIndex === index ? Theme.textPrimary : Theme.textPrimary
-                                            font.pixelSize: 13
-                                            elide: Text.ElideLeft
+                                    ScrollBar.vertical: ScrollBar {
+                                        policy: recentFlick.contentHeight > recentFlick.height
+                                                ? ScrollBar.AlwaysOn : ScrollBar.AlwaysOff
+                                        contentItem: Rectangle {
+                                            implicitWidth: 4
+                                            radius: 2
+                                            color: Theme.textMuted
+                                            opacity: 0.5
                                         }
-                                        MouseArea {
-                                            id: recentItemArea
-                                            anchors.fill: parent
-                                            hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onEntered: recentPopup.selectedIndex = index
-                                            onClicked: {
-                                                var path = modelData
-                                                folderInput.text = path
-                                                recentPopup.close()
-                                                Qt.callLater(function() { controller.loadFolder(path) })
+                                    }
+
+                                    property real recentHeaderHeight: 30 + 6 + 1 + 36 + 6 * 3  // header + divider + clear + spacing
+
+                                    function ensureVisible(idx) {
+                                        var itemY = idx * 46  // 40 height + 6 spacing
+                                        var itemH = 40
+                                        if (itemY < contentY)
+                                            contentY = itemY
+                                        else if (itemY + itemH > contentY + height)
+                                            contentY = itemY + itemH - height
+                                    }
+
+                                    Column {
+                                        id: recentListCol
+                                        width: parent.width
+                                        spacing: 6
+
+                                        Repeater {
+                                            model: controller.folderHistory
+
+                                            delegate: Rectangle {
+                                                width: recentListCol.width - 10
+                                                height: 40
+                                                radius: 10
+                                                color: (recentPopup.selectedIndex === index)
+                                                       ? Theme.accentDeep
+                                                       : (recentItemArea.containsMouse ? Theme.surface : "transparent")
+                                                Behavior on color { ColorAnimation { duration: 100 } }
+                                                border.color: recentPopup.selectedIndex === index ? Theme.accent : "transparent"
+                                                border.width: 1
+
+                                                Text {
+                                                    anchors { left: parent.left; right: parent.right
+                                                              verticalCenter: parent.verticalCenter
+                                                              leftMargin: 12; rightMargin: 12 }
+                                                    text: modelData
+                                                    color: recentPopup.selectedIndex === index ? Theme.textPrimary : Theme.textPrimary
+                                                    font.pixelSize: 13
+                                                    elide: Text.ElideLeft
+                                                }
+                                                MouseArea {
+                                                    id: recentItemArea
+                                                    anchors.fill: parent
+                                                    hoverEnabled: true
+                                                    cursorShape: Qt.PointingHandCursor
+                                                    onEntered: recentPopup.selectedIndex = index
+                                                    onClicked: {
+                                                        var path = modelData
+                                                        folderInput.text = path
+                                                        recentPopup.close()
+                                                        Qt.callLater(function() { controller.loadFolder(path) })
+                                                    }
+                                                }
                                             }
                                         }
                                     }
                                 }
 
                                 // Divider + clear
-                                Rectangle { width: recentCol.width; height: 1; color: Theme.surface }
+                                Rectangle { width: recentOuterCol.width; height: 1; color: Theme.surface }
 
                                 Rectangle {
-                                    width: recentCol.width
+                                    width: recentOuterCol.width
                                     height: 36
                                     radius: 10
                                     color: clearArea.containsMouse ? Theme.surface : "transparent"

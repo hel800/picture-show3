@@ -39,7 +39,7 @@ from PySide6.QtCore import Property, QObject, QSettings, QTimer, Signal, Slot
 _EXIF_DATE_TAKEN = 36867
 
 # Maximum number of recent folders to remember
-_MAX_HISTORY = 10
+_MAX_HISTORY = 100
 
 # ---------------------------------------------------------------------------
 # Types
