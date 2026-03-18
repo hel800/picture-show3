@@ -210,7 +210,6 @@ class SlideshowController(QObject):
             return
 
         self._folder = str(Path(path))
-        self._update_history(self._folder)
         self._scan_images()
         self.settingsChanged.emit()
 
@@ -364,6 +363,8 @@ class SlideshowController(QObject):
     @Slot()
     def startShow(self) -> None:
         """Called when the show begins — starts the timer if autoplay is on."""
+        if self._folder and self._images:
+            self._update_history(self._folder)
         if self._autoplay and self._images:
             self._timer.setInterval(self._interval)
             self._timer.start()
