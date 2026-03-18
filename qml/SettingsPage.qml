@@ -693,7 +693,8 @@ Item {
                                 height: 58
                                 radius: 12
                                 color: controller.transitionStyle === modelData.id
-                                       ? Theme.accentDeep : Theme.surface
+                                       ? Theme.accentDeep
+                                       : (transChipArea.containsMouse ? Theme.surfaceHover : Theme.surface)
                                 border.color: controller.transitionStyle === modelData.id
                                               ? Theme.accent : "transparent"
                                 border.width: 1
@@ -718,7 +719,9 @@ Item {
                                     }
                                 }
                                 MouseArea {
+                                    id: transChipArea
                                     anchors.fill: parent
+                                    hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: controller.setTransitionStyle(modelData.id)
                                 }
@@ -766,7 +769,8 @@ Item {
                                         height: 58
                                         radius: 12
                                         color: controller.sortOrder === modelData.id
-                                               ? Theme.accentDeep : Theme.surface
+                                               ? Theme.accentDeep
+                                               : (sortChipArea.containsMouse ? Theme.surfaceHover : Theme.surface)
                                         border.color: controller.sortOrder === modelData.id
                                                       ? Theme.accent : "transparent"
                                         border.width: 1
@@ -791,7 +795,9 @@ Item {
                                             }
                                         }
                                         MouseArea {
+                                            id: sortChipArea
                                             anchors.fill: parent
+                                            hoverEnabled: true
                                             cursorShape: Qt.PointingHandCursor
                                             onClicked: controller.setSortOrder(modelData.id)
                                         }
@@ -822,9 +828,10 @@ Item {
                                 id: filterBtn
                                 Layout.fillWidth: true; height: 58
                                 radius: 12
-                                color: Theme.surface
+                                color: filterBtnArea.containsMouse ? Theme.surfaceHover : Theme.surface
                                 border.color: (filterPopup.opened || controller.minRating > 0) ? Theme.accent : "transparent"
                                 border.width: 1
+                                Behavior on color { ColorAnimation { duration: 150 } }
                                 Behavior on border.color { ColorAnimation { duration: 150 } }
 
                                 ThemedIcon {
@@ -844,7 +851,9 @@ Item {
                                 }
 
                                 MouseArea {
+                                    id: filterBtnArea
                                     anchors.fill: parent
+                                    hoverEnabled: true
                                     cursorShape: Qt.PointingHandCursor
                                     onClicked: filterPopup.opened ? filterPopup.close() : filterPopup.open()
                                 }
