@@ -1322,10 +1322,10 @@ Item {
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 6
+                Layout.topMargin: 14
                 text: "v" + appVersion
-                color: Theme.borderMuted
-                font.pixelSize: 10
+                color: Theme.surfaceHover
+                font.pixelSize: 11
                 font.letterSpacing: 0.3
             }
 
