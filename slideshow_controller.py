@@ -197,6 +197,18 @@ class SlideshowController(QObject):
             case _:
                 path = folder_path
 
+        path = path.strip()
+        if not path or not Path(path).is_dir():
+            self._folder = path
+            self._all_images = []
+            self._images = []
+            self._current_index = 0
+            self._rating_cache = {}
+            self.imagesChanged.emit()
+            self.currentIndexChanged.emit()
+            self.settingsChanged.emit()
+            return
+
         self._folder = str(Path(path))
         self._update_history(self._folder)
         self._scan_images()

@@ -384,7 +384,7 @@ Item {
                                 font.pixelSize: 13
                                 clip: true
                                 text: controller.folder
-                                onEditingFinished: controller.loadFolder(text)
+                                onTextEdited: controller.loadFolder(text)
 
                                 Connections {
                                     target: controller
