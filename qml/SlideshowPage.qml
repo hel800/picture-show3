@@ -332,17 +332,7 @@ Rectangle {
                 visible: text.length > 0
             }
 
-            // ▶/⏸ play state
-            Text {
-                text: controller.isPlaying ? "▶  Playing" : "⏸  Paused"
-                color: Theme.textSecondary
-                font.pixelSize: Math.round(13 * root.hudScale)
-                visible: controller.autoplay
-            }
-            Text {
-                text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale)
-                visible: controller.autoplay
-            }
+
 
             // ⌨ keyboard hints
             KeyHint { label: "F"; uiScale: root.hudScale; Layout.leftMargin: Math.round(10 * root.hudScale) }

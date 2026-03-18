@@ -75,9 +75,17 @@ ApplicationWindow {
     }
 
     // ── Help overlay (above all pages) ───────────────────────────────────────
+    property bool _wasPlaying: false
     HelpOverlay {
         id: helpOverlay
-        onClosed: stack.currentItem.forceActiveFocus()
+        onOpened: {
+            root._wasPlaying = controller.isPlaying
+            if (controller.isPlaying) controller.togglePlay()
+        }
+        onClosed: {
+            if (root._wasPlaying) controller.togglePlay()
+            stack.currentItem.forceActiveFocus()
+        }
     }
 
     // ── Pages ─────────────────────────────────────────────────────────────────
