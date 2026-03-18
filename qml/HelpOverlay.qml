@@ -28,6 +28,19 @@ Popup {
 
     leftPadding: 28; rightPadding: 28; topPadding: 24; bottomPadding: 24
 
+    enter: Transition {
+        ParallelAnimation {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale";   from: 0.92; to: 1; duration: 250; easing.type: Easing.OutCubic }
+        }
+    }
+    exit: Transition {
+        ParallelAnimation {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.InCubic }
+            NumberAnimation { property: "scale";   from: 1; to: 0.92; duration: 200; easing.type: Easing.InCubic }
+        }
+    }
+
     background: Rectangle {
         radius: 20
         color: Theme.bgCard
