@@ -200,6 +200,22 @@ Rectangle {
 
     // ── Keyboard control ──────────────────────────────────────────────────────
     Keys.onPressed: function(event) {
+        // Jump popup is open — handle Enter/Esc, absorb everything else
+        if (jumpOverlay.visible) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                jumpAndClose()
+            else if (event.key === Qt.Key_Escape)
+                closeJump()
+            else if (event.key === Qt.Key_Up)
+                adjustNumber(1)
+            else if (event.key === Qt.Key_Down)
+                adjustNumber(-1)
+            else if (event.key === Qt.Key_F)
+                toggleFullscreen()
+            event.accepted = true
+            return
+        }
+
         switch (event.key) {
         case Qt.Key_Right:
             navDir = 1
@@ -225,6 +241,9 @@ Rectangle {
             root.hudVisible = !root.hudVisible
             controller.setHudVisible(root.hudVisible)
             break
+        case Qt.Key_J:
+            openJump()
+            break
         case Qt.Key_Question:
             root.openHelp()
             break
@@ -232,6 +251,44 @@ Rectangle {
             break
         }
         event.accepted = true
+    }
+
+    property bool _jumpWasPlaying: false
+
+    function openJump() {
+        _jumpWasPlaying = controller.isPlaying
+        if (controller.isPlaying) controller.togglePlay()
+        jumpInput.text = (controller.currentIndex + 1).toString()
+        jumpOverlay.visible = true
+        dimOut.stop(); dimIn.start()
+        jumpInput.forceActiveFocus()
+        jumpInput.selectAll()
+        previewTimer.stop()
+    }
+
+    function loadPreview() {
+        if (jumpInput.acceptableInput)
+            previewImg.source = "image://slides/" + (parseInt(jumpInput.text) - 1) + "?t=" + Date.now()
+    }
+
+    function closeJump() {
+        dimIn.stop(); dimOut.start()   // visible = false fires in onStopped
+        if (_jumpWasPlaying) controller.togglePlay()
+        root.forceActiveFocus()
+    }
+
+    function adjustNumber(delta) {
+        var n = jumpInput.acceptableInput ? parseInt(jumpInput.text) + delta : delta > 0 ? 1 : controller.imageCount
+        jumpInput.text = Math.max(1, Math.min(controller.imageCount, n)).toString()
+    }
+
+    function jumpAndClose() {
+        if (!jumpInput.acceptableInput)
+            return
+        var newIdx = parseInt(jumpInput.text) - 1
+        root.navDir = newIdx >= controller.currentIndex ? 1 : -1
+        controller.goTo(newIdx)
+        closeJump()
     }
 
     function toggleFullscreen() {
@@ -383,6 +440,167 @@ Rectangle {
             NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 400; easing.type: Easing.InQuad }
         }
 
+    }
+
+    // ── Jump-to-image popup ───────────────────────────────────────────────────
+    Item {
+        id: jumpOverlay
+        anchors.fill: parent
+        visible: false
+        z: 30
+
+        Rectangle {
+            id: dimBg
+            anchors.fill: parent
+            color: "black"
+            opacity: 0
+            NumberAnimation { id: dimIn;  target: dimBg; property: "opacity"; to: 0.45; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { id: dimOut; target: dimBg; property: "opacity"; to: 0;    duration: 220; easing.type: Easing.InQuad
+                onStopped: jumpOverlay.visible = false }
+        }
+
+        Rectangle {
+            id: jumpBox
+            width: 400
+            height: jumpLayout.implicitHeight + 40
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: parent.height * 5 / 6 - height / 2
+            radius: 18
+            color: Qt.rgba(0, 0, 0, 0.82)
+            border.color: Qt.rgba(1, 1, 1, 0.4)
+            border.width: 1
+
+            RowLayout {
+                id: jumpLayout
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 20 }
+                spacing: 18
+
+                ThemedIcon {
+                    source: "../img/icon_jump.svg"
+                    size: 44
+                    iconColor: Theme.accentLight
+                    Layout.alignment: Qt.AlignVCenter
+                    transform: Translate { y: -2 }
+                }
+
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 14
+
+                    Text {
+                        text: "JUMP TO IMAGE"
+                        color: Theme.textMuted
+                        font.pixelSize: 10
+                        font.weight: Font.Medium
+                        font.letterSpacing: 1.4
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 44
+                            radius: 10
+                            color: Qt.rgba(1, 1, 1, 0.08)
+                            border.color: jumpInput.acceptableInput ? Qt.rgba(1, 1, 1, 0.22) : Theme.statusWarn
+                            border.width: 1
+
+                            TextInput {
+                                id: jumpInput
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                horizontalAlignment: TextInput.AlignHCenter
+                                verticalAlignment: TextInput.AlignVCenter
+                                color: acceptableInput ? "white" : Theme.statusWarn
+                                font.pixelSize: 20
+                                font.weight: Font.Medium
+                                inputMethodHints: Qt.ImhDigitsOnly
+                                validator: IntValidator { bottom: 1; top: controller.imageCount }
+                                Keys.onReturnPressed: jumpAndClose()
+                                Keys.onEnterPressed:  jumpAndClose()
+                                Keys.onEscapePressed: closeJump()
+                                Keys.onUpPressed:     adjustNumber(1)
+                                Keys.onDownPressed:   adjustNumber(-1)
+                                onTextChanged: {
+                                    previewAnim.stop()
+                                    previewContainer.opacity = 0
+                                    previewContainer.scale = 1
+                                    previewImg.source = ""
+                                    previewTimer.stop()
+                                    if (acceptableInput) previewTimer.restart()
+                                }
+                                Keys.onPressed: function(event) {
+                                    if (event.key === Qt.Key_F) {
+                                        toggleFullscreen()
+                                        event.accepted = true
+                                    } else if (event.key === Qt.Key_J) {
+                                        closeJump()
+                                        event.accepted = true
+                                    }
+                                }
+                            }
+                        }
+
+                        Text {
+                            text: "/ " + controller.imageCount
+                            color: Theme.textSecondary
+                            font.pixelSize: 18
+                        }
+                    }
+
+                    Row {
+                        spacing: 6
+                        KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "go"; color: Theme.textDisabled; font.pixelSize: 11 }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+                        KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "cancel"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    }
+                }
+
+                // ── Preview image ─────────────────────────────────────────
+                Rectangle {
+                    id: previewContainer
+                    Layout.preferredWidth: 130
+                    Layout.fillHeight: true
+                    radius: 10
+                    color: Qt.rgba(1, 1, 1, 0.06)
+                    clip: true
+                    opacity: 0
+
+                    Image {
+                        id: previewImg
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        smooth: true
+                        mipmap: true
+                        cache: false
+                        onStatusChanged: {
+                            if (status === Image.Ready) {
+                                previewContainer.scale = 0.78
+                                previewAnim.start()
+                            }
+                        }
+                    }
+
+                    ParallelAnimation {
+                        id: previewAnim
+                        NumberAnimation { target: previewContainer; property: "opacity"; from: 0;    to: 1;   duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: previewContainer; property: "scale";   from: 0.78; to: 1.0; duration: 520; easing.type: Easing.OutBack; easing.overshoot: 1.8 }
+                    }
+
+                    Timer {
+                        id: previewTimer
+                        interval: 1000
+                        repeat: false
+                        onTriggered: loadPreview()
+                    }
+                }
+            }
+        }
     }
 
     // ── Intro fade-in (black overlay that fades away to reveal first image) ──

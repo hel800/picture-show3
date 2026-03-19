@@ -238,6 +238,7 @@ Popup {
                             { keys: ["Space"],  desc: "Play / pause"     },
                             { keys: ["F"],      desc: "Toggle fullscreen"},
                             { keys: ["I"],      desc: "Toggle info HUD"  },
+                            { keys: ["J"],      desc: "Jump to image"    },
                             { keys: ["Esc"],    desc: "Exit show"        },
                             { keys: ["?"],      desc: "Help"             }
                         ]
