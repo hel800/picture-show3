@@ -227,8 +227,6 @@ Rectangle {
             break
         case Qt.Key_Space:
             controller.togglePlay()
-            playIcon.visible  = controller.isPlaying
-            pauseIcon.visible = !controller.isPlaying
             playPauseAnim.restart()
             break
         case Qt.Key_Escape:
@@ -405,41 +403,61 @@ Rectangle {
     // ── Play / Pause popup ────────────────────────────────────────────────────
     Item {
         id: playPausePopup
-        anchors.centerIn: parent
-        width: 120; height: 120
+        anchors.horizontalCenter: parent.horizontalCenter
+        y: parent.height * 5 / 6 - height / 2
+        width: ppBox.implicitWidth
+        height: ppBox.implicitHeight
         opacity: 0
         z: 20
 
         Rectangle {
-            anchors.fill: parent
-            radius: 24
-            color: Qt.rgba(0, 0, 0, 0.55)
-        }
+            id: ppBox
+            implicitWidth: ppLayout.implicitWidth + 40
+            implicitHeight: ppLayout.implicitHeight + 32
+            radius: 18
+            color: Qt.rgba(0, 0, 0, 0.82)
+            border.color: Qt.rgba(1, 1, 1, 0.25)
+            border.width: 1
 
-        Image {
-            id: playIcon
-            source: "../img/icon_play.svg"
-            width: 52; height: 52
-            anchors.centerIn: parent
-            smooth: true
-            visible: false
-        }
-        Image {
-            id: pauseIcon
-            source: "../img/icon_pause.svg"
-            width: 52; height: 52
-            anchors.centerIn: parent
-            smooth: true
-            visible: false
+            RowLayout {
+                id: ppLayout
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
+                spacing: 14
+
+                ThemedIcon {
+                    source: controller.isPlaying ? "../img/icon_play.svg" : "../img/icon_pause.svg"
+                    size: 36
+                    iconColor: Theme.accentLight
+                    Layout.alignment: Qt.AlignVCenter
+                }
+
+                ColumnLayout {
+                    spacing: 4
+
+                    Text {
+                        text: "AUTOPLAY"
+                        color: Theme.textMuted
+                        font.pixelSize: 10
+                        font.weight: Font.Medium
+                        font.letterSpacing: 1.4
+                    }
+                    Text {
+                        text: controller.isPlaying
+                              ? "Play (" + (controller.interval / 1000).toFixed(1) + " s)"
+                              : "Pause"
+                        color: Theme.textSecondary
+                        font.pixelSize: 14
+                    }
+                }
+            }
         }
 
         SequentialAnimation {
             id: playPauseAnim
             NumberAnimation { target: playPausePopup; property: "opacity"; to: 1; duration: 120; easing.type: Easing.OutQuad }
-            PauseAnimation  { duration: 700 }
+            PauseAnimation  { duration: 900 }
             NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 400; easing.type: Easing.InQuad }
         }
-
     }
 
     // ── Jump-to-image popup ───────────────────────────────────────────────────
