@@ -240,7 +240,11 @@ Rectangle {
         event.accepted = true
     }
 
+    property bool _jumpWasPlaying: false
+
     function openJump() {
+        _jumpWasPlaying = controller.isPlaying
+        if (controller.isPlaying) controller.togglePlay()
         jumpInput.text = (controller.currentIndex + 1).toString()
         jumpOverlay.visible = true
         jumpInput.forceActiveFocus()
@@ -249,6 +253,7 @@ Rectangle {
 
     function closeJump() {
         jumpOverlay.visible = false
+        if (_jumpWasPlaying) controller.togglePlay()
         root.forceActiveFocus()
     }
 
