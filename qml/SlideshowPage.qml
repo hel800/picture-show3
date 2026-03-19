@@ -200,8 +200,15 @@ Rectangle {
 
     // ── Keyboard control ──────────────────────────────────────────────────────
     Keys.onPressed: function(event) {
-        // Jump popup is open — absorb all keys so nothing fires behind it
-        if (jumpOverlay.visible) { event.accepted = true; return }
+        // Jump popup is open — handle Enter/Esc, absorb everything else
+        if (jumpOverlay.visible) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                jumpAndClose()
+            else if (event.key === Qt.Key_Escape)
+                closeJump()
+            event.accepted = true
+            return
+        }
 
         switch (event.key) {
         case Qt.Key_Right:
