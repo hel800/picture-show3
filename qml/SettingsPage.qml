@@ -344,7 +344,7 @@ Item {
                 color: Theme.bgCard
                 border.color: Theme.surface
                 border.width: 1
-                implicitHeight: cardCol.implicitHeight + 56
+                implicitHeight: cardCol.implicitHeight + 44
 
                 ColumnLayout {
                     id: cardCol
@@ -706,65 +706,70 @@ Item {
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface }
 
                     // ── Transition style ──────────────────────────────────────
-                    RowLayout {
+                    ColumnLayout {
                         Layout.fillWidth: true
-                        Text {
-                            text: "TRANSITION"
-                            color: Theme.textMuted; font.pixelSize: 11
-                            font.weight: Font.Medium; font.letterSpacing: 1.4
+                        spacing: 6
+
+                        RowLayout {
+                            Layout.fillWidth: true
+                            Text {
+                                text: "TRANSITION"
+                                color: Theme.textMuted; font.pixelSize: 11
+                                font.weight: Font.Medium; font.letterSpacing: 1.4
+                            }
+                            Item { Layout.fillWidth: true }
+                            KeyHint { label: "T" }
                         }
-                        Item { Layout.fillWidth: true }
-                        KeyHint { label: "T" }
-                    }
 
-                    RowLayout {
-                        Layout.fillWidth: true
-                        spacing: 8
+                        RowLayout {
+                            Layout.fillWidth: true
+                            spacing: 8
 
-                        Repeater {
-                            model: [
-                                { id: "fade",      label: "Fade",       icon: "../img/icon_trans_fade.svg"      },
-                                { id: "slide",     label: "Slide",      icon: "../img/icon_trans_slide.svg"     },
-                                { id: "zoom",      label: "Zoom",       icon: "../img/icon_trans_zoom.svg"      },
-                                { id: "fadeblack", label: "Fade/Black", icon: "../img/icon_trans_fadeblack.svg" }
-                            ]
+                            Repeater {
+                                model: [
+                                    { id: "fade",      label: "Fade",       icon: "../img/icon_trans_fade.svg"      },
+                                    { id: "slide",     label: "Slide",      icon: "../img/icon_trans_slide.svg"     },
+                                    { id: "zoom",      label: "Zoom",       icon: "../img/icon_trans_zoom.svg"      },
+                                    { id: "fadeblack", label: "Fade/Black", icon: "../img/icon_trans_fadeblack.svg" }
+                                ]
 
-                            delegate: Rectangle {
-                                Layout.fillWidth: true
-                                height: 58
-                                radius: 12
-                                color: controller.transitionStyle === modelData.id
-                                       ? Theme.accentDeep
-                                       : (transChipArea.containsMouse ? Theme.surfaceHover : Theme.surface)
-                                border.color: controller.transitionStyle === modelData.id
-                                              ? Theme.accent : "transparent"
-                                border.width: 1
-                                Behavior on color { ColorAnimation { duration: 150 } }
+                                delegate: Rectangle {
+                                    Layout.fillWidth: true
+                                    height: 58
+                                    radius: 12
+                                    color: controller.transitionStyle === modelData.id
+                                           ? Theme.accentDeep
+                                           : (transChipArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                    border.color: controller.transitionStyle === modelData.id
+                                                  ? Theme.accent : "transparent"
+                                    border.width: 1
+                                    Behavior on color { ColorAnimation { duration: 150 } }
 
-                                Column {
-                                    anchors.centerIn: parent
-                                    spacing: 3
-                                    ThemedIcon {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        source: modelData.icon
-                                        size: 20
-                                        iconColor: controller.transitionStyle === modelData.id
-                                                   ? Theme.accentLight : Theme.textMuted
-                                        Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                    Column {
+                                        anchors.centerIn: parent
+                                        spacing: 3
+                                        ThemedIcon {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            source: modelData.icon
+                                            size: 20
+                                            iconColor: controller.transitionStyle === modelData.id
+                                                       ? Theme.accentLight : Theme.textMuted
+                                            Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                        }
+                                        Text {
+                                            anchors.horizontalCenter: parent.horizontalCenter
+                                            text: modelData.label; font.pixelSize: 11
+                                            color: controller.transitionStyle === modelData.id
+                                                   ? Theme.textPrimary : Theme.textMuted
+                                        }
                                     }
-                                    Text {
-                                        anchors.horizontalCenter: parent.horizontalCenter
-                                        text: modelData.label; font.pixelSize: 11
-                                        color: controller.transitionStyle === modelData.id
-                                               ? Theme.textPrimary : Theme.textMuted
+                                    MouseArea {
+                                        id: transChipArea
+                                        anchors.fill: parent
+                                        hoverEnabled: true
+                                        cursorShape: Qt.PointingHandCursor
+                                        onClicked: controller.setTransitionStyle(modelData.id)
                                     }
-                                }
-                                MouseArea {
-                                    id: transChipArea
-                                    anchors.fill: parent
-                                    hoverEnabled: true
-                                    cursorShape: Qt.PointingHandCursor
-                                    onClicked: controller.setTransitionStyle(modelData.id)
                                 }
                             }
                         }
@@ -1303,7 +1308,6 @@ Item {
                         }
                     }
 
-                    Item { Layout.preferredHeight: 4 }
                 } // end cardCol
             } // end card
 
