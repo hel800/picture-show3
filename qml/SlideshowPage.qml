@@ -260,6 +260,7 @@ Rectangle {
         if (controller.isPlaying) controller.togglePlay()
         jumpInput.text = (controller.currentIndex + 1).toString()
         jumpOverlay.visible = true
+        dimOut.stop(); dimIn.start()
         jumpInput.forceActiveFocus()
         jumpInput.selectAll()
         previewTimer.stop()
@@ -271,7 +272,7 @@ Rectangle {
     }
 
     function closeJump() {
-        jumpOverlay.visible = false
+        dimIn.stop(); dimOut.start()   // visible = false fires in onStopped
         if (_jumpWasPlaying) controller.togglePlay()
         root.forceActiveFocus()
     }
@@ -449,6 +450,16 @@ Rectangle {
         z: 30
 
         Rectangle {
+            id: dimBg
+            anchors.fill: parent
+            color: "black"
+            opacity: 0
+            NumberAnimation { id: dimIn;  target: dimBg; property: "opacity"; to: 0.45; duration: 220; easing.type: Easing.OutQuad }
+            NumberAnimation { id: dimOut; target: dimBg; property: "opacity"; to: 0;    duration: 220; easing.type: Easing.InQuad
+                onStopped: jumpOverlay.visible = false }
+        }
+
+        Rectangle {
             id: jumpBox
             width: 400
             height: jumpLayout.implicitHeight + 40
@@ -456,7 +467,7 @@ Rectangle {
             y: parent.height * 5 / 6 - height / 2
             radius: 18
             color: Qt.rgba(0, 0, 0, 0.82)
-            border.color: Qt.rgba(1, 1, 1, 0.10)
+            border.color: Qt.rgba(1, 1, 1, 0.4)
             border.width: 1
 
             RowLayout {
