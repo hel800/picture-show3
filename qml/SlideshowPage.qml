@@ -36,6 +36,13 @@ Rectangle {
     property string hudCaption: controller.imageCaption(controller.currentIndex)
     property int    hudRating : controller.imageRating(controller.currentIndex)
 
+    // ── Panorama mode state ───────────────────────────────────────────────────
+    property bool panoramaActive      : false
+    property bool _panoWasPlaying     : false
+    property bool _panoCleanupPending : false
+    property int  _pendingNav         : 0       // 0=none  1=next  -1=prev
+    property var  _panoLayer          : null    // the layer currently being animated
+
     // ── Cursor: hidden only in fullscreen ──────────────────────────────────────
     MouseArea {
         anchors.fill: parent
@@ -111,6 +118,44 @@ Rectangle {
         id: fadeBlackAnim
         NumberAnimation { id: fbOutAnim; property: "opacity"; to: 0; duration: root.transDur / 2; easing.type: Easing.InQuad }
         NumberAnimation { id: fbInAnim;  property: "opacity"; to: 1; duration: root.transDur / 2; easing.type: Easing.OutQuad }
+    }
+
+    // ── Panorama animations ───────────────────────────────────────────────────
+    ParallelAnimation {
+        id: panoramaEnterAnim
+        NumberAnimation { id: panoScaleIn; property: "scale"; duration: 1400; easing.type: Easing.InOutCubic }
+        NumberAnimation { id: panoXLeft;   property: "x";    duration: 1400; easing.type: Easing.InOutCubic }
+        onStopped: if (root.panoramaActive && !root._panoCleanupPending) root._panoramaScrollRight()
+    }
+    NumberAnimation {
+        id: scrollRightAnim
+        property: "x"
+        easing.type: Easing.InOutSine
+        onStopped: if (root.panoramaActive && !root._panoCleanupPending) root._panoramaScrollLeft()
+    }
+    NumberAnimation {
+        id: scrollLeftAnim
+        property: "x"
+        easing.type: Easing.InOutSine
+        onStopped: if (root.panoramaActive && !root._panoCleanupPending) root._panoramaScrollRight()
+    }
+    ParallelAnimation {
+        id: panoramaExitAnim
+        NumberAnimation { id: panoScaleOut; property: "scale"; to: 1.0; duration: 800; easing.type: Easing.OutCubic }
+        NumberAnimation { id: panoXCenter;  property: "x";    to: 0.0; duration: 800; easing.type: Easing.OutCubic }
+        onStopped: {
+            if (!root._panoCleanupPending) return
+            root._panoCleanupPending = false
+            root.panoramaActive = false
+            root._panoLayer = null
+            var wasPlaying = root._panoWasPlaying
+            root._panoWasPlaying = false
+            var pendingNav = root._pendingNav
+            root._pendingNav = 0
+            if (wasPlaying) controller.togglePlay()
+            if (pendingNav === 1)       { root.navDir = 1;  controller.nextImage() }
+            else if (pendingNav === -1) { root.navDir = -1; controller.prevImage() }
+        }
     }
 
     // ── Transition logic ──────────────────────────────────────────────────────
@@ -195,7 +240,10 @@ Rectangle {
     // ── React to controller index changes (autoplay, remote, keyboard) ────────
     Connections {
         target: controller
-        function onCurrentIndexChanged() { showImage(true) }
+        function onCurrentIndexChanged() {
+            if (root.panoramaActive) _panoramaAbort()
+            showImage(true)
+        }
     }
 
     // ── Keyboard control ──────────────────────────────────────────────────────
@@ -212,6 +260,31 @@ Rectangle {
                 adjustNumber(-1)
             else if (event.key === Qt.Key_F)
                 toggleFullscreen()
+            event.accepted = true
+            return
+        }
+
+        // Panorama mode — limited key set; Space/J/? are absorbed
+        if (root.panoramaActive) {
+            switch (event.key) {
+            case Qt.Key_P:
+            case Qt.Key_Escape:
+                stopPanorama()
+                break
+            case Qt.Key_Right:
+                if (root._pendingNav === 0) { root._pendingNav = 1;  stopPanorama() }
+                break
+            case Qt.Key_Left:
+                if (root._pendingNav === 0) { root._pendingNav = -1; stopPanorama() }
+                break
+            case Qt.Key_F:
+                toggleFullscreen()
+                break
+            case Qt.Key_I:
+                root.hudVisible = !root.hudVisible
+                controller.setHudVisible(root.hudVisible)
+                break
+            }
             event.accepted = true
             return
         }
@@ -241,6 +314,9 @@ Rectangle {
             break
         case Qt.Key_J:
             openJump()
+            break
+        case Qt.Key_P:
+            startPanorama()
             break
         case Qt.Key_Question:
             root.openHelp()
@@ -297,6 +373,76 @@ Rectangle {
             windowHelper.saveWindowed()
             win.showFullScreen()
         }
+    }
+
+    function startPanorama() {
+        var img = showingA ? imgA : imgB
+        if (img.implicitWidth <= 0 || img.implicitHeight <= 0) return
+        var imgAspect = img.implicitWidth / img.implicitHeight
+        if (imgAspect < root.width / root.height * 1.3) return
+        var layer = showingA ? layerA : layerB
+        var s = root.height * imgAspect / root.width
+        var scrollRange = root.height * imgAspect - root.width
+        root._panoLayer = layer
+        root._panoWasPlaying = controller.isPlaying
+        if (controller.isPlaying) controller.togglePlay()
+        root.panoramaActive = true
+        root._pendingNav = 0
+        root._panoCleanupPending = false
+        panoScaleIn.target = layer; panoScaleIn.from = 1.0; panoScaleIn.to = s
+        panoXLeft.target   = layer; panoXLeft.from   = 0;   panoXLeft.to   = scrollRange / 2
+        panoramaEnterAnim.start()
+    }
+
+    function stopPanorama() {
+        root._panoCleanupPending = true
+        panoramaEnterAnim.stop()
+        scrollRightAnim.stop()
+        scrollLeftAnim.stop()
+        var layer = root._panoLayer
+        panoScaleOut.target = layer; panoScaleOut.from = layer.scale
+        panoXCenter.target  = layer; panoXCenter.from  = layer.x
+        panoramaExitAnim.start()
+    }
+
+    function _panoramaAbort() {
+        root._panoCleanupPending = false
+        panoramaEnterAnim.stop()
+        scrollRightAnim.stop()
+        scrollLeftAnim.stop()
+        panoramaExitAnim.stop()
+        if (root._panoLayer) {
+            root._panoLayer.scale = 1
+            root._panoLayer.x = 0
+            root._panoLayer = null
+        }
+        root.panoramaActive = false
+        root._panoWasPlaying = false
+        root._pendingNav = 0
+    }
+
+    function _panoramaScrollRight() {
+        var layer = root._panoLayer
+        var img = showingA ? imgA : imgB
+        var scrollRange = root.height * (img.implicitWidth / img.implicitHeight) - root.width
+        var dur = Math.max(1, Math.round(scrollRange / 250 * 1000))
+        scrollRightAnim.target   = layer
+        scrollRightAnim.from     = layer.x
+        scrollRightAnim.to       = -scrollRange / 2
+        scrollRightAnim.duration = dur
+        scrollRightAnim.start()
+    }
+
+    function _panoramaScrollLeft() {
+        var layer = root._panoLayer
+        var img = showingA ? imgA : imgB
+        var scrollRange = root.height * (img.implicitWidth / img.implicitHeight) - root.width
+        var dur = Math.max(1, Math.round(scrollRange / 250 * 1000))
+        scrollLeftAnim.target   = layer
+        scrollLeftAnim.from     = layer.x
+        scrollLeftAnim.to       = scrollRange / 2
+        scrollLeftAnim.duration = dur
+        scrollLeftAnim.start()
     }
 
     Rectangle {

@@ -239,6 +239,7 @@ Popup {
                             { keys: ["F"],      desc: "Toggle fullscreen"},
                             { keys: ["I"],      desc: "Toggle info HUD"  },
                             { keys: ["J"],      desc: "Jump to image"    },
+                            { keys: ["P"],      desc: "Panorama mode"    },
                             { keys: ["Esc"],    desc: "Exit show"        },
                             { keys: ["?"],      desc: "Help"             }
                         ]
