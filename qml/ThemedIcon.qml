@@ -20,8 +20,8 @@ Item {
         smooth: true
         mipmap: true
         visible: false
-        sourceSize.width: parent.size
-        sourceSize.height: parent.size
+        sourceSize.width: parent.size * 2
+        sourceSize.height: parent.size * 2
     }
     MultiEffect {
         source: img

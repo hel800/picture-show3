@@ -1167,7 +1167,7 @@ Item {
                         Layout.fillWidth: true
                         spacing: 14
 
-                        Text { text: "📱"; font.pixelSize: 26 }
+                        ThemedIcon { source: "../img/icon_remote.svg"; size: 32; iconColor: Theme.accentLight }
 
                         Column {
                             Layout.fillWidth: true
