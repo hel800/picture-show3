@@ -256,6 +256,13 @@ Rectangle {
         jumpOverlay.visible = true
         jumpInput.forceActiveFocus()
         jumpInput.selectAll()
+        previewTimer.stop()
+        loadPreview()
+    }
+
+    function loadPreview() {
+        if (jumpInput.acceptableInput)
+            previewImg.source = "image://slides/" + (parseInt(jumpInput.text) - 1) + "?t=" + Date.now()
     }
 
     function closeJump() {
@@ -433,7 +440,7 @@ Rectangle {
 
         Rectangle {
             id: jumpBox
-            width: 270
+            width: 400
             height: jumpLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
             y: parent.height * 2 / 3 - height / 2
@@ -492,6 +499,13 @@ Rectangle {
                                 Keys.onReturnPressed: jumpAndClose()
                                 Keys.onEnterPressed:  jumpAndClose()
                                 Keys.onEscapePressed: closeJump()
+                                onTextChanged: {
+                                    previewAnim.stop()
+                                    previewImg.opacity = 0
+                                    previewImg.source = ""
+                                    previewTimer.stop()
+                                    if (acceptableInput) previewTimer.restart()
+                                }
                             }
                         }
 
@@ -509,6 +523,45 @@ Rectangle {
                         Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
                         KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
                         Text { anchors.verticalCenter: parent.verticalCenter; text: "cancel"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    }
+                }
+
+                // ── Preview image ─────────────────────────────────────────
+                Rectangle {
+                    Layout.preferredWidth: 130
+                    Layout.fillHeight: true
+                    radius: 10
+                    color: Qt.rgba(1, 1, 1, 0.06)
+                    clip: true
+
+                    Image {
+                        id: previewImg
+                        anchors.fill: parent
+                        fillMode: Image.PreserveAspectCrop
+                        asynchronous: true
+                        smooth: true
+                        mipmap: true
+                        cache: false
+                        opacity: 0
+                        onStatusChanged: {
+                            if (status === Image.Ready) {
+                                scale = 1.08
+                                previewAnim.start()
+                            }
+                        }
+                    }
+
+                    ParallelAnimation {
+                        id: previewAnim
+                        NumberAnimation { target: previewImg; property: "opacity"; from: 0; to: 1;   duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: previewImg; property: "scale";   from: 1.08; to: 1; duration: 380; easing.type: Easing.OutCubic }
+                    }
+
+                    Timer {
+                        id: previewTimer
+                        interval: 1000
+                        repeat: false
+                        onTriggered: loadPreview()
                     }
                 }
             }
