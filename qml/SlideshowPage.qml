@@ -200,6 +200,9 @@ Rectangle {
 
     // ── Keyboard control ──────────────────────────────────────────────────────
     Keys.onPressed: function(event) {
+        // Jump popup is open — absorb all keys so nothing fires behind it
+        if (jumpOverlay.visible) { event.accepted = true; return }
+
         switch (event.key) {
         case Qt.Key_Right:
             navDir = 1
@@ -225,6 +228,9 @@ Rectangle {
             root.hudVisible = !root.hudVisible
             controller.setHudVisible(root.hudVisible)
             break
+        case Qt.Key_J:
+            openJump()
+            break
         case Qt.Key_Question:
             root.openHelp()
             break
@@ -232,6 +238,27 @@ Rectangle {
             break
         }
         event.accepted = true
+    }
+
+    function openJump() {
+        jumpInput.text = (controller.currentIndex + 1).toString()
+        jumpOverlay.visible = true
+        jumpInput.forceActiveFocus()
+        jumpInput.selectAll()
+    }
+
+    function closeJump() {
+        jumpOverlay.visible = false
+        root.forceActiveFocus()
+    }
+
+    function jumpAndClose() {
+        if (!jumpInput.acceptableInput)
+            return
+        var newIdx = parseInt(jumpInput.text) - 1
+        root.navDir = newIdx >= controller.currentIndex ? 1 : -1
+        controller.goTo(newIdx)
+        closeJump()
     }
 
     function toggleFullscreen() {
@@ -383,6 +410,88 @@ Rectangle {
             NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 400; easing.type: Easing.InQuad }
         }
 
+    }
+
+    // ── Jump-to-image popup ───────────────────────────────────────────────────
+    Item {
+        id: jumpOverlay
+        anchors.fill: parent
+        visible: false
+        z: 30
+
+        Rectangle {
+            id: jumpBox
+            width: 300
+            height: jumpCol.implicitHeight + 36
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: parent.height * 2 / 3 - height / 2
+            radius: 18
+            color: Qt.rgba(0, 0, 0, 0.82)
+            border.color: Qt.rgba(1, 1, 1, 0.10)
+            border.width: 1
+
+            Column {
+                id: jumpCol
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 20 }
+                spacing: 14
+
+                Text {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    text: "JUMP TO IMAGE"
+                    color: Theme.textMuted
+                    font.pixelSize: 10
+                    font.weight: Font.Medium
+                    font.letterSpacing: 1.4
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 10
+
+                    Rectangle {
+                        width: 88; height: 44
+                        radius: 10
+                        color: Qt.rgba(1, 1, 1, 0.08)
+                        border.color: jumpInput.acceptableInput ? Qt.rgba(1, 1, 1, 0.22) : Theme.statusWarn
+                        border.width: 1
+
+                        TextInput {
+                            id: jumpInput
+                            anchors.fill: parent
+                            anchors.margins: 8
+                            horizontalAlignment: TextInput.AlignHCenter
+                            verticalAlignment: TextInput.AlignVCenter
+                            color: acceptableInput ? "white" : Theme.statusWarn
+                            font.pixelSize: 20
+                            font.weight: Font.Medium
+                            inputMethodHints: Qt.ImhDigitsOnly
+                            validator: IntValidator { bottom: 1; top: controller.imageCount }
+                            Keys.onReturnPressed: jumpAndClose()
+                            Keys.onEnterPressed:  jumpAndClose()
+                            Keys.onEscapePressed: closeJump()
+                        }
+                    }
+
+                    Text {
+                        anchors.verticalCenter: parent.verticalCenter
+                        text: "/ " + controller.imageCount
+                        color: Theme.textSecondary
+                        font.pixelSize: 18
+                    }
+                }
+
+                Row {
+                    anchors.horizontalCenter: parent.horizontalCenter
+                    spacing: 6
+
+                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: "go"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: "cancel"; color: Theme.textDisabled; font.pixelSize: 11 }
+                }
+            }
+        }
     }
 
     // ── Intro fade-in (black overlay that fades away to reveal first image) ──
