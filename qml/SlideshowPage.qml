@@ -421,8 +421,8 @@ Rectangle {
 
         Rectangle {
             id: jumpBox
-            width: 300
-            height: jumpCol.implicitHeight + 36
+            width: 270
+            height: jumpLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
             y: parent.height * 2 / 3 - height / 2
             radius: 18
@@ -430,65 +430,74 @@ Rectangle {
             border.color: Qt.rgba(1, 1, 1, 0.10)
             border.width: 1
 
-            Column {
-                id: jumpCol
+            RowLayout {
+                id: jumpLayout
                 anchors { left: parent.left; right: parent.right; top: parent.top; margins: 20 }
-                spacing: 14
+                spacing: 18
 
-                Text {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    text: "JUMP TO IMAGE"
-                    color: Theme.textMuted
-                    font.pixelSize: 10
-                    font.weight: Font.Medium
-                    font.letterSpacing: 1.4
+                ThemedIcon {
+                    source: "../img/icon_jump.svg"
+                    size: 48
+                    iconColor: Theme.accentLight
+                    Layout.alignment: Qt.AlignVCenter
                 }
 
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 10
+                ColumnLayout {
+                    Layout.fillWidth: true
+                    spacing: 14
 
-                    Rectangle {
-                        width: 88; height: 44
-                        radius: 10
-                        color: Qt.rgba(1, 1, 1, 0.08)
-                        border.color: jumpInput.acceptableInput ? Qt.rgba(1, 1, 1, 0.22) : Theme.statusWarn
-                        border.width: 1
+                    Text {
+                        text: "JUMP TO IMAGE"
+                        color: Theme.textMuted
+                        font.pixelSize: 10
+                        font.weight: Font.Medium
+                        font.letterSpacing: 1.4
+                    }
 
-                        TextInput {
-                            id: jumpInput
-                            anchors.fill: parent
-                            anchors.margins: 8
-                            horizontalAlignment: TextInput.AlignHCenter
-                            verticalAlignment: TextInput.AlignVCenter
-                            color: acceptableInput ? "white" : Theme.statusWarn
-                            font.pixelSize: 20
-                            font.weight: Font.Medium
-                            inputMethodHints: Qt.ImhDigitsOnly
-                            validator: IntValidator { bottom: 1; top: controller.imageCount }
-                            Keys.onReturnPressed: jumpAndClose()
-                            Keys.onEnterPressed:  jumpAndClose()
-                            Keys.onEscapePressed: closeJump()
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 10
+
+                        Rectangle {
+                            Layout.fillWidth: true
+                            height: 44
+                            radius: 10
+                            color: Qt.rgba(1, 1, 1, 0.08)
+                            border.color: jumpInput.acceptableInput ? Qt.rgba(1, 1, 1, 0.22) : Theme.statusWarn
+                            border.width: 1
+
+                            TextInput {
+                                id: jumpInput
+                                anchors.fill: parent
+                                anchors.margins: 8
+                                horizontalAlignment: TextInput.AlignHCenter
+                                verticalAlignment: TextInput.AlignVCenter
+                                color: acceptableInput ? "white" : Theme.statusWarn
+                                font.pixelSize: 20
+                                font.weight: Font.Medium
+                                inputMethodHints: Qt.ImhDigitsOnly
+                                validator: IntValidator { bottom: 1; top: controller.imageCount }
+                                Keys.onReturnPressed: jumpAndClose()
+                                Keys.onEnterPressed:  jumpAndClose()
+                                Keys.onEscapePressed: closeJump()
+                            }
+                        }
+
+                        Text {
+                            text: "/ " + controller.imageCount
+                            color: Theme.textSecondary
+                            font.pixelSize: 18
                         }
                     }
 
-                    Text {
-                        anchors.verticalCenter: parent.verticalCenter
-                        text: "/ " + controller.imageCount
-                        color: Theme.textSecondary
-                        font.pixelSize: 18
+                    Row {
+                        spacing: 6
+                        KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "go"; color: Theme.textDisabled; font.pixelSize: 11 }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+                        KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: "cancel"; color: Theme.textDisabled; font.pixelSize: 11 }
                     }
-                }
-
-                Row {
-                    anchors.horizontalCenter: parent.horizontalCenter
-                    spacing: 6
-
-                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
-                    Text { anchors.verticalCenter: parent.verticalCenter; text: "go"; color: Theme.textDisabled; font.pixelSize: 11 }
-                    Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
-                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
-                    Text { anchors.verticalCenter: parent.verticalCenter; text: "cancel"; color: Theme.textDisabled; font.pixelSize: 11 }
                 }
             }
         }

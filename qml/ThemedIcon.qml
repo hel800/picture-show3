@@ -33,6 +33,8 @@ Item {
         smooth: true
         mipmap: true
         visible: false
+        sourceSize.width: parent.size
+        sourceSize.height: parent.size
     }
     MultiEffect {
         source: img
