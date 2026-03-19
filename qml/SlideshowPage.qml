@@ -206,6 +206,12 @@ Rectangle {
                 jumpAndClose()
             else if (event.key === Qt.Key_Escape)
                 closeJump()
+            else if (event.key === Qt.Key_Up)
+                adjustNumber(1)
+            else if (event.key === Qt.Key_Down)
+                adjustNumber(-1)
+            else if (event.key === Qt.Key_F)
+                toggleFullscreen()
             event.accepted = true
             return
         }
@@ -268,6 +274,11 @@ Rectangle {
         jumpOverlay.visible = false
         if (_jumpWasPlaying) controller.togglePlay()
         root.forceActiveFocus()
+    }
+
+    function adjustNumber(delta) {
+        var n = jumpInput.acceptableInput ? parseInt(jumpInput.text) + delta : delta > 0 ? 1 : controller.imageCount
+        jumpInput.text = Math.max(1, Math.min(controller.imageCount, n)).toString()
     }
 
     function jumpAndClose() {
@@ -499,6 +510,8 @@ Rectangle {
                                 Keys.onReturnPressed: jumpAndClose()
                                 Keys.onEnterPressed:  jumpAndClose()
                                 Keys.onEscapePressed: closeJump()
+                                Keys.onUpPressed:     adjustNumber(1)
+                                Keys.onDownPressed:   adjustNumber(-1)
                                 onTextChanged: {
                                     previewAnim.stop()
                                     previewImg.opacity = 0
