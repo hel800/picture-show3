@@ -388,6 +388,8 @@ class SlideshowController(QObject):
             case _:
                 self.stopShow()
                 return
+        if self._is_playing:
+            self._timer.start()   # restart countdown after any navigation
         self.currentIndexChanged.emit()
 
     @Slot()
@@ -401,12 +403,16 @@ class SlideshowController(QObject):
                 self._current_index = len(self._images) - 1
             case _:
                 return
+        if self._is_playing:
+            self._timer.start()   # restart countdown after any navigation
         self.currentIndexChanged.emit()
 
     @Slot(int)
     def goTo(self, index: int) -> None:
         if 0 <= index < len(self._images):
             self._current_index = index
+            if self._is_playing:
+                self._timer.start()   # restart countdown after any navigation
             self.currentIndexChanged.emit()
 
     # ── Image path access (used by ImageProvider and QML) ────────────────────
