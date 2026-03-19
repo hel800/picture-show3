@@ -1,19 +1,20 @@
 # picture-show3.spec
 #
 # Build with (from the project root):
-#   python install/make_icon.py           # only needed once, or when icon.svg changes
-#   python install/compile_resources.py   # rerun whenever any QML or img/ file changes
-#   pyinstaller install/picture-show3.spec
+#   python install/windows/make_icon.py           # only needed once, or when icon.svg changes
+#   python install/windows/compile_resources.py   # rerun whenever any QML or img/ file changes
+#   pyinstaller install/windows/picture-show3.spec \
+#       --distpath install/windows/dist --workpath install/windows/build
 #
-# Output: dist\picture-show3\picture-show3.exe  (onedir bundle)
+# Output: install\windows\dist\picture-show3\picture-show3.exe  (onedir bundle)
 
 import os
 from PyInstaller.utils.hooks import collect_data_files
 
 block_cipher = None
 
-# Project root is one level above this spec file
-ROOT = os.path.normpath(os.path.join(SPECPATH, ".."))
+# Project root is two levels above this spec file (install/windows/ → project root)
+ROOT = os.path.normpath(os.path.join(SPECPATH, "..", ".."))
 
 # ── Collect only the QML modules actually used by this app ────────────────────
 # Collecting the entire Qt/qml tree (~300-400 MB) is wasteful.

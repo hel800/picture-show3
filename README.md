@@ -143,20 +143,29 @@ QML and image files are compiled into the binary so the source is not exposed in
 
 ```bash
 # 1. Install build dependencies (one-time)
-pip install -r install/requirements-build.txt
+pip install -r install/windows/requirements-build.txt
 
 # 2. Generate the app icon (one-time, or when icon.svg changes)
-python install/make_icon.py
+python install/windows/make_icon.py
 
 # 3. Compile QML + images into a Qt resource bundle
 #    Re-run whenever any .qml or img/*.svg file changes
-python install/compile_resources.py
+python install/windows/compile_resources.py
 
 # 4. Build the executable
-pyinstaller install/picture-show3.spec
+pyinstaller install/windows/picture-show3.spec ^
+    --distpath install/windows/dist --workpath install/windows/build
 ```
 
-Output: `dist\picture-show3\picture-show3.exe` (onedir bundle, runs without Python installed).
+Output: `install\windows\dist\picture-show3\picture-show3.exe` (onedir bundle, runs without Python installed).
+
+To build the installer (requires [Inno Setup 6](https://jrsoftware.org/isdl.php)):
+
+```bash
+iscc install\windows\picture-show3.iss
+```
+
+Installer output: `install\windows\dist\installer\picture-show3-setup-0.5-beta.exe`
 
 ### Dev vs. frozen mode
 

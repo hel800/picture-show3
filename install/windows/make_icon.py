@@ -4,7 +4,7 @@
 make_icon.py — convert img/icon.svg to img/icon.ico
 
 Run once before building with PyInstaller:
-    python install/make_icon.py
+    python install/windows/make_icon.py
 
 Requires PySide6 (already a project dependency) and Pillow.
 """
@@ -18,7 +18,7 @@ from PySide6.QtGui import QImage, QPainter
 from PySide6.QtSvg import QSvgRenderer
 from PySide6.QtWidgets import QApplication
 
-ROOT  = Path(__file__).parent.parent
+ROOT  = Path(__file__).parent.parent.parent
 SIZES = [256, 128, 64, 48, 32, 16]
 SRC   = ROOT / "img" / "icon.svg"
 DST   = ROOT / "img" / "icon.ico"
