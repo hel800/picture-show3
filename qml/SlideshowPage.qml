@@ -36,6 +36,9 @@ Rectangle {
     property string hudCaption: controller.imageCaption(controller.currentIndex)
     property int    hudRating : controller.imageRating(controller.currentIndex)
 
+    onWidthChanged:  if (panoramaActive) _panoramaAbort()
+    onHeightChanged: if (panoramaActive) _panoramaAbort()
+
     // ── Panorama mode state ───────────────────────────────────────────────────
     property bool panoramaActive      : false
     property bool _panoWasPlaying     : false
@@ -147,6 +150,7 @@ Rectangle {
             if (!root._panoCleanupPending) return
             root._panoCleanupPending = false
             root.panoramaActive = false
+            if (root._panoLayer) root._panoLayer.layer.enabled = false
             root._panoLayer = null
             var wasPlaying = root._panoWasPlaying
             root._panoWasPlaying = false
@@ -264,7 +268,7 @@ Rectangle {
             return
         }
 
-        // Panorama mode — limited key set; Space/J/? are absorbed
+        // Panorama mode — limited key set; F/Space/J/? are absorbed
         if (root.panoramaActive) {
             switch (event.key) {
             case Qt.Key_P:
@@ -276,9 +280,6 @@ Rectangle {
                 break
             case Qt.Key_Left:
                 if (root._pendingNav === 0) { root._pendingNav = -1; stopPanorama() }
-                break
-            case Qt.Key_F:
-                toggleFullscreen()
                 break
             case Qt.Key_I:
                 root.hudVisible = !root.hudVisible
@@ -389,6 +390,12 @@ Rectangle {
         root.panoramaActive = true
         root._pendingNav = 0
         root._panoCleanupPending = false
+        // Render the layer into a larger FBO so the image is sampled at panorama
+        // resolution rather than upscaled from a window-sized composite.
+        layer.layer.enabled = true
+        layer.layer.smooth  = true
+        layer.layer.textureSize = Qt.size(Math.min(Math.round(root.width * s), 4096),
+                                          Math.min(Math.round(root.height * s), 4096))
         panoScaleIn.target = layer; panoScaleIn.from = 1.0; panoScaleIn.to = s
         panoXLeft.target   = layer; panoXLeft.from   = 0;   panoXLeft.to   = scrollRange / 2
         panoramaEnterAnim.start()
@@ -407,16 +414,17 @@ Rectangle {
 
     function _panoramaAbort() {
         root._panoCleanupPending = false
+        root.panoramaActive = false      // must be first — guards onStopped from restarting scroll
         panoramaEnterAnim.stop()
         scrollRightAnim.stop()
         scrollLeftAnim.stop()
         panoramaExitAnim.stop()
         if (root._panoLayer) {
+            root._panoLayer.layer.enabled = false
             root._panoLayer.scale = 1
             root._panoLayer.x = 0
             root._panoLayer = null
         }
-        root.panoramaActive = false
         root._panoWasPlaying = false
         root._pendingNav = 0
     }
