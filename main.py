@@ -18,6 +18,7 @@ picture-show3 — main entry point
 Requires: Python >= 3.14  |  PySide6 >= 6.7
 """
 import sys
+import ctypes
 from pathlib import Path
 
 from PySide6.QtCore import QObject, QSettings, QTimer, QUrl, Slot
@@ -33,6 +34,11 @@ from slideshow_controller import SlideshowController
 APP_VERSION = "0.2 beta"
 
 _FROZEN = getattr(sys, "frozen", False)
+
+# Tell Windows this is its own app, not a Python script — gives it a distinct
+# taskbar button with the correct icon instead of grouping under python.exe.
+if sys.platform == "win32":
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("picture-show3")
 
 
 def _base_dir() -> Path:
@@ -152,7 +158,9 @@ def main() -> None:
     if _FROZEN:
         app.setWindowIcon(QIcon(":/img/icon.svg"))
     else:
-        app.setWindowIcon(QIcon(str(_base_dir() / "img" / "icon.svg")))
+        ico = _base_dir() / "img" / "icon.ico"
+        svg = _base_dir() / "img" / "icon.svg"
+        app.setWindowIcon(QIcon(str(ico if ico.exists() else svg)))
 
     engine = QQmlApplicationEngine()
 
