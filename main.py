@@ -31,7 +31,7 @@ from qr_provider import QrImageProvider
 from remote_server import RemoteServer
 from slideshow_controller import SlideshowController
 
-APP_VERSION = "0.2 beta"
+APP_VERSION = "0.5 beta"
 
 _FROZEN = getattr(sys, "frozen", False)
 
