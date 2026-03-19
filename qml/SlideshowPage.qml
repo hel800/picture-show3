@@ -257,7 +257,6 @@ Rectangle {
         jumpInput.forceActiveFocus()
         jumpInput.selectAll()
         previewTimer.stop()
-        loadPreview()
     }
 
     function loadPreview() {
@@ -443,7 +442,7 @@ Rectangle {
             width: 400
             height: jumpLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * 2 / 3 - height / 2
+            y: parent.height * 5 / 6 - height / 2
             radius: 18
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.10)
@@ -456,9 +455,10 @@ Rectangle {
 
                 ThemedIcon {
                     source: "../img/icon_jump.svg"
-                    size: 48
+                    size: 44
                     iconColor: Theme.accentLight
                     Layout.alignment: Qt.AlignVCenter
+                    transform: Translate { y: -2 }
                 }
 
                 ColumnLayout {
