@@ -514,10 +514,20 @@ Rectangle {
                                 Keys.onDownPressed:   adjustNumber(-1)
                                 onTextChanged: {
                                     previewAnim.stop()
-                                    previewImg.opacity = 0
+                                    previewContainer.opacity = 0
+                                    previewContainer.scale = 1
                                     previewImg.source = ""
                                     previewTimer.stop()
                                     if (acceptableInput) previewTimer.restart()
+                                }
+                                Keys.onPressed: function(event) {
+                                    if (event.key === Qt.Key_F) {
+                                        toggleFullscreen()
+                                        event.accepted = true
+                                    } else if (event.key === Qt.Key_J) {
+                                        closeJump()
+                                        event.accepted = true
+                                    }
                                 }
                             }
                         }
@@ -541,11 +551,13 @@ Rectangle {
 
                 // ── Preview image ─────────────────────────────────────────
                 Rectangle {
+                    id: previewContainer
                     Layout.preferredWidth: 130
                     Layout.fillHeight: true
                     radius: 10
                     color: Qt.rgba(1, 1, 1, 0.06)
                     clip: true
+                    opacity: 0
 
                     Image {
                         id: previewImg
@@ -555,10 +567,9 @@ Rectangle {
                         smooth: true
                         mipmap: true
                         cache: false
-                        opacity: 0
                         onStatusChanged: {
                             if (status === Image.Ready) {
-                                scale = 1.08
+                                previewContainer.scale = 0.78
                                 previewAnim.start()
                             }
                         }
@@ -566,8 +577,8 @@ Rectangle {
 
                     ParallelAnimation {
                         id: previewAnim
-                        NumberAnimation { target: previewImg; property: "opacity"; from: 0; to: 1;   duration: 380; easing.type: Easing.OutCubic }
-                        NumberAnimation { target: previewImg; property: "scale";   from: 1.08; to: 1; duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: previewContainer; property: "opacity"; from: 0;    to: 1;   duration: 380; easing.type: Easing.OutCubic }
+                        NumberAnimation { target: previewContainer; property: "scale";   from: 0.78; to: 1.0; duration: 520; easing.type: Easing.OutBack; easing.overshoot: 1.8 }
                     }
 
                     Timer {
