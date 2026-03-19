@@ -1,18 +1,5 @@
-// This file is part of picture-show3.
-// Copyright (C) 2026  Sebastian Schäfer
-//
-// picture-show3 is free software: you can redistribute it and/or modify
-// it under the terms of the GNU General Public License as published by
-// the Free Software Foundation, either version 3 of the License, or
-// (at your option) any later version.
-//
-// picture-show3 is distributed in the hope that it will be useful,
-// but WITHOUT ANY WARRANTY; without even the implied warranty of
-// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-// GNU General Public License for more details.
-//
-// You should have received a copy of the GNU General Public License
-// along with picture-show3.  If not, see <https://www.gnu.org/licenses/>.
+// Copyright (c) 2026 Sebastian Schäfer
+// Licensed under MIT License with Commons Clause — see LICENSE for details.
 import QtQuick
 import QtQuick.Controls
 import QtQuick.Layouts
@@ -139,7 +126,7 @@ Popup {
             // ── License ───────────────────────────────────────────────────────
             Text {
                 Layout.fillWidth: true
-                text: "© 2026 Sebastian Schäfer  ·  Released under the GNU General Public License v3"
+                text: "© 2026 Sebastian Schäfer  ·  MIT License with Commons Clause"
                 color: Theme.textMuted
                 font.pixelSize: 11
                 wrapMode: Text.Wrap
