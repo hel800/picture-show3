@@ -214,12 +214,21 @@ def _restore_window(win) -> None:
         win.setX(int(s.value("window/x")))
         win.setY(int(s.value("window/y")))
     if s.value("window/fullscreen", False, type=bool):
-        # Defer so the window is fully shown before going fullscreen.
+        # On Linux/X11/Wayland the WM is a separate process: a showFullScreen()
+        # request sent before the window is mapped is silently ignored by most
+        # EWMH-compliant WMs.  The safe pattern is to show() first and wait for
+        # the visibilityChanged(Windowed) signal — which confirms the native
+        # surface is mapped — then request fullscreen.
         # Do NOT call saveWindowed() here — the windowed geometry in settings
         # is already correct and must not be overwritten with fullscreen dims.
-        QTimer.singleShot(0, win.showFullScreen)
+        def _on_windowed(vis) -> None:
+            if vis == QWindow.Visibility.Windowed:
+                win.visibilityChanged.disconnect(_on_windowed)
+                win.showFullScreen()
+        win.visibilityChanged.connect(_on_windowed)
+        QTimer.singleShot(0, win.show)
     else:
-        # Defer show() to the first event loop iteration (same pattern as showFullScreen above).
+        # Defer show() to the first event loop iteration (same pattern as above).
         # Calling win.show() before app.exec() starts leaves the native window surface
         # visible for several frames before Qt Quick's render loop fires — causing a white flash.
         QTimer.singleShot(0, win.show)
