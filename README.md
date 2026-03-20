@@ -1,7 +1,7 @@
 # picture-show3
 
 A full-screen photo slideshow viewer built with **Python + PySide6 + QML**.
-Hardware-accelerated transitions · Smartphone remote · Panorama mode · No mouse interference.
+Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-Rating Filter
 
 ---
 
