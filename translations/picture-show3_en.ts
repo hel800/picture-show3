@@ -4,47 +4,62 @@
 <context>
     <name>AdvancedSettingsDialog</name>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="37"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="41"/>
         <source>ADVANCED SETTINGS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="69"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="73"/>
         <source>TRANSITION</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="82"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="86"/>
         <source>Duration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="134"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="138"/>
         <source>HUD</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="147"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="151"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="199"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="203"/>
         <source>SMARTPHONE REMOTE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="211"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="215"/>
         <source>Enable remote control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="238"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="242"/>
         <source>Port</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="277"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
+        <source>LANGUAGE</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="303"/>
+        <source>Auto</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="322"/>
+        <source>⚠  Restart the app to apply the language change.</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="342"/>
         <source>Done</source>
         <translation type="unfinished"></translation>
     </message>
@@ -428,7 +443,7 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="220"/>
+        <location filename="../slideshow_controller.py" line="256"/>
         <source>Folder not found: {}</source>
         <translation type="unfinished"></translation>
     </message>

@@ -20,13 +20,21 @@ from PIL import Image, IptcImagePlugin, UnidentifiedImageError
 
 # Allow very large images (e.g. high-res panoramas) without a decompression bomb warning
 Image.MAX_IMAGE_PIXELS = 500_000_000
-from PySide6.QtCore import Property, QObject, QSettings, QTimer, Signal, Slot
+from PySide6.QtCore import Property, QLocale, QObject, QSettings, QTimer, Signal, Slot
 
 # EXIF tag id for DateTimeOriginal (when the shutter was pressed)
 _EXIF_DATE_TAKEN = 36867
 
 # Maximum number of recent folders to remember
 _MAX_HISTORY = 100
+
+_FROZEN = getattr(sys, "frozen", False)
+
+
+def _translations_dir() -> Path:
+    if _FROZEN:
+        return Path(sys._MEIPASS) / "translations"   # type: ignore[attr-defined]
+    return Path(__file__).parent / "translations"
 
 # ---------------------------------------------------------------------------
 # Types
@@ -70,6 +78,7 @@ class SlideshowController(QObject):
         self._all_images      : list[str]        = []
         self._min_rating      : int              = 0
         self._rating_cache    : dict[str, int]   = {}
+        self._language        : str              = "auto"
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
@@ -90,6 +99,7 @@ class SlideshowController(QObject):
         self._remote_enabled   = s.value("remoteEnabled", False, type=bool)
         self._remote_port      = s.value("remotePort",    8765,  type=int)
         self._min_rating       = s.value("minRating",     0,     type=int)
+        self._language         = s.value("language",      "auto")
 
         # QSettings returns a str for single-item lists, list for multiple
         raw = s.value("folderHistory", [])
@@ -118,6 +128,7 @@ class SlideshowController(QObject):
         s.setValue("remoteEnabled",  self._remote_enabled)
         s.setValue("remotePort",     self._remote_port)
         s.setValue("minRating",      self._min_rating)
+        s.setValue("language",       self._language)
         s.setValue("folderHistory",  self._folder_history)
 
     # ── Properties ───────────────────────────────────────────────────────────
@@ -171,6 +182,31 @@ class SlideshowController(QObject):
 
     @Property(list, notify=folderHistoryChanged)
     def folderHistory(self) -> list[str]: return list(self._folder_history)
+
+    @Property(str, notify=settingsChanged)
+    def language(self) -> str: return self._language
+
+    @Property(list, notify=settingsChanged)
+    def availableLanguages(self) -> list[dict]:
+        """
+        Return [{code, name}] for the language selector.
+        Always includes 'auto' and 'en'; appends any additional languages
+        found as compiled .qm files in the translations directory.
+        """
+        options: list[dict] = [{"code": "auto", "name": "Auto"}]
+        seen: set[str] = {"auto", "en"}
+        td = _translations_dir()
+        if td.is_dir():
+            for qm in sorted(td.glob("picture-show3_*.qm")):
+                code = qm.stem.removeprefix("picture-show3_")
+                if code in seen:
+                    continue
+                locale = QLocale(code)
+                name = locale.nativeLanguageName().capitalize() if locale != QLocale.c() else code
+                options.append({"code": code, "name": name})
+                seen.add(code)
+        options.append({"code": "en", "name": "English"})
+        return options
 
     # ── Folder / image loading ────────────────────────────────────────────────
     @Slot(str)
@@ -343,6 +379,12 @@ class SlideshowController(QObject):
     def setInterval(self, ms: int) -> None:
         self._interval = ms
         self._timer.setInterval(ms)
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(str)
+    def setLanguage(self, code: str) -> None:
+        self._language = code
         self._save_settings()
         self.settingsChanged.emit()
 

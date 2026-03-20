@@ -13,6 +13,10 @@ Popup {
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
+    // Capture the language at app start so we can show the restart notice
+    // when the user picks a different language during this session.
+    property string _startupLang: controller.language
+
     onOpened: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = true  }
     onClosed:  { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = false }
 
@@ -260,6 +264,67 @@ Popup {
                     }
                 }
             }
+        }
+
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
+
+        // ── Language ──────────────────────────────────────────────────────────
+        Text {
+            text: qsTr("LANGUAGE")
+            color: Theme.textMuted
+            font.pixelSize: 11
+            font.weight: Font.Medium
+            font.letterSpacing: 1.4
+            Layout.bottomMargin: 14
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 10
+            spacing: 8
+
+            Repeater {
+                model: controller.availableLanguages
+
+                delegate: Rectangle {
+                    height: 32
+                    width: langLabel.implicitWidth + 24
+                    radius: 10
+                    color: controller.language === modelData.code
+                           ? Theme.accentDeep
+                           : (langArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                    border.color: controller.language === modelData.code ? Theme.accent : "transparent"
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Text {
+                        id: langLabel
+                        anchors.centerIn: parent
+                        text: modelData.code === "auto" ? qsTr("Auto") : modelData.name
+                        font.pixelSize: 12
+                        color: controller.language === modelData.code
+                               ? Theme.textPrimary : Theme.textMuted
+                    }
+                    MouseArea {
+                        id: langArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: controller.setLanguage(modelData.code)
+                    }
+                }
+            }
+        }
+
+        // Restart notice — shown when language changed since app start
+        Text {
+            visible: controller.language !== root._startupLang
+            text: qsTr("⚠  Restart the app to apply the language change.")
+            color: Theme.statusWarn
+            font.pixelSize: 11
+            wrapMode: Text.Wrap
+            Layout.fillWidth: true
+            Layout.bottomMargin: 6
         }
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
