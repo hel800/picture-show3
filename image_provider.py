@@ -17,11 +17,32 @@ from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QImage, QImageReader
 from PySide6.QtQuick import QQuickImageProvider
 
+# Register HEIC/HEIF support into Pillow if pillow-heif is installed
+try:
+    from pillow_heif import register_heif_opener
+    register_heif_opener()
+except ImportError:
+    pass
+
 from slideshow_controller import SlideshowController
 
 # How many images to keep ready on each side of the current index
 _AHEAD  = 2
 _BEHIND = 1
+
+
+def _pillow_to_qimage(path: str) -> QImage:
+    """Fallback loader using Pillow — handles HEIC, AVIF, and other Qt-unsupported formats."""
+    try:
+        from PIL import Image, ImageOps
+        img = Image.open(path)
+        img = ImageOps.exif_transpose(img)
+        img = img.convert("RGBA")
+        data = img.tobytes()
+        qimage = QImage(data, img.width, img.height, QImage.Format.Format_RGBA8888)
+        return qimage.copy()  # copy so QImage owns the buffer
+    except Exception:
+        return QImage()
 
 
 class SlideshowImageProvider(QQuickImageProvider):
@@ -68,6 +89,8 @@ class SlideshowImageProvider(QQuickImageProvider):
             reader = QImageReader(path)
             reader.setAutoTransform(True)
             image = reader.read()
+            if image.isNull():
+                image = _pillow_to_qimage(path)
         with self._lock:
             self._loading.discard(index)
             if not image.isNull():
@@ -109,4 +132,6 @@ class SlideshowImageProvider(QQuickImageProvider):
                 reader.setScaledSize(scaled)
 
         image = reader.read()
+        if image.isNull():
+            image = _pillow_to_qimage(path)
         return image if not image.isNull() else QImage()
