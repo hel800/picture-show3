@@ -185,14 +185,14 @@ Item {
                         spacing: 4
 
                         Text {
-                            text: "Exit Application"
+                            text: qsTr("Exit Application")
                             color: Theme.textPrimary
                             font.pixelSize: 16
                             font.weight: Font.Bold
                         }
 
                         Text {
-                            text: "Do you want to exit the application?"
+                            text: qsTr("Do you want to exit the application?")
                             color: Theme.textSecondary
                             font.pixelSize: 13
                             wrapMode: Text.Wrap
@@ -217,7 +217,7 @@ Item {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "No"
+                            text: qsTr("No")
                             color: Theme.textPrimary
                             font.pixelSize: 14
                         }
@@ -240,7 +240,7 @@ Item {
 
                         Text {
                             anchors.centerIn: parent
-                            text: "Yes"
+                            text: qsTr("Yes")
                             color: "white"
                             font.pixelSize: 14
                         }
@@ -258,7 +258,7 @@ Item {
     // ── Folder dialog ──────────────────────────────────────────────────────────
     FolderDialog {
         id: folderDialog
-        title: "Select image folder"
+        title: qsTr("Select image folder")
         onAccepted: controller.loadFolder(selectedFolder.toString())
     }
 
@@ -343,7 +343,7 @@ Item {
 
                     // ── Folder picker ─────────────────────────────────────────
                     Text {
-                        text: "IMAGE FOLDER"
+                        text: qsTr("IMAGE FOLDER")
                         color: Theme.textMuted
                         font.pixelSize: 11
                         font.weight: Font.Medium
@@ -384,7 +384,7 @@ Item {
                                 Text {
                                     anchors { fill: parent }
                                     verticalAlignment: Text.AlignVCenter
-                                    text: "Type a path or click Browse…"
+                                    text: qsTr("Type a path or click Browse…")
                                     color: Theme.surfaceHover
                                     font.pixelSize: 13
                                     visible: parent.text.length === 0
@@ -394,7 +394,7 @@ Item {
 
                         // Browse button
                         Rectangle {
-                            width: 110; height: 44
+                            width: 124; height: 44
                             radius: 10
                             color: browseArea.containsMouse ? Theme.surfaceHover : Theme.surface
                             Behavior on color { ColorAnimation { duration: 120 } }
@@ -404,7 +404,7 @@ Item {
                                 spacing: 8
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: "Browse..."
+                                    text: qsTr("Browse...")
                                     color: Theme.accentLight
                                     font.pixelSize: 13
                                     font.weight: Font.Medium
@@ -520,7 +520,7 @@ Item {
                                 spacing: 6
 
                                 Text {
-                                    text: "Recent Folders"
+                                    text: qsTr("Recent Folders")
                                     color: Theme.textMuted
                                     font.pixelSize: 11
                                     font.letterSpacing: 1.4
@@ -617,7 +617,7 @@ Item {
 
                                     Text {
                                         anchors.centerIn: parent
-                                        text: "Clear history"
+                                        text: qsTr("Clear history")
                                         color: Theme.textMuted
                                         font.pixelSize: 12
                                     }
@@ -641,14 +641,14 @@ Item {
                         spacing: 0
                         Text {
                             text: controller.imageCount > 0
-                                  ? "✓  " + controller.imageCount + " images found"
-                                  : "⚠  No supported images found in this folder"
+                                  ? qsTr("✓  %1 images found").arg(controller.imageCount)
+                                  : qsTr("⚠  No supported images found in this folder")
                             color: controller.imageCount > 0 ? Theme.statusOk : Theme.statusWarn
                             font.pixelSize: 12
                         }
                         Text {
                             visible: controller.imageCount < controller.totalImageCount
-                            text: "  ·  filter active"
+                            text: qsTr("  ·  filter active")
                             color: Theme.textMuted
                             font.pixelSize: 12
                         }
@@ -667,8 +667,8 @@ Item {
                         Text {
                             anchors.centerIn: parent
                             text: controller.imageCount > 0
-                                  ? (root.hasStarted ? "▶  Resume Picture Show" : "▶  Start Picture Show")
-                                  : "Select a folder to continue"
+                                  ? (root.hasStarted ? qsTr("▶  Resume Picture Show") : qsTr("▶  Start Picture Show"))
+                                  : qsTr("Select a folder to continue")
                             color: controller.imageCount > 0 ? "white" : Theme.textDisabled
                             font.pixelSize: 16
                             font.weight: Font.Bold
@@ -700,7 +700,7 @@ Item {
                         RowLayout {
                             Layout.fillWidth: true
                             Text {
-                                text: "TRANSITION"
+                                text: qsTr("TRANSITION")
                                 color: Theme.textMuted; font.pixelSize: 11
                                 font.weight: Font.Medium; font.letterSpacing: 1.4
                             }
@@ -714,10 +714,10 @@ Item {
 
                             Repeater {
                                 model: [
-                                    { id: "fade",      label: "Fade",       icon: "../img/icon_trans_fade.svg"      },
-                                    { id: "slide",     label: "Slide",      icon: "../img/icon_trans_slide.svg"     },
-                                    { id: "zoom",      label: "Zoom",       icon: "../img/icon_trans_zoom.svg"      },
-                                    { id: "fadeblack", label: "Fade/Black", icon: "../img/icon_trans_fadeblack.svg" }
+                                    { id: "fade",      label: qsTr("Fade"),       icon: "../img/icon_trans_fade.svg"      },
+                                    { id: "slide",     label: qsTr("Slide"),      icon: "../img/icon_trans_slide.svg"     },
+                                    { id: "zoom",      label: qsTr("Zoom"),       icon: "../img/icon_trans_zoom.svg"      },
+                                    { id: "fadeblack", label: qsTr("Fade/Black"), icon: "../img/icon_trans_fadeblack.svg" }
                                 ]
 
                                 delegate: Rectangle {
@@ -778,7 +778,7 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Text {
-                                    text: "SORT ORDER"
+                                    text: qsTr("SORT ORDER")
                                     color: Theme.textMuted; font.pixelSize: 11
                                     font.weight: Font.Medium; font.letterSpacing: 1.4
                                 }
@@ -792,9 +792,9 @@ Item {
 
                                 Repeater {
                                     model: [
-                                        { id: "name",   label: "By Name", icon: "../img/icon_sort_name.svg"   },
-                                        { id: "date",   label: "By Date", icon: "../img/icon_sort_date.svg"   },
-                                        { id: "random", label: "Random",  icon: "../img/icon_sort_random.svg" }
+                                        { id: "name",   label: qsTr("By Name"), icon: "../img/icon_sort_name.svg"   },
+                                        { id: "date",   label: qsTr("By Date"), icon: "../img/icon_sort_date.svg"   },
+                                        { id: "random", label: qsTr("Random"),  icon: "../img/icon_sort_random.svg" }
                                     ]
 
                                     delegate: Rectangle {
@@ -848,7 +848,7 @@ Item {
                             RowLayout {
                                 Layout.fillWidth: true
                                 Text {
-                                    text: "FILTER"
+                                    text: qsTr("FILTER")
                                     color: Theme.textMuted; font.pixelSize: 11
                                     font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Layout.fillWidth: true
@@ -943,7 +943,7 @@ Item {
 
                                         // Star rating label
                                         Text {
-                                            text: "STAR RATING"
+                                            text: qsTr("STAR RATING")
                                             color: Theme.textMuted; font.pixelSize: 10
                                             font.weight: Font.Medium; font.letterSpacing: 1.4
                                         }
@@ -955,12 +955,12 @@ Item {
 
                                             Repeater {
                                                 model: [
-                                                    { rating: 0, label: "All"              },
-                                                    { rating: 1, label: "1 star and above" },
-                                                    { rating: 2, label: "2 stars and above"},
-                                                    { rating: 3, label: "3 stars and above"},
-                                                    { rating: 4, label: "4 stars and above"},
-                                                    { rating: 5, label: "5 stars"          }
+                                                    { rating: 0, label: qsTr("All")               },
+                                                    { rating: 1, label: qsTr("1 star and above")  },
+                                                    { rating: 2, label: qsTr("2 stars and above") },
+                                                    { rating: 3, label: qsTr("3 stars and above") },
+                                                    { rating: 4, label: qsTr("4 stars and above") },
+                                                    { rating: 5, label: qsTr("5 stars")           }
                                                 ]
 
                                                 delegate: Rectangle {
@@ -1037,8 +1037,8 @@ Item {
 
                                 Column {
                                     spacing: 2
-                                    Text { text: "Loop"; color: Theme.textPrimary; font.pixelSize: 14; font.weight: Font.Medium }
-                                    Text { text: "Repeat after last photo"; color: Theme.textMuted; font.pixelSize: 11 }
+                                    Text { text: qsTr("Loop"); color: Theme.textPrimary; font.pixelSize: 14; font.weight: Font.Medium }
+                                    Text { text: qsTr("Repeat after last photo"); color: Theme.textMuted; font.pixelSize: 11 }
                                 }
 
                                 Item { Layout.fillWidth: true }
@@ -1081,8 +1081,8 @@ Item {
 
                                 Column {
                                     spacing: 2
-                                    Text { text: "Autoplay"; color: Theme.textPrimary; font.pixelSize: 14; font.weight: Font.Medium }
-                                    Text { text: "Advance automatically"; color: Theme.textMuted; font.pixelSize: 11 }
+                                    Text { text: qsTr("Autoplay"); color: Theme.textPrimary; font.pixelSize: 14; font.weight: Font.Medium }
+                                    Text { text: qsTr("Advance automatically"); color: Theme.textMuted; font.pixelSize: 11 }
                                 }
 
                                 Item { Layout.fillWidth: true }
@@ -1123,7 +1123,7 @@ Item {
 
                         RowLayout {
                             Layout.fillWidth: true
-                            Text { text: "Interval"; color: Theme.textSecondary; font.pixelSize: 13 }
+                            Text { text: qsTr("Interval"); color: Theme.textSecondary; font.pixelSize: 13 }
                             Item { Layout.fillWidth: true }
                             Text {
                                 text: (intervalSlider.value / 1000).toFixed(1) + " s"
@@ -1172,9 +1172,9 @@ Item {
                         Column {
                             Layout.fillWidth: true
                             spacing: 3
-                            Text { text: "Smartphone Remote"; color: Theme.textPrimary; font.pixelSize: 13; font.weight: Font.Medium }
+                            Text { text: qsTr("Smartphone Remote"); color: Theme.textPrimary; font.pixelSize: 13; font.weight: Font.Medium }
                             Text {
-                                text: "Open " + remoteServer.url + " on your phone during the show"
+                                text: qsTr("Open %1 on your phone during the show").arg(remoteServer.url)
                                 color: Theme.textMuted; font.pixelSize: 12
                             }
                         }
@@ -1250,7 +1250,7 @@ Item {
                                 spacing: 6
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: "Help"
+                                    text: qsTr("Help")
                                     color: Theme.textMuted
                                     font.pixelSize: 12
                                 }
@@ -1279,7 +1279,7 @@ Item {
                                 spacing: 6
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: "Advanced settings ›"
+                                    text: qsTr("Advanced settings ›")
                                     color: Theme.textMuted
                                     font.pixelSize: 12
                                 }
@@ -1308,7 +1308,7 @@ Item {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "In show commands:"
+                    text: qsTr("In show commands:")
                     color: Theme.textGhost
                     font.pixelSize: 11
                 }
@@ -1316,7 +1316,7 @@ Item {
                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "→" }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Navigate"
+                    text: qsTr("Navigate")
                     color: Theme.textGhost
                     font.pixelSize: 11
                 }
@@ -1329,7 +1329,7 @@ Item {
                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Space" }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Play/Pause"
+                    text: qsTr("Play/Pause")
                     color: Theme.textGhost
                     font.pixelSize: 11
                 }
@@ -1342,7 +1342,7 @@ Item {
                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "F" }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Fullscreen"
+                    text: qsTr("Fullscreen")
                     color: Theme.textGhost
                     font.pixelSize: 11
                 }
@@ -1355,7 +1355,7 @@ Item {
                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "Exit"
+                    text: qsTr("Exit")
                     color: Theme.textGhost
                     font.pixelSize: 11
                 }

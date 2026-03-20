@@ -13,6 +13,12 @@ Popup {
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
 
+    // Capture the language at app start so we can show the restart notice
+    // when the user picks a different language during this session.
+    // Plain assignment (not a binding) so it stays fixed at the startup value.
+    property string _startupLang: ""
+    Component.onCompleted: _startupLang = controller.language
+
     onOpened: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = true  }
     onClosed:  { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = false }
 
@@ -34,7 +40,7 @@ Popup {
             Layout.bottomMargin: 24
 
             Text {
-                text: "ADVANCED SETTINGS"
+                text: qsTr("ADVANCED SETTINGS")
                 color: Theme.textMuted
                 font.pixelSize: 11
                 font.weight: Font.Medium
@@ -66,7 +72,7 @@ Popup {
 
         // ── Transition Duration ───────────────────────────────────────────────
         Text {
-            text: "TRANSITION"
+            text: qsTr("TRANSITION")
             color: Theme.textMuted
             font.pixelSize: 11
             font.weight: Font.Medium
@@ -79,7 +85,7 @@ Popup {
             Layout.bottomMargin: 10
 
             Text {
-                text: "Duration"
+                text: qsTr("Duration")
                 color: Theme.textPrimary
                 font.pixelSize: 14
             }
@@ -131,7 +137,7 @@ Popup {
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
 
         Text {
-            text: "HUD"
+            text: qsTr("HUD")
             color: Theme.textMuted
             font.pixelSize: 11
             font.weight: Font.Medium
@@ -144,7 +150,7 @@ Popup {
             Layout.bottomMargin: 10
 
             Text {
-                text: "Size"
+                text: qsTr("Size")
                 color: Theme.textPrimary
                 font.pixelSize: 14
             }
@@ -196,7 +202,7 @@ Popup {
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
 
         Text {
-            text: "SMARTPHONE REMOTE"
+            text: qsTr("SMARTPHONE REMOTE")
             color: Theme.textMuted
             font.pixelSize: 11
             font.weight: Font.Medium
@@ -208,7 +214,7 @@ Popup {
             Layout.fillWidth: true
             Layout.bottomMargin: 16
 
-            Text { text: "Enable remote control"; color: Theme.textPrimary; font.pixelSize: 14 }
+            Text { text: qsTr("Enable remote control"); color: Theme.textPrimary; font.pixelSize: 14 }
             Item { Layout.fillWidth: true }
             Switch {
                 id: remoteSwitch
@@ -235,7 +241,7 @@ Popup {
             Layout.bottomMargin: 28
             opacity: controller.remoteEnabled ? 1.0 : 0.35
 
-            Text { text: "Port"; color: Theme.textPrimary; font.pixelSize: 14 }
+            Text { text: qsTr("Port"); color: Theme.textPrimary; font.pixelSize: 14 }
             Item { Layout.fillWidth: true }
             Rectangle {
                 width: 90; height: 32; radius: 8
@@ -264,6 +270,67 @@ Popup {
 
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
 
+        // ── Language ──────────────────────────────────────────────────────────
+        Text {
+            text: qsTr("LANGUAGE")
+            color: Theme.textMuted
+            font.pixelSize: 11
+            font.weight: Font.Medium
+            font.letterSpacing: 1.4
+            Layout.bottomMargin: 14
+        }
+
+        Flow {
+            Layout.fillWidth: true
+            Layout.bottomMargin: 10
+            spacing: 8
+
+            Repeater {
+                model: controller.availableLanguages
+
+                delegate: Rectangle {
+                    height: 32
+                    width: langLabel.implicitWidth + 24
+                    radius: 10
+                    color: controller.language === modelData.code
+                           ? Theme.accentDeep
+                           : (langArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                    border.color: controller.language === modelData.code ? Theme.accent : "transparent"
+                    border.width: 1
+                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                    Text {
+                        id: langLabel
+                        anchors.centerIn: parent
+                        text: modelData.code === "auto" ? qsTr("Auto") : modelData.name
+                        font.pixelSize: 12
+                        color: controller.language === modelData.code
+                               ? Theme.textPrimary : Theme.textMuted
+                    }
+                    MouseArea {
+                        id: langArea
+                        anchors.fill: parent
+                        hoverEnabled: true
+                        cursorShape: Qt.PointingHandCursor
+                        onClicked: controller.setLanguage(modelData.code)
+                    }
+                }
+            }
+        }
+
+        // Restart notice — shown when language changed since app start
+        Text {
+            visible: controller.language !== root._startupLang
+            text: qsTr("⚠  Restart the app to apply the language change.")
+            color: Theme.statusWarn
+            font.pixelSize: 11
+            wrapMode: Text.Wrap
+            Layout.fillWidth: true
+            Layout.bottomMargin: 6
+        }
+
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
+
         // ── Close button ─────────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
@@ -274,7 +341,7 @@ Popup {
 
             Text {
                 anchors.centerIn: parent
-                text: "Done"
+                text: qsTr("Done")
                 color: Theme.textPrimary
                 font.pixelSize: 14
                 font.weight: Font.Medium

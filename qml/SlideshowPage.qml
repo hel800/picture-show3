@@ -533,11 +533,11 @@ Rectangle {
 
             // ⌨ keyboard hints
             KeyHint { label: "F"; uiScale: root.hudScale; Layout.leftMargin: Math.round(10 * root.hudScale) }
-            Text { text: "fullscreen"; color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
+            Text { text: qsTr("fullscreen"); color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
             KeyHint { label: "I";   uiScale: root.hudScale }
-            Text { text: "info";       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
+            Text { text: qsTr("info");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
             KeyHint { label: "Esc"; uiScale: root.hudScale }
-            Text { text: "exit";       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
+            Text { text: qsTr("exit");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
         }
     }
 
@@ -576,7 +576,7 @@ Rectangle {
                     spacing: 4
 
                     Text {
-                        text: "AUTOPLAY"
+                        text: qsTr("AUTOPLAY")
                         color: Theme.textMuted
                         font.pixelSize: 10
                         font.weight: Font.Medium
@@ -584,8 +584,8 @@ Rectangle {
                     }
                     Text {
                         text: controller.isPlaying
-                              ? "Play (" + (controller.interval / 1000).toFixed(1) + " s)"
-                              : "Pause"
+                              ? qsTr("Play (%1 s)").arg((controller.interval / 1000).toFixed(1))
+                              : qsTr("Pause")
                         color: Theme.textSecondary
                         font.pixelSize: 14
                     }
@@ -647,7 +647,7 @@ Rectangle {
                     spacing: 14
 
                     Text {
-                        text: "JUMP TO IMAGE"
+                        text: qsTr("JUMP TO IMAGE")
                         color: Theme.textMuted
                         font.pixelSize: 10
                         font.weight: Font.Medium
@@ -712,10 +712,10 @@ Rectangle {
                     Row {
                         spacing: 6
                         KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: "go"; color: Theme.textDisabled; font.pixelSize: 11 }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("go"); color: Theme.textDisabled; font.pixelSize: 11 }
                         Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
                         KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
-                        Text { anchors.verticalCenter: parent.verticalCenter; text: "cancel"; color: Theme.textDisabled; font.pixelSize: 11 }
+                        Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("cancel"); color: Theme.textDisabled; font.pixelSize: 11 }
                     }
                 }
 

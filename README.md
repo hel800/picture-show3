@@ -124,6 +124,53 @@ Reachable via the **Advanced settings ›** link or by pressing `V` on the setti
 
 - **Transition duration** — how long each transition animation takes (100–3000 ms)
 - **HUD size** — scales the info bar and its font (50–200 %)
+- **Smartphone remote** — enable/disable and set the port
+- **Language** — select the UI language (see below)
+
+---
+
+## Translations
+
+The UI language is selected in **Advanced settings › LANGUAGE**.
+`Auto` follows the system locale; a restart is required after changing the language.
+
+The active language is stored as `language` in the settings INI file and can be set manually:
+
+```ini
+language = de     ; e.g. de, en, auto
+```
+
+### Adding a new language
+
+1. Copy `translations/picture-show3_en.ts` to `translations/picture-show3_<code>.ts`
+   (e.g. `picture-show3_fr.ts` for French).
+2. Open the file in **Qt Linguist** (`pyside6-linguist`) or any text editor and fill in the `<translation>` elements.
+3. Compile the `.ts` file to a `.qm` file:
+   ```bash
+   .venv/Scripts/pyside6-lrelease translations/picture-show3_fr.ts \
+       -qm translations/picture-show3_fr.qm
+   ```
+4. Restart the app — the new language appears automatically in the language selector.
+
+Commit the `.ts` source file; `.qm` files are generated and excluded from git.
+
+### Keeping translations up to date
+
+After adding or changing `qsTr()`/`self.tr()` strings in the source, regenerate the `.ts` files:
+
+```bash
+.venv/Scripts/pyside6-lupdate qml/*.qml slideshow_controller.py \
+    -ts translations/picture-show3_en.ts translations/picture-show3_de.ts
+```
+
+New strings are added with `type="unfinished"`; existing translations are preserved.
+Compile all `.ts` files at once:
+
+```bash
+.venv/Scripts/pyside6-lrelease translations/picture-show3_*.ts
+```
+
+The build script (`install/windows/compile_resources.py`) runs `pyside6-lrelease` automatically as part of the build.
 
 ---
 

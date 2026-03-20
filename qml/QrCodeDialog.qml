@@ -35,7 +35,7 @@ Popup {
             Layout.fillWidth: true
 
             Text {
-                text: "SMARTPHONE REMOTE"
+                text: qsTr("SMARTPHONE REMOTE")
                 color: Theme.textMuted
                 font.pixelSize: 11
                 font.weight: Font.Medium
@@ -92,7 +92,7 @@ Popup {
         Text {
             Layout.alignment: Qt.AlignHCenter
             Layout.bottomMargin: 4
-            text: "Scan with your phone to open the remote"
+            text: qsTr("Scan with your phone to open the remote")
             color: Theme.textMuted
             font.pixelSize: 11
         }

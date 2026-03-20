@@ -99,7 +99,7 @@ Popup {
                 }
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: "—  HELP"
+                    text: qsTr("—  HELP")
                     color: Theme.accentLight
                     font.pixelSize: 18
                     font.weight: Font.Bold
@@ -116,7 +116,7 @@ Popup {
             // ── Description ───────────────────────────────────────────────────
             Text {
                 Layout.fillWidth: true
-                text: "A full-screen photo slideshow viewer. Browse to a folder, configure transitions and sort order, then press ↵ to start. Control the show from the keyboard or from a smartphone via the built-in remote."
+                text: qsTr("A full-screen photo slideshow viewer. Browse to a folder, configure transitions and sort order, then press ↵ to start. Control the show from the keyboard or from a smartphone via the built-in remote.")
                 color: Theme.textSecondary
                 font.pixelSize: 13
                 wrapMode: Text.Wrap
@@ -150,7 +150,7 @@ Popup {
                     spacing: 6
 
                     Text {
-                        text: "SETTINGS PAGE"
+                        text: qsTr("SETTINGS PAGE")
                         color: Theme.textMuted
                         font.pixelSize: 10
                         font.weight: Font.Medium
@@ -160,17 +160,17 @@ Popup {
 
                     Repeater {
                         model: [
-                            { keys: ["T"],   desc: "Cycle transition"   },
-                            { keys: ["S"],   desc: "Cycle sort order"   },
-                            { keys: ["L"],   desc: "Toggle loop"        },
-                            { keys: ["A"],   desc: "Toggle autoplay"    },
-                            { keys: ["B"],   desc: "Browse folder"      },
-                            { keys: ["R"],   desc: "Star rating filter" },
-                            { keys: ["↵"],   desc: "Start / resume show"},
-                            { keys: ["V"],   desc: "Advanced settings"  },
-                            { keys: ["F"],   desc: "Toggle fullscreen"  },
-                            { keys: ["Esc"], desc: "Quit dialog"        },
-                            { keys: ["?"],   desc: "Help"               }
+                            { keys: ["T"],   desc: qsTr("Cycle transition")    },
+                            { keys: ["S"],   desc: qsTr("Cycle sort order")    },
+                            { keys: ["L"],   desc: qsTr("Toggle loop")         },
+                            { keys: ["A"],   desc: qsTr("Toggle autoplay")     },
+                            { keys: ["B"],   desc: qsTr("Browse folder")       },
+                            { keys: ["R"],   desc: qsTr("Star rating filter")  },
+                            { keys: ["↵"],   desc: qsTr("Start / resume show") },
+                            { keys: ["V"],   desc: qsTr("Advanced settings")   },
+                            { keys: ["F"],   desc: qsTr("Toggle fullscreen")   },
+                            { keys: ["Esc"], desc: qsTr("Quit dialog")         },
+                            { keys: ["?"],   desc: qsTr("Help")                }
                         ]
                         RowLayout {
                             Layout.fillWidth: true
@@ -211,7 +211,7 @@ Popup {
                     spacing: 6
 
                     Text {
-                        text: "IN SHOW"
+                        text: qsTr("IN SHOW")
                         color: Theme.textMuted
                         font.pixelSize: 10
                         font.weight: Font.Medium
@@ -221,14 +221,14 @@ Popup {
 
                     Repeater {
                         model: [
-                            { keys: ["←","→"], desc: "Navigate"         },
-                            { keys: ["Space"],  desc: "Play / pause"     },
-                            { keys: ["F"],      desc: "Toggle fullscreen"},
-                            { keys: ["I"],      desc: "Toggle info HUD"  },
-                            { keys: ["J"],      desc: "Jump to image"    },
-                            { keys: ["P"],      desc: "Panorama mode"    },
-                            { keys: ["Esc"],    desc: "Exit show"        },
-                            { keys: ["?"],      desc: "Help"             }
+                            { keys: ["←","→"], desc: qsTr("Navigate")          },
+                            { keys: ["Space"],  desc: qsTr("Play / pause")      },
+                            { keys: ["F"],      desc: qsTr("Toggle fullscreen") },
+                            { keys: ["I"],      desc: qsTr("Toggle info HUD")   },
+                            { keys: ["J"],      desc: qsTr("Jump to image")     },
+                            { keys: ["P"],      desc: qsTr("Panorama mode")     },
+                            { keys: ["Esc"],    desc: qsTr("Exit show")         },
+                            { keys: ["?"],      desc: qsTr("Help")              }
                         ]
                         RowLayout {
                             Layout.fillWidth: true
@@ -270,11 +270,11 @@ Popup {
             Row {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 6
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "Press"; color: Theme.textGhost; font.pixelSize: 11 }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("Press"); color: Theme.textGhost; font.pixelSize: 11 }
                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "?" }
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "or"; color: Theme.textGhost; font.pixelSize: 11 }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("or"); color: Theme.textGhost; font.pixelSize: 11 }
                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
-                Text { anchors.verticalCenter: parent.verticalCenter; text: "to close"; color: Theme.textGhost; font.pixelSize: 11 }
+                Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("to close"); color: Theme.textGhost; font.pixelSize: 11 }
             }
         }
     }
