@@ -15,7 +15,9 @@ Popup {
 
     // Capture the language at app start so we can show the restart notice
     // when the user picks a different language during this session.
-    property string _startupLang: controller.language
+    // Plain assignment (not a binding) so it stays fixed at the startup value.
+    property string _startupLang: ""
+    Component.onCompleted: _startupLang = controller.language
 
     onOpened: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = true  }
     onClosed:  { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = false }
