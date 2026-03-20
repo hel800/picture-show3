@@ -7,7 +7,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 
 ## Features
 
-| | |
+| **Feature** | Description |
 |---|---|
 | **Transitions** | Fade, Slide, Zoom, Fade-to-black — GPU-accelerated via Qt Quick |
 | **Sort** | By filename, by EXIF date taken, or random |
