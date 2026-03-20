@@ -394,7 +394,7 @@ Item {
 
                         // Browse button
                         Rectangle {
-                            width: 110; height: 44
+                            width: 124; height: 44
                             radius: 10
                             color: browseArea.containsMouse ? Theme.surfaceHover : Theme.surface
                             Behavior on color { ColorAnimation { duration: 120 } }
