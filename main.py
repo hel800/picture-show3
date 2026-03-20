@@ -214,19 +214,24 @@ def _restore_window(win) -> None:
         win.setX(int(s.value("window/x")))
         win.setY(int(s.value("window/y")))
     if s.value("window/fullscreen", False, type=bool):
-        # On Linux/X11/Wayland the WM is a separate process: a showFullScreen()
-        # request sent before the window is mapped is silently ignored by most
-        # EWMH-compliant WMs.  The safe pattern is to show() first and wait for
-        # the visibilityChanged(Windowed) signal — which confirms the native
-        # surface is mapped — then request fullscreen.
         # Do NOT call saveWindowed() here — the windowed geometry in settings
         # is already correct and must not be overwritten with fullscreen dims.
-        def _on_windowed(vis) -> None:
-            if vis == QWindow.Visibility.Windowed:
-                win.visibilityChanged.disconnect(_on_windowed)
-                win.showFullScreen()
-        win.visibilityChanged.connect(_on_windowed)
-        QTimer.singleShot(0, win.show)
+        if sys.platform == "linux":
+            # On X11/Wayland the WM is a separate process.  visibilityChanged
+            # fires before the X server sends MapNotify and before the WM has
+            # actually managed the window, so showFullScreen() still arrives too
+            # early via that signal.  activeChanged fires only after the WM
+            # grants focus — the window is fully mapped at that point.
+            def _on_active() -> None:
+                if win.isActive():
+                    win.activeChanged.disconnect(_on_active)
+                    win.showFullScreen()
+            win.activeChanged.connect(_on_active)
+            QTimer.singleShot(0, win.show)
+        else:
+            # On Windows the kernel manages windows directly — showFullScreen()
+            # is honored immediately even before the window is visible.
+            QTimer.singleShot(0, win.showFullScreen)
     else:
         # Defer show() to the first event loop iteration (same pattern as above).
         # Calling win.show() before app.exec() starts leaves the native window surface
