@@ -20,6 +20,7 @@ dist/
 # Generated files (reproducible from source)
 img/icon.ico
 resources_rc.py
+translations/*.qm
 
 # IDE / editor
 .idea/

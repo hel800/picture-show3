@@ -8,7 +8,7 @@ import sys
 import ctypes
 from pathlib import Path
 
-from PySide6.QtCore import QObject, QSettings, QTimer, QUrl, Slot
+from PySide6.QtCore import QLocale, QObject, QSettings, QTimer, QTranslator, QUrl, Slot
 from PySide6.QtGui import QGuiApplication, QIcon, QWindow
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
@@ -42,6 +42,28 @@ if _FROZEN:
     _QML_ROOT = QUrl("qrc:/qml/main.qml")
 else:
     _QML_ROOT = QUrl.fromLocalFile(str(_base_dir() / "qml" / "main.qml"))
+
+
+def _install_translator(app: QGuiApplication) -> QTranslator | None:
+    """
+    Load the .qm translation file matching the configured or system language.
+    Falls back silently (stays English) if no matching file is found.
+    """
+    s = QSettings()
+    lang = s.value("language", "auto")
+    if lang == "auto":
+        lang = QLocale.system().name()   # e.g. "de_DE" or "de"
+
+    translations_dir = _base_dir() / "translations"
+    translator = QTranslator(app)
+
+    # Try exact locale match ("de_DE"), then language-only ("de")
+    for candidate in dict.fromkeys([lang, lang.split("_")[0]]):
+        if translator.load(str(translations_dir / f"picture-show3_{candidate}.qm")):
+            app.installTranslator(translator)
+            return translator
+
+    return None
 
 
 class WindowHelper(QObject):
@@ -142,6 +164,7 @@ def main() -> None:
     app = QGuiApplication(sys.argv)
     app.setApplicationName("picture-show3")
     app.setOrganizationName("picture-show3")
+    app.translator = _install_translator(app)   # None if no matching .qm found
     if _FROZEN:
         app.setWindowIcon(QIcon(":/img/icon.svg"))
     else:
