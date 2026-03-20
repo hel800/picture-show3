@@ -1,16 +1,22 @@
 ; picture-show3 — Inno Setup installer script
 ; Requires Inno Setup 6.x  (https://jrsoftware.org/isdl.php)
 ;
-; Build steps before running this script (all from project root):
+; Preferred build method — version is read automatically from main.py:
+;   python install/windows/build.py
+;
+; Manual build steps (all from project root):
 ;   1. python install/windows/make_icon.py
 ;   2. python install/windows/compile_resources.py
 ;   3. pyinstaller install/windows/picture-show3.spec ^
 ;          --distpath install/windows/dist --workpath install/windows/build
-;   4. Open this file in the Inno Setup IDE and click Build, or run:
-;      iscc install\windows\picture-show3.iss
+;   4. iscc install\windows\picture-show3.iss
+;      (version falls back to the #define below when not passed via /D)
 
 #define MyAppName      "picture-show3"
-#define MyAppVersion   "0.5 beta"
+; MyAppVersion can be overridden from the command line: iscc /DMyAppVersion="1.0" ...
+#ifndef MyAppVersion
+  #define MyAppVersion "--"
+#endif
 #define MyAppPublisher "Sebastian Schäfer"
 #define MyAppExeName   "picture-show3.exe"
 ; Unique ID — do NOT change after first release (Windows uses it to identify the app)
@@ -35,7 +41,11 @@ LicenseFile=..\..\LICENSE
 
 ; Output goes into install\windows\dist\installer\
 OutputDir=dist\installer
-OutputBaseFilename=picture-show3-setup-0.5-beta
+; OutputBaseFilename can be overridden: iscc /DOutputBaseFilename="picture-show3-setup-1.0" ...
+#ifndef OutputBaseFilename
+  #define OutputBaseFilename "picture-show3-setup-" + StringChange(MyAppVersion, " ", "-")
+#endif
+OutputBaseFilename={#OutputBaseFilename}
 
 ; Icon
 SetupIconFile=..\..\img\icon.ico

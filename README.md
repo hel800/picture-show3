@@ -141,31 +141,37 @@ IPTC `Caption/Abstract` (tag 2:120) is shown in the HUD when available.
 
 QML and image files are compiled into the binary so the source is not exposed in the distribution.
 
-```bash
-# 1. Install build dependencies (one-time)
-pip install -r install/windows/requirements-build.txt
+**Prerequisites (one-time):**
+- `pip install -r install/windows/requirements-build.txt`
+- [Inno Setup 6](https://jrsoftware.org/isdl.php) installed with `iscc.exe` on `PATH`
 
-# 2. Generate the app icon (one-time, or when icon.svg changes)
+**Full build (exe + installer) — version is read automatically from `main.py`:**
+
+```bash
+python install/windows/build.py
+```
+
+Installer output: `install\windows\dist\installer\picture-show3-setup-<version>.exe`
+
+<details>
+<summary>Manual step-by-step</summary>
+
+```bash
+# 1. Generate the app icon (one-time, or when icon.svg changes)
 python install/windows/make_icon.py
 
-# 3. Compile QML + images into a Qt resource bundle
+# 2. Compile QML + images into a Qt resource bundle
 #    Re-run whenever any .qml or img/*.svg file changes
 python install/windows/compile_resources.py
 
-# 4. Build the executable
+# 3. Build the executable
 pyinstaller install/windows/picture-show3.spec ^
     --distpath install/windows/dist --workpath install/windows/build
-```
 
-Output: `install\windows\dist\picture-show3\picture-show3.exe` (onedir bundle, runs without Python installed).
-
-To build the installer (requires [Inno Setup 6](https://jrsoftware.org/isdl.php)):
-
-```bash
+# 4. Build the installer
 iscc install\windows\picture-show3.iss
 ```
-
-Installer output: `install\windows\dist\installer\picture-show3-setup-0.5-beta.exe`
+</details>
 
 ### Dev vs. frozen mode
 
