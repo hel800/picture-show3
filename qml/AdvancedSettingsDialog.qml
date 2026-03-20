@@ -34,7 +34,7 @@ Popup {
             Layout.bottomMargin: 24
 
             Text {
-                text: "ADVANCED SETTINGS"
+                text: qsTr("ADVANCED SETTINGS")
                 color: Theme.textMuted
                 font.pixelSize: 11
                 font.weight: Font.Medium
@@ -66,7 +66,7 @@ Popup {
 
         // ── Transition Duration ───────────────────────────────────────────────
         Text {
-            text: "TRANSITION"
+            text: qsTr("TRANSITION")
             color: Theme.textMuted
             font.pixelSize: 11
             font.weight: Font.Medium
@@ -79,7 +79,7 @@ Popup {
             Layout.bottomMargin: 10
 
             Text {
-                text: "Duration"
+                text: qsTr("Duration")
                 color: Theme.textPrimary
                 font.pixelSize: 14
             }
@@ -131,7 +131,7 @@ Popup {
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
 
         Text {
-            text: "HUD"
+            text: qsTr("HUD")
             color: Theme.textMuted
             font.pixelSize: 11
             font.weight: Font.Medium
@@ -144,7 +144,7 @@ Popup {
             Layout.bottomMargin: 10
 
             Text {
-                text: "Size"
+                text: qsTr("Size")
                 color: Theme.textPrimary
                 font.pixelSize: 14
             }
@@ -196,7 +196,7 @@ Popup {
         Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
 
         Text {
-            text: "SMARTPHONE REMOTE"
+            text: qsTr("SMARTPHONE REMOTE")
             color: Theme.textMuted
             font.pixelSize: 11
             font.weight: Font.Medium
@@ -208,7 +208,7 @@ Popup {
             Layout.fillWidth: true
             Layout.bottomMargin: 16
 
-            Text { text: "Enable remote control"; color: Theme.textPrimary; font.pixelSize: 14 }
+            Text { text: qsTr("Enable remote control"); color: Theme.textPrimary; font.pixelSize: 14 }
             Item { Layout.fillWidth: true }
             Switch {
                 id: remoteSwitch
@@ -235,7 +235,7 @@ Popup {
             Layout.bottomMargin: 28
             opacity: controller.remoteEnabled ? 1.0 : 0.35
 
-            Text { text: "Port"; color: Theme.textPrimary; font.pixelSize: 14 }
+            Text { text: qsTr("Port"); color: Theme.textPrimary; font.pixelSize: 14 }
             Item { Layout.fillWidth: true }
             Rectangle {
                 width: 90; height: 32; radius: 8
@@ -274,7 +274,7 @@ Popup {
 
             Text {
                 anchors.centerIn: parent
-                text: "Done"
+                text: qsTr("Done")
                 color: Theme.textPrimary
                 font.pixelSize: 14
                 font.weight: Font.Medium

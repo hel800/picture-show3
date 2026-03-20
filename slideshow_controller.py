@@ -217,7 +217,7 @@ class SlideshowController(QObject):
     def _scan_images(self) -> None:
         folder = Path(self._folder)
         if not folder.is_dir():
-            self.errorOccurred.emit(f"Folder not found: {self._folder!r}")
+            self.errorOccurred.emit(self.tr("Folder not found: {}").format(self._folder))
             images: list[str] = []
         else:
             images = [
