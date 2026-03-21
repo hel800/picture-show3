@@ -20,7 +20,8 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Phone remote** | Scan the QR code or open the URL on any phone on the same Wi-Fi |
 | **Keyboard** | Full keyboard control on both the settings screen and during the show |
 | **Help overlay** | Press `?` at any time to see all keyboard shortcuts |
-| **Cursor** | Completely hidden during the show (fullscreen and windowed) |
+| **Cursor** | Hidden in fullscreen; visible in windowed mode |
+| **Multilingual** | UI language selectable in Advanced settings; `Auto` follows system locale |
 
 ---
 
@@ -29,6 +30,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 - Python ≥ 3.14
 - PySide6 ≥ 6.7
 - Pillow ≥ 10.0
+- pillow-heif ≥ 0.16 (HEIC/HEIF support)
 - qrcode[pil] ≥ 7.4
 
 ---
@@ -177,6 +179,9 @@ The build script (`install/windows/compile_resources.py`) runs `pyside6-lrelease
 ## Supported image formats
 
 `.jpg` `.jpeg` `.png` `.gif` `.bmp` `.webp` `.tiff` `.tif` `.heic` `.avif`
+
+HEIC/HEIF files require the `pillow-heif` package (included in `requirements.txt`).
+AVIF support requires Pillow ≥ 9.1 (satisfied by the `≥ 10.0` constraint).
 
 EXIF orientation is applied automatically.
 EXIF `DateTimeOriginal` is read for date-based sorting and HUD display.
