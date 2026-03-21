@@ -58,6 +58,7 @@ Rectangle {
             fillMode: Image.PreserveAspectFit
             asynchronous: true
             smooth: true
+            mipmap: true
             cache: false
         }
     }
@@ -75,6 +76,7 @@ Rectangle {
             fillMode: Image.PreserveAspectFit
             asynchronous: true
             smooth: true
+            mipmap: true
             cache: false
         }
     }

@@ -174,6 +174,9 @@ Item {
                         source: "../img/icon.svg"
                         fillMode: Image.PreserveAspectFit
                         smooth: true
+                        mipmap: true
+                        sourceSize.width: 72
+                        sourceSize.height: 72
                         Layout.preferredWidth: 36
                         Layout.preferredHeight: 36
                         Layout.fillWidth: false
@@ -285,6 +288,8 @@ Item {
         scale: 0.9
         transformOrigin: Item.Center
         fillMode: Image.PreserveAspectFit
+        smooth: true
+        mipmap: true
     }
 
     // ── Scroll area ────────────────────────────────────────────────────────────
@@ -311,6 +316,8 @@ Item {
                 fillMode: Image.PreserveAspectFit
                 width: 500
                 height: 150
+                sourceSize.width: 1000
+                sourceSize.height: 300
                 Layout.preferredWidth: 500
                 Layout.preferredHeight: 150
                 Layout.fillWidth: false
@@ -1392,6 +1399,8 @@ Item {
             fillMode: Image.PreserveAspectFit
             width: 500
             height: 150
+            sourceSize.width: 1000
+            sourceSize.height: 300
             x: parent.width / 2 - width / 2
             y: parent.height / 2 - height / 2
             smooth: true
@@ -1473,6 +1482,7 @@ Item {
         source: "../img/logo.svg"
         fillMode: Image.PreserveAspectFit
         width: 500; height: 150
+        sourceSize.width: 1000; sourceSize.height: 300
         smooth: true; mipmap: true
         z: 201
         visible: false
