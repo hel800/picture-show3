@@ -9,6 +9,7 @@ Popup {
     id: root
     anchors.centerIn: Overlay.overlay
     width: Math.min(parent.width - 64, 520)
+    height: 640
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
@@ -18,6 +19,8 @@ Popup {
     // Plain assignment (not a binding) so it stays fixed at the startup value.
     property string _startupLang: ""
     Component.onCompleted: _startupLang = controller.language
+
+    property int _section: 0   // 0 General · 1 Controls · 2 HUD · 3 Remote
 
     onOpened: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = true  }
     onClosed:  { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = false }
@@ -37,7 +40,7 @@ Popup {
         // ── Header ────────────────────────────────────────────────────────────
         RowLayout {
             Layout.fillWidth: true
-            Layout.bottomMargin: 24
+            Layout.bottomMargin: 20
 
             Text {
                 text: qsTr("ADVANCED SETTINGS")
@@ -70,268 +73,342 @@ Popup {
             }
         }
 
-        // ── Transition Duration ───────────────────────────────────────────────
-        Text {
-            text: qsTr("TRANSITION")
-            color: Theme.textMuted
-            font.pixelSize: 11
-            font.weight: Font.Medium
-            font.letterSpacing: 1.4
-            Layout.bottomMargin: 14
-        }
-
-        RowLayout {
+        // ── Section tabs (segmented control) ─────────────────────────────────
+        Rectangle {
             Layout.fillWidth: true
-            Layout.bottomMargin: 10
+            Layout.bottomMargin: 20
+            height: 36
+            radius: 10
+            color: Theme.surface
 
-            Text {
-                text: qsTr("Duration")
-                color: Theme.textPrimary
-                font.pixelSize: 14
-            }
-            Item { Layout.fillWidth: true }
-            Text {
-                text: (durationSlider.value / 1000).toFixed(1) + " s"
-                color: Theme.accentLight
-                font.pixelSize: 13
-                font.weight: Font.Medium
-            }
-        }
+            Row {
+                anchors { fill: parent; margins: 3 }
+                spacing: 3
 
-        Slider {
-            id: durationSlider
-            Layout.fillWidth: true
-            Layout.bottomMargin: 6
-            from: 100; to: 3000; stepSize: 100
-            value: controller.transitionDuration
-            onMoved: controller.setTransitionDuration(value)
+                Repeater {
+                    model: [qsTr("General"), qsTr("Controls"), qsTr("HUD"), qsTr("Remote")]
 
-            background: Rectangle {
-                x: durationSlider.leftPadding
-                y: durationSlider.topPadding + durationSlider.availableHeight / 2 - height / 2
-                width: durationSlider.availableWidth; height: 4; radius: 2
-                color: Theme.surface
-                Rectangle {
-                    width: durationSlider.visualPosition * parent.width
-                    height: parent.height; color: Theme.accent; radius: 2
-                }
-            }
-            handle: Rectangle {
-                x: durationSlider.leftPadding + durationSlider.visualPosition * (durationSlider.availableWidth - width)
-                y: durationSlider.topPadding + durationSlider.availableHeight / 2 - height / 2
-                width: 22; height: 22; radius: 11
-                color: Theme.accentLight
-                border.color: Theme.accent; border.width: 2
-            }
-        }
+                    delegate: Rectangle {
+                        height: parent.height
+                        width: (parent.width - 3 * spacing) / 4
+                        radius: 8
+                        color: root._section === index
+                               ? Theme.bgCard
+                               : (tabHover.containsMouse ? Theme.surfaceHover : "transparent")
+                        border.color: root._section === index ? Theme.accent : "transparent"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 120 } }
 
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 28
-            Text { text: "0.1 s"; color: Theme.textDisabled; font.pixelSize: 11 }
-            Item { Layout.fillWidth: true }
-            Text { text: "3.0 s"; color: Theme.textDisabled; font.pixelSize: 11 }
-        }
-
-        // ── HUD Size ──────────────────────────────────────────────────────────
-        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
-
-        Text {
-            text: qsTr("HUD")
-            color: Theme.textMuted
-            font.pixelSize: 11
-            font.weight: Font.Medium
-            font.letterSpacing: 1.4
-            Layout.bottomMargin: 14
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 10
-
-            Text {
-                text: qsTr("Size")
-                color: Theme.textPrimary
-                font.pixelSize: 14
-            }
-            Item { Layout.fillWidth: true }
-            Text {
-                text: hudSizeSlider.value + " %"
-                color: Theme.accentLight
-                font.pixelSize: 13
-                font.weight: Font.Medium
-            }
-        }
-
-        Slider {
-            id: hudSizeSlider
-            Layout.fillWidth: true
-            Layout.bottomMargin: 6
-            from: 50; to: 200; stepSize: 10
-            value: controller.hudSize
-            onMoved: controller.setHudSize(value)
-
-            background: Rectangle {
-                x: hudSizeSlider.leftPadding
-                y: hudSizeSlider.topPadding + hudSizeSlider.availableHeight / 2 - height / 2
-                width: hudSizeSlider.availableWidth; height: 4; radius: 2
-                color: Theme.surface
-                Rectangle {
-                    width: hudSizeSlider.visualPosition * parent.width
-                    height: parent.height; color: Theme.accent; radius: 2
-                }
-            }
-            handle: Rectangle {
-                x: hudSizeSlider.leftPadding + hudSizeSlider.visualPosition * (hudSizeSlider.availableWidth - width)
-                y: hudSizeSlider.topPadding + hudSizeSlider.availableHeight / 2 - height / 2
-                width: 22; height: 22; radius: 11
-                color: Theme.accentLight
-                border.color: Theme.accent; border.width: 2
-            }
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 28
-            Text { text: "50 %"; color: Theme.textDisabled; font.pixelSize: 11 }
-            Item { Layout.fillWidth: true }
-            Text { text: "200 %"; color: Theme.textDisabled; font.pixelSize: 11 }
-        }
-
-        // ── Smartphone Remote ─────────────────────────────────────────────────
-        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
-
-        Text {
-            text: qsTr("SMARTPHONE REMOTE")
-            color: Theme.textMuted
-            font.pixelSize: 11
-            font.weight: Font.Medium
-            font.letterSpacing: 1.4
-            Layout.bottomMargin: 14
-        }
-
-        RowLayout {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 16
-
-            Text { text: qsTr("Enable remote control"); color: Theme.textPrimary; font.pixelSize: 14 }
-            Item { Layout.fillWidth: true }
-            Switch {
-                id: remoteSwitch
-                checked: controller.remoteEnabled
-                onToggled: controller.setRemoteEnabled(checked)
-
-                indicator: Rectangle {
-                    implicitWidth: 44; implicitHeight: 24; radius: 12
-                    color: remoteSwitch.checked ? Theme.accent : Theme.surface
-                    Behavior on color { ColorAnimation { duration: 120 } }
-                    Rectangle {
-                        x: remoteSwitch.checked ? parent.width - width - 3 : 3
-                        anchors.verticalCenter: parent.verticalCenter
-                        width: 18; height: 18; radius: 9
-                        color: remoteSwitch.checked ? "white" : Theme.textMuted
-                        Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                        Text {
+                            id: tabLabel
+                            anchors.centerIn: parent
+                            text: modelData
+                            font.pixelSize: 12
+                            font.weight: root._section === index ? Font.Medium : Font.Normal
+                            color: root._section === index ? Theme.accentLight : Theme.textMuted
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                        }
+                        MouseArea {
+                            id: tabHover
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: root._section = index
+                        }
                     }
                 }
             }
         }
 
-        RowLayout {
+        // ── Section content ────────────────────────────────────────────────────
+        StackLayout {
             Layout.fillWidth: true
-            Layout.bottomMargin: 28
-            opacity: controller.remoteEnabled ? 1.0 : 0.35
+            Layout.fillHeight: true
+            currentIndex: root._section
 
-            Text { text: qsTr("Port"); color: Theme.textPrimary; font.pixelSize: 14 }
-            Item { Layout.fillWidth: true }
-            Rectangle {
-                width: 90; height: 32; radius: 8
-                color: Theme.surface
-                border.color: portField.activeFocus ? Theme.accent : Theme.borderMuted
-                border.width: 1
-                Behavior on border.color { ColorAnimation { duration: 100 } }
-
-                TextInput {
-                    id: portField
-                    anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
-                    verticalAlignment: TextInput.AlignVCenter
-                    text: controller.remotePort.toString()
-                    color: Theme.textPrimary
-                    font.pixelSize: 13
-                    enabled: controller.remoteEnabled
-                    inputMethodHints: Qt.ImhDigitsOnly
-                    validator: IntValidator { bottom: 1024; top: 65535 }
-                    onEditingFinished: {
-                        if (acceptableInput)
-                            controller.setRemotePort(parseInt(text))
-                    }
-                }
-            }
-        }
-
-        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
-
-        // ── Language ──────────────────────────────────────────────────────────
-        Text {
-            text: qsTr("LANGUAGE")
-            color: Theme.textMuted
-            font.pixelSize: 11
-            font.weight: Font.Medium
-            font.letterSpacing: 1.4
-            Layout.bottomMargin: 14
-        }
-
-        Flow {
-            Layout.fillWidth: true
-            Layout.bottomMargin: 10
-            spacing: 8
-
-            Repeater {
-                model: controller.availableLanguages
-
-                delegate: Rectangle {
-                    height: 32
-                    width: langLabel.implicitWidth + 24
-                    radius: 10
-                    color: controller.language === modelData.code
-                           ? Theme.accentDeep
-                           : (langArea.containsMouse ? Theme.surfaceHover : Theme.surface)
-                    border.color: controller.language === modelData.code ? Theme.accent : "transparent"
-                    border.width: 1
-                    Behavior on color { ColorAnimation { duration: 150 } }
+            // ── General ───────────────────────────────────────────────────────
+            Item {
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 0
 
                     Text {
-                        id: langLabel
-                        anchors.centerIn: parent
-                        text: modelData.code === "auto" ? qsTr("Auto") : modelData.name
-                        font.pixelSize: 12
-                        color: controller.language === modelData.code
-                               ? Theme.textPrimary : Theme.textMuted
+                        text: qsTr("TRANSITION")
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        font.letterSpacing: 1.4
+                        Layout.bottomMargin: 12
                     }
-                    MouseArea {
-                        id: langArea
-                        anchors.fill: parent
-                        hoverEnabled: true
-                        cursorShape: Qt.PointingHandCursor
-                        onClicked: controller.setLanguage(modelData.code)
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 10
+                        Text {
+                            text: qsTr("Duration")
+                            color: Theme.textPrimary
+                            font.pixelSize: 14
+                        }
+                        Item { Layout.fillWidth: true }
+                        Text {
+                            text: (durationSlider.value / 1000).toFixed(1) + " s"
+                            color: Theme.accentLight
+                            font.pixelSize: 13
+                            font.weight: Font.Medium
+                        }
+                    }
+
+                    Slider {
+                        id: durationSlider
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 6
+                        from: 100; to: 3000; stepSize: 100
+                        value: controller.transitionDuration
+                        onMoved: controller.setTransitionDuration(value)
+
+                        background: Rectangle {
+                            x: durationSlider.leftPadding
+                            y: durationSlider.topPadding + durationSlider.availableHeight / 2 - height / 2
+                            width: durationSlider.availableWidth; height: 4; radius: 2
+                            color: Theme.surface
+                            Rectangle {
+                                width: durationSlider.visualPosition * parent.width
+                                height: parent.height; color: Theme.accent; radius: 2
+                            }
+                        }
+                        handle: Rectangle {
+                            x: durationSlider.leftPadding + durationSlider.visualPosition * (durationSlider.availableWidth - width)
+                            y: durationSlider.topPadding + durationSlider.availableHeight / 2 - height / 2
+                            width: 22; height: 22; radius: 11
+                            color: Theme.accentLight
+                            border.color: Theme.accent; border.width: 2
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 24
+                        Text { text: "0.1 s"; color: Theme.textDisabled; font.pixelSize: 11 }
+                        Item { Layout.fillWidth: true }
+                        Text { text: "3.0 s"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
+
+                    Text {
+                        text: qsTr("LANGUAGE")
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        font.letterSpacing: 1.4
+                        Layout.bottomMargin: 12
+                    }
+
+                    Flow {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 10
+                        spacing: 8
+
+                        Repeater {
+                            model: controller.availableLanguages
+
+                            delegate: Rectangle {
+                                height: 32
+                                width: langLabel.implicitWidth + 24
+                                radius: 10
+                                color: controller.language === modelData.code
+                                       ? Theme.accentDeep
+                                       : (langArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                border.color: controller.language === modelData.code ? Theme.accent : "transparent"
+                                border.width: 1
+                                Behavior on color { ColorAnimation { duration: 150 } }
+
+                                Text {
+                                    id: langLabel
+                                    anchors.centerIn: parent
+                                    text: modelData.code === "auto" ? qsTr("Auto") : modelData.name
+                                    font.pixelSize: 12
+                                    color: controller.language === modelData.code
+                                           ? Theme.textPrimary : Theme.textMuted
+                                }
+                                MouseArea {
+                                    id: langArea
+                                    anchors.fill: parent
+                                    hoverEnabled: true
+                                    cursorShape: Qt.PointingHandCursor
+                                    onClicked: controller.setLanguage(modelData.code)
+                                }
+                            }
+                        }
+                    }
+
+                    // Restart notice — shown when language changed since app start
+                    Text {
+                        visible: controller.language !== root._startupLang
+                        text: qsTr("⚠  Restart the app to apply the language change.")
+                        color: Theme.statusWarn
+                        font.pixelSize: 11
+                        wrapMode: Text.Wrap
+                        Layout.fillWidth: true
+                    }
+                }
+            }
+
+            // ── Controls ──────────────────────────────────────────────────────
+            Item {
+                Text {
+                    anchors.centerIn: parent
+                    text: qsTr("No options yet")
+                    color: Theme.textDisabled
+                    font.pixelSize: 13
+                }
+            }
+
+            // ── HUD ───────────────────────────────────────────────────────────
+            Item {
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 0
+
+                    Text {
+                        text: qsTr("HUD")
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        font.letterSpacing: 1.4
+                        Layout.bottomMargin: 12
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 10
+                        Text {
+                            text: qsTr("Size")
+                            color: Theme.textPrimary
+                            font.pixelSize: 14
+                        }
+                        Item { Layout.fillWidth: true }
+                        Text {
+                            text: hudSizeSlider.value + " %"
+                            color: Theme.accentLight
+                            font.pixelSize: 13
+                            font.weight: Font.Medium
+                        }
+                    }
+
+                    Slider {
+                        id: hudSizeSlider
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 6
+                        from: 50; to: 200; stepSize: 10
+                        value: controller.hudSize
+                        onMoved: controller.setHudSize(value)
+
+                        background: Rectangle {
+                            x: hudSizeSlider.leftPadding
+                            y: hudSizeSlider.topPadding + hudSizeSlider.availableHeight / 2 - height / 2
+                            width: hudSizeSlider.availableWidth; height: 4; radius: 2
+                            color: Theme.surface
+                            Rectangle {
+                                width: hudSizeSlider.visualPosition * parent.width
+                                height: parent.height; color: Theme.accent; radius: 2
+                            }
+                        }
+                        handle: Rectangle {
+                            x: hudSizeSlider.leftPadding + hudSizeSlider.visualPosition * (hudSizeSlider.availableWidth - width)
+                            y: hudSizeSlider.topPadding + hudSizeSlider.availableHeight / 2 - height / 2
+                            width: 22; height: 22; radius: 11
+                            color: Theme.accentLight
+                            border.color: Theme.accent; border.width: 2
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Text { text: "50 %"; color: Theme.textDisabled; font.pixelSize: 11 }
+                        Item { Layout.fillWidth: true }
+                        Text { text: "200 %"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    }
+                }
+            }
+
+            // ── Remote ────────────────────────────────────────────────────────
+            Item {
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 0
+
+                    Text {
+                        text: qsTr("SMARTPHONE REMOTE")
+                        color: Theme.textMuted
+                        font.pixelSize: 11
+                        font.weight: Font.Medium
+                        font.letterSpacing: 1.4
+                        Layout.bottomMargin: 12
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 16
+                        Text { text: qsTr("Enable remote control"); color: Theme.textPrimary; font.pixelSize: 14 }
+                        Item { Layout.fillWidth: true }
+                        Switch {
+                            id: remoteSwitch
+                            checked: controller.remoteEnabled
+                            onToggled: controller.setRemoteEnabled(checked)
+
+                            indicator: Rectangle {
+                                implicitWidth: 44; implicitHeight: 24; radius: 12
+                                color: remoteSwitch.checked ? Theme.accent : Theme.surface
+                                Behavior on color { ColorAnimation { duration: 120 } }
+                                Rectangle {
+                                    x: remoteSwitch.checked ? parent.width - width - 3 : 3
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 18; height: 18; radius: 9
+                                    color: remoteSwitch.checked ? "white" : Theme.textMuted
+                                    Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                                }
+                            }
+                        }
+                    }
+
+                    RowLayout {
+                        Layout.fillWidth: true
+                        opacity: controller.remoteEnabled ? 1.0 : 0.35
+
+                        Text { text: qsTr("Port"); color: Theme.textPrimary; font.pixelSize: 14 }
+                        Item { Layout.fillWidth: true }
+                        Rectangle {
+                            width: 90; height: 32; radius: 8
+                            color: Theme.surface
+                            border.color: portField.activeFocus ? Theme.accent : Theme.borderMuted
+                            border.width: 1
+                            Behavior on border.color { ColorAnimation { duration: 100 } }
+
+                            TextInput {
+                                id: portField
+                                anchors { fill: parent; leftMargin: 10; rightMargin: 10 }
+                                verticalAlignment: TextInput.AlignVCenter
+                                text: controller.remotePort.toString()
+                                color: Theme.textPrimary
+                                font.pixelSize: 13
+                                enabled: controller.remoteEnabled
+                                inputMethodHints: Qt.ImhDigitsOnly
+                                validator: IntValidator { bottom: 1024; top: 65535 }
+                                onEditingFinished: {
+                                    if (acceptableInput)
+                                        controller.setRemotePort(parseInt(text))
+                                }
+                            }
+                        }
                     }
                 }
             }
         }
 
-        // Restart notice — shown when language changed since app start
-        Text {
-            visible: controller.language !== root._startupLang
-            text: qsTr("⚠  Restart the app to apply the language change.")
-            color: Theme.statusWarn
-            font.pixelSize: 11
-            wrapMode: Text.Wrap
-            Layout.fillWidth: true
-            Layout.bottomMargin: 6
-        }
+        // ── Done button ───────────────────────────────────────────────────────
+        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 16; Layout.bottomMargin: 16 }
 
-        Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.bottomMargin: 20 }
-
-        // ── Close button ─────────────────────────────────────────────────────
         Rectangle {
             Layout.fillWidth: true
             height: 44
