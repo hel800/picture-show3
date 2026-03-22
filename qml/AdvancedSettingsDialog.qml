@@ -20,8 +20,9 @@ Popup {
     property string _startupLang: ""
     Component.onCompleted: _startupLang = controller.language
 
-    property int _section: 0       // 0 General · 1 Controls · 2 HUD · 3 Remote
-    property int _focusedOption: 0 // index of focused option within current section
+    property int  _section: 0       // 0 General · 1 Controls · 2 HUD · 3 Remote
+    property int  _focusedOption: 0 // index of focused option within current section
+    property bool _doneFocused: false // Done button has keyboard focus
 
     // Options per section: General=[duration,language] Controls=[mouseNav] HUD=[size] Remote=[enable,port]
     readonly property var _optionCounts: [2, 1, 1, 2]
@@ -38,6 +39,12 @@ Popup {
         keyHandler.forceActiveFocus()
     }
 
+    // Returns true only when the given option is keyboard-highlighted.
+    // False whenever the Done button has focus, so option highlights clear.
+    function _isOptionFocused(section, option) {
+        return !root._doneFocused && root._section === section && root._focusedOption === option
+    }
+
     // If the focused option becomes disabled (e.g. remote turned off while Port was focused),
     // fall back to the first option.
     Connections {
@@ -52,6 +59,7 @@ Popup {
     onOpened: {
         var w = parent ? parent.Window.window : null
         if (w) w.advancedOpen = true
+        root._doneFocused = false
         keyHandler.forceActiveFocus()
     }
     onClosed: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = false }
@@ -78,6 +86,33 @@ Popup {
             Keys.onPressed: function(event) {
                 var count = root._optionCounts[root._section]
 
+                // ── Done button is keyboard-focused ───────────────────────────
+                if (root._doneFocused) {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                        root.close()
+                    } else if (event.key === Qt.Key_Up) {
+                        root._doneFocused = false
+                        var last = count - 1
+                        while (last >= 0 && !root._optionEnabled(root._section, last)) last--
+                        if (last >= 0) root._focusedOption = last
+                        root._updateOptionFocus()
+                    } else if (event.key === Qt.Key_Tab) {
+                        root._doneFocused = false
+                        root._section = (root._section + 1) % 4
+                        root._focusedOption = 0
+                        root._updateOptionFocus()
+                    } else if (event.key === Qt.Key_Backtab) {
+                        root._doneFocused = false
+                        root._section = (root._section + 3) % 4
+                        root._focusedOption = 0
+                        root._updateOptionFocus()
+                    }
+                    // Down / Left / Right on Done: no-op
+                    event.accepted = true
+                    return
+                }
+
+                // ── Normal option navigation ───────────────────────────────────
                 if (event.key === Qt.Key_Tab) {
                     root._section = (root._section + 1) % 4
                     root._focusedOption = 0
@@ -100,32 +135,36 @@ Popup {
                 } else if (event.key === Qt.Key_Down) {
                     var next = root._focusedOption + 1
                     while (next < count && !root._optionEnabled(root._section, next)) next++
-                    if (next < count) root._focusedOption = next
+                    if (next < count) {
+                        root._focusedOption = next
+                    } else {
+                        root._doneFocused = true   // wrap to Done button
+                    }
                     root._updateOptionFocus()
                     event.accepted = true
 
                 } else if (event.key === Qt.Key_Left || event.key === Qt.Key_Right) {
                     var d = (event.key === Qt.Key_Right) ? 1 : -1
 
-                    if (root._section === 0 && root._focusedOption === 0) {
+                    if (root._isOptionFocused(0, 0)) {
                         controller.setTransitionDuration(
                             Math.max(100, Math.min(3000, controller.transitionDuration + d * 100)))
 
-                    } else if (root._section === 0 && root._focusedOption === 1) {
+                    } else if (root._isOptionFocused(0, 1)) {
                         var langs = controller.availableLanguages
                         var idx = 0
                         for (var i = 0; i < langs.length; i++)
                             if (langs[i].code === controller.language) { idx = i; break }
                         controller.setLanguage(langs[(idx + d + langs.length) % langs.length].code)
 
-                    } else if (root._section === 2 && root._focusedOption === 0) {
+                    } else if (root._isOptionFocused(2, 0)) {
                         controller.setHudSize(
                             Math.max(50, Math.min(200, controller.hudSize + d * 10)))
 
-                    } else if (root._section === 1 && root._focusedOption === 0) {
+                    } else if (root._isOptionFocused(1, 0)) {
                         controller.setMouseNavEnabled(d > 0)
 
-                    } else if (root._section === 3 && root._focusedOption === 0) {
+                    } else if (root._isOptionFocused(3, 0)) {
                         controller.setRemoteEnabled(d > 0)
                     }
                     event.accepted = true
@@ -246,7 +285,7 @@ Popup {
                         implicitHeight: gen0Inner.implicitHeight + 24
                         Rectangle {
                             anchors.fill: parent; radius: 8
-                            color: (root._section === 0 && root._focusedOption === 0)
+                            color: root._isOptionFocused(0, 0)
                                    ? Theme.surface : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
@@ -259,13 +298,13 @@ Popup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: (root._section === 0 && root._focusedOption === 0)
+                                    color: root._isOptionFocused(0, 0)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("TRANSITION")
-                                    color: (root._section === 0 && root._focusedOption === 0)
+                                    color: root._isOptionFocused(0, 0)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -317,7 +356,7 @@ Popup {
                         implicitHeight: gen1Inner.implicitHeight + 24
                         Rectangle {
                             anchors.fill: parent; radius: 8
-                            color: (root._section === 0 && root._focusedOption === 1)
+                            color: root._isOptionFocused(0, 1)
                                    ? Theme.surface : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
@@ -330,13 +369,13 @@ Popup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: (root._section === 0 && root._focusedOption === 1)
+                                    color: root._isOptionFocused(0, 1)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("LANGUAGE")
-                                    color: (root._section === 0 && root._focusedOption === 1)
+                                    color: root._isOptionFocused(0, 1)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -391,7 +430,7 @@ Popup {
                         implicitHeight: ctrl0Inner.implicitHeight + 24
                         Rectangle {
                             anchors.fill: parent; radius: 8
-                            color: (root._section === 1 && root._focusedOption === 0)
+                            color: root._isOptionFocused(1, 0)
                                    ? Theme.surface : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
@@ -404,13 +443,13 @@ Popup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: (root._section === 1 && root._focusedOption === 0)
+                                    color: root._isOptionFocused(1, 0)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("MOUSE")
-                                    color: (root._section === 1 && root._focusedOption === 0)
+                                    color: root._isOptionFocused(1, 0)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -459,7 +498,7 @@ Popup {
                         implicitHeight: hud0Inner.implicitHeight + 24
                         Rectangle {
                             anchors.fill: parent; radius: 8
-                            color: (root._section === 2 && root._focusedOption === 0)
+                            color: root._isOptionFocused(2, 0)
                                    ? Theme.surface : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
@@ -472,13 +511,13 @@ Popup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: (root._section === 2 && root._focusedOption === 0)
+                                    color: root._isOptionFocused(2, 0)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("HUD")
-                                    color: (root._section === 2 && root._focusedOption === 0)
+                                    color: root._isOptionFocused(2, 0)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -537,7 +576,7 @@ Popup {
                         implicitHeight: rem0Inner.implicitHeight + 24
                         Rectangle {
                             anchors.fill: parent; radius: 8
-                            color: (root._section === 3 && root._focusedOption === 0)
+                            color: root._isOptionFocused(3, 0)
                                    ? Theme.surface : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
@@ -550,13 +589,13 @@ Popup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: (root._section === 3 && root._focusedOption === 0)
+                                    color: root._isOptionFocused(3, 0)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("SMARTPHONE REMOTE")
-                                    color: (root._section === 3 && root._focusedOption === 0)
+                                    color: root._isOptionFocused(3, 0)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -596,7 +635,7 @@ Popup {
                         opacity: controller.remoteEnabled ? 1.0 : 0.35
                         Rectangle {
                             anchors.fill: parent; radius: 8
-                            color: (root._section === 3 && root._focusedOption === 1)
+                            color: root._isOptionFocused(3, 1)
                                    ? Theme.surface : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
@@ -609,13 +648,13 @@ Popup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: (root._section === 3 && root._focusedOption === 1)
+                                    color: root._isOptionFocused(3, 1)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("PORT")
-                                    color: (root._section === 3 && root._focusedOption === 1)
+                                    color: root._isOptionFocused(3, 1)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -699,9 +738,16 @@ Popup {
 
         Rectangle {
             Layout.fillWidth: true; height: 44; radius: 10
-            color: doneArea.containsMouse ? Theme.surfaceHover : Theme.surface
+            color: root._doneFocused ? Theme.accentDeep
+                   : (doneArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+            border.color: root._doneFocused ? Theme.accent : "transparent"
+            border.width: 1
             Behavior on color { ColorAnimation { duration: 120 } }
-            Text { anchors.centerIn: parent; text: qsTr("Done"); color: Theme.textPrimary; font.pixelSize: 14; font.weight: Font.Medium }
+            Text {
+                anchors.centerIn: parent; text: qsTr("Done")
+                color: root._doneFocused ? Theme.accentLight : Theme.textPrimary
+                font.pixelSize: 14; font.weight: Font.Medium
+            }
             MouseArea {
                 id: doneArea; anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
                 onClicked: root.close()

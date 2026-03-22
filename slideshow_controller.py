@@ -369,12 +369,12 @@ class SlideshowController(QObject):
         self.settingsChanged.emit()
 
     @Slot(bool)
-    @Slot(bool)
     def setMouseNavEnabled(self, enabled: bool) -> None:
         self._mouse_nav = enabled
         self._save_settings()
         self.settingsChanged.emit()
 
+    @Slot(bool)
     def setRemoteEnabled(self, enabled: bool) -> None:
         self._remote_enabled = enabled
         self._save_settings()
