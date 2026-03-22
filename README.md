@@ -17,6 +17,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
 | **Jump to image** | Instantly jump to any image by number with a live preview |
 | **Panorama mode** | Auto-detects wide images and scrolls them smoothly across the screen |
+| **Mouse navigation** | Optional left/right click to advance or go back (toggle in Advanced settings) |
 | **Phone remote** | Scan the QR code or open the URL on any phone on the same Wi-Fi |
 | **Keyboard** | Full keyboard control on both the settings screen and during the show |
 | **Help overlay** | Press `?` at any time to see all keyboard shortcuts |
@@ -84,6 +85,9 @@ Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\pict
 | `P` | Panorama mode (wide images only) |
 | `?` | Help overlay |
 | `Esc` | Return to settings |
+| Left click | Next photo (when mouse navigation enabled) |
+| Right click | Previous photo (when mouse navigation enabled) |
+| Double-click | Toggle fullscreen |
 
 ---
 
@@ -122,12 +126,25 @@ The current image's rating is also shown in the HUD info bar during the show.
 
 ## Advanced settings
 
-Reachable via the **Advanced settings ›** link or by pressing `V` on the settings screen:
+Reachable via the **Advanced settings ›** link or by pressing `V` on the settings screen.
+Settings are grouped into four tabs:
 
-- **Transition duration** — how long each transition animation takes (100–3000 ms)
-- **HUD size** — scales the info bar and its font (50–200 %)
-- **Smartphone remote** — enable/disable and set the port
-- **Language** — select the UI language (see below)
+| Tab | Options |
+|---|---|
+| **General** | Transition duration (100–3000 ms) · UI language |
+| **Controls** | Mouse button navigation (left = next, right = previous) |
+| **HUD** | HUD size (50–200 %) |
+| **Remote** | Smartphone remote enable/disable · Port |
+
+### Keyboard navigation inside Advanced settings
+
+| Key | Action |
+|-----|--------|
+| `Tab` / `Shift+Tab` | Cycle tabs |
+| `↑` / `↓` | Move between options; `↓` on last option focuses **Done** |
+| `←` / `→` | Change the selected option's value |
+| `Enter` | Edit a text field (Port) · Close dialog when Done is focused |
+| `Esc` | Close dialog |
 
 ---
 

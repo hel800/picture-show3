@@ -96,8 +96,9 @@ class SlideshowController(QObject):
         self._loop             = s.value("loop",          True,  type=bool)
         self._autoplay         = s.value("autoplay",      False, type=bool)
         self._interval         = s.value("interval",      5_000, type=int)
-        self._remote_enabled   = s.value("remoteEnabled", False, type=bool)
-        self._remote_port      = s.value("remotePort",    8765,  type=int)
+        self._remote_enabled   = s.value("remoteEnabled",   False, type=bool)
+        self._remote_port      = s.value("remotePort",     8765,  type=int)
+        self._mouse_nav        = s.value("mouseNavEnabled", False, type=bool)
         self._min_rating       = s.value("minRating",     0,     type=int)
         self._language         = s.value("language",      "auto")
 
@@ -125,8 +126,9 @@ class SlideshowController(QObject):
         s.setValue("loop",          self._loop)
         s.setValue("autoplay",       self._autoplay)
         s.setValue("interval",       self._interval)
-        s.setValue("remoteEnabled",  self._remote_enabled)
-        s.setValue("remotePort",     self._remote_port)
+        s.setValue("remoteEnabled",   self._remote_enabled)
+        s.setValue("remotePort",      self._remote_port)
+        s.setValue("mouseNavEnabled", self._mouse_nav)
         s.setValue("minRating",      self._min_rating)
         s.setValue("language",       self._language)
         s.setValue("folderHistory",  self._folder_history)
@@ -170,6 +172,9 @@ class SlideshowController(QObject):
 
     @Property(int, notify=settingsChanged)
     def interval(self) -> int: return self._interval
+
+    @Property(bool, notify=settingsChanged)
+    def mouseNavEnabled(self) -> bool: return self._mouse_nav
 
     @Property(bool, notify=settingsChanged)
     def remoteEnabled(self) -> bool: return self._remote_enabled
@@ -360,6 +365,12 @@ class SlideshowController(QObject):
     @Slot(bool)
     def setAutoplay(self, value: bool) -> None:
         self._autoplay = value
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(bool)
+    def setMouseNavEnabled(self, enabled: bool) -> None:
+        self._mouse_nav = enabled
         self._save_settings()
         self.settingsChanged.emit()
 
