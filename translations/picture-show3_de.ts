@@ -4,113 +4,128 @@
 <context>
     <name>AdvancedSettingsDialog</name>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="189"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="206"/>
         <source>ADVANCED SETTINGS</source>
         <translation>ERWEITERTE EINSTELLUNGEN</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="306"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="323"/>
         <source>TRANSITION</source>
         <translation>ÜBERGANG</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="315"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="332"/>
         <source>Duration</source>
         <translation>Dauer</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="222"/>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="519"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="239"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="598"/>
         <source>HUD</source>
         <translation>HUD</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="222"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="239"/>
         <source>General</source>
         <translation>Allgemein</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="222"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="239"/>
         <source>Controls</source>
         <translation>Steuerung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="222"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="239"/>
         <source>Remote</source>
         <translation>Fernbedienung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="257"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="274"/>
         <source>sections</source>
         <translation>Abschnitte</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="261"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="278"/>
         <source>option</source>
         <translation>Option</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="265"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="282"/>
         <source>change</source>
         <translation>Ändern</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="451"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="462"/>
+        <source>UPDATES</source>
+        <translation>UPDATES</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="473"/>
+        <source>Check for updates on startup</source>
+        <translation>Beim Start nach Updates suchen</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="474"/>
+        <source>Checks GitHub Releases for a newer version</source>
+        <translation>Prüft GitHub Releases auf eine neuere Version</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="530"/>
         <source>MOUSE</source>
         <translation>MAUS</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="462"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="541"/>
         <source>Mouse button navigation</source>
         <translation>Maussteuerung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="463"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="542"/>
         <source>Left click → next  ·  Right click → previous</source>
         <translation>Linksklick → weiter  ·  Rechtsklick → zurück</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="528"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="607"/>
         <source>Size</source>
         <translation>Größe</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="597"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="676"/>
         <source>SMARTPHONE REMOTE</source>
         <translation>SMARTPHONE REMOTE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="606"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="685"/>
         <source>Enable remote control</source>
         <translation>Fernbedienung aktivieren</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="656"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="735"/>
         <source>PORT</source>
         <translation>PORT</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="665"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="744"/>
         <source>Port</source>
         <translation>Port</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="377"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="394"/>
         <source>LANGUAGE</source>
         <translation>SPRACHE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="398"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="415"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="412"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="429"/>
         <source>⚠  Restart the app to apply the language change.</source>
         <translation>⚠  App neu starten, um die Sprachänderung zu übernehmen.</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="747"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="826"/>
         <source>Done</source>
         <translation>Fertig</translation>
     </message>
@@ -256,237 +271,242 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="191"/>
+        <location filename="../qml/SettingsPage.qml" line="197"/>
         <source>Exit Application</source>
         <translation>Anwendung beenden</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="198"/>
+        <location filename="../qml/SettingsPage.qml" line="204"/>
         <source>Do you want to exit the application?</source>
         <translation>Möchten Sie die Anwendung beenden?</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="223"/>
+        <location filename="../qml/SettingsPage.qml" line="229"/>
         <source>No</source>
         <translation>Nein</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="246"/>
+        <location filename="../qml/SettingsPage.qml" line="252"/>
         <source>Yes</source>
         <translation>Ja</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="264"/>
+        <location filename="../qml/SettingsPage.qml" line="270"/>
         <source>Select image folder</source>
         <translation>Bildordner auswählen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="353"/>
+        <location filename="../qml/SettingsPage.qml" line="359"/>
         <source>IMAGE FOLDER</source>
         <translation>BILDORDNER</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="394"/>
+        <location filename="../qml/SettingsPage.qml" line="400"/>
         <source>Type a path or click Browse…</source>
         <translation>Pfad eingeben oder Durchsuchen klicken …</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="414"/>
+        <location filename="../qml/SettingsPage.qml" line="420"/>
         <source>Browse...</source>
         <translation>Durchsuchen...</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="530"/>
+        <location filename="../qml/SettingsPage.qml" line="536"/>
         <source>Recent Folders</source>
         <translation>Zuletzt verwendet</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="627"/>
+        <location filename="../qml/SettingsPage.qml" line="633"/>
         <source>Clear history</source>
         <translation>Verlauf löschen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="651"/>
+        <location filename="../qml/SettingsPage.qml" line="657"/>
         <source>✓  %1 images found</source>
         <translation>✓  %1 Bilder gefunden</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="652"/>
+        <location filename="../qml/SettingsPage.qml" line="658"/>
         <source>⚠  No supported images found in this folder</source>
         <translation>⚠  Keine unterstützten Bilder in diesem Ordner gefunden</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="658"/>
+        <location filename="../qml/SettingsPage.qml" line="664"/>
         <source>  ·  filter active</source>
         <translation>  ·  Filter aktiv</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="677"/>
+        <location filename="../qml/SettingsPage.qml" line="683"/>
         <source>▶  Resume Picture Show</source>
         <translation>▶  Picture Show fortsetzen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="677"/>
+        <location filename="../qml/SettingsPage.qml" line="683"/>
         <source>▶  Start Picture Show</source>
         <translation>▶  Picture Show starten</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="678"/>
+        <location filename="../qml/SettingsPage.qml" line="684"/>
         <source>Select a folder to continue</source>
         <translation>Ordner auswählen, um fortzufahren</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="710"/>
+        <location filename="../qml/SettingsPage.qml" line="716"/>
         <source>TRANSITION</source>
         <translation>ÜBERGANG</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="724"/>
+        <location filename="../qml/SettingsPage.qml" line="730"/>
         <source>Fade</source>
         <translation>Überblenden</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="725"/>
+        <location filename="../qml/SettingsPage.qml" line="731"/>
         <source>Slide</source>
         <translation>Schieben</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="726"/>
+        <location filename="../qml/SettingsPage.qml" line="732"/>
         <source>Zoom</source>
         <translation>Zoom</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="727"/>
+        <location filename="../qml/SettingsPage.qml" line="733"/>
         <source>Fade/Black</source>
         <translation>Überblenden/Schwarz</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="788"/>
+        <location filename="../qml/SettingsPage.qml" line="794"/>
         <source>SORT ORDER</source>
         <translation>SORTIERUNG</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="802"/>
+        <location filename="../qml/SettingsPage.qml" line="808"/>
         <source>By Name</source>
         <translation>Nach Name</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="803"/>
+        <location filename="../qml/SettingsPage.qml" line="809"/>
         <source>By Date</source>
         <translation>Nach Datum</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="804"/>
+        <location filename="../qml/SettingsPage.qml" line="810"/>
         <source>Random</source>
         <translation>Zufällig</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="858"/>
+        <location filename="../qml/SettingsPage.qml" line="864"/>
         <source>FILTER</source>
         <translation>FILTER</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="953"/>
+        <location filename="../qml/SettingsPage.qml" line="959"/>
         <source>STAR RATING</source>
         <translation>STERNEBEWERTUNG</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="965"/>
+        <location filename="../qml/SettingsPage.qml" line="971"/>
         <source>All</source>
         <translation>Alle</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="966"/>
+        <location filename="../qml/SettingsPage.qml" line="972"/>
         <source>1 star and above</source>
         <translation>1 Stern und mehr</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="967"/>
+        <location filename="../qml/SettingsPage.qml" line="973"/>
         <source>2 stars and above</source>
         <translation>2 Sterne und mehr</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="968"/>
+        <location filename="../qml/SettingsPage.qml" line="974"/>
         <source>3 stars and above</source>
         <translation>3 Sterne und mehr</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="969"/>
+        <location filename="../qml/SettingsPage.qml" line="975"/>
         <source>4 stars and above</source>
         <translation>4 Sterne und mehr</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="970"/>
+        <location filename="../qml/SettingsPage.qml" line="976"/>
         <source>5 stars</source>
         <translation>5 Sterne</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1047"/>
+        <location filename="../qml/SettingsPage.qml" line="1053"/>
         <source>Loop</source>
         <translation>Schleife</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1048"/>
+        <location filename="../qml/SettingsPage.qml" line="1054"/>
         <source>Repeat after last photo</source>
         <translation>Nach dem letzten Foto wiederholen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1091"/>
+        <location filename="../qml/SettingsPage.qml" line="1097"/>
         <source>Autoplay</source>
         <translation>Autoplay</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1092"/>
+        <location filename="../qml/SettingsPage.qml" line="1098"/>
         <source>Advance automatically</source>
         <translation>Automatisch weiterschalten</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1133"/>
+        <location filename="../qml/SettingsPage.qml" line="1139"/>
         <source>Interval</source>
         <translation>Intervall</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1182"/>
+        <location filename="../qml/SettingsPage.qml" line="1188"/>
         <source>Smartphone Remote</source>
         <translation>Smartphone-Fernbedienung</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1184"/>
+        <location filename="../qml/SettingsPage.qml" line="1190"/>
         <source>Open %1 on your phone during the show</source>
         <translation>%1 auf dem Smartphone öffnen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1260"/>
+        <location filename="../qml/SettingsPage.qml" line="1266"/>
         <source>Help</source>
         <translation>Hilfe</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1289"/>
+        <location filename="../qml/SettingsPage.qml" line="1296"/>
+        <source>Update available:</source>
+        <translation>Update verfügbar:</translation>
+    </message>
+    <message>
+        <location filename="../qml/SettingsPage.qml" line="1321"/>
         <source>Advanced settings ›</source>
         <translation>Erweiterte Einstellungen ›</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1318"/>
+        <location filename="../qml/SettingsPage.qml" line="1350"/>
         <source>In show commands:</source>
         <translation>Tastenkürzel in der Show:</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1326"/>
+        <location filename="../qml/SettingsPage.qml" line="1358"/>
         <source>Navigate</source>
         <translation>Navigieren</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1339"/>
+        <location filename="../qml/SettingsPage.qml" line="1371"/>
         <source>Play/Pause</source>
         <translation>Play/Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1352"/>
+        <location filename="../qml/SettingsPage.qml" line="1384"/>
         <source>Fullscreen</source>
         <translation>Vollbild</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1365"/>
+        <location filename="../qml/SettingsPage.qml" line="1397"/>
         <source>Exit</source>
         <translation>Beenden</translation>
     </message>
@@ -494,7 +514,7 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="261"/>
+        <location filename="../slideshow_controller.py" line="267"/>
         <source>Folder not found: {}</source>
         <translation>Ordner nicht gefunden: {}</translation>
     </message>
