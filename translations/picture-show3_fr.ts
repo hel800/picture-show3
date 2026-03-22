@@ -338,7 +338,7 @@
     <message>
         <location filename="../qml/SettingsPage.qml" line="690"/>
         <source>Include subfolders</source>
-        <translation type="unfinished"></translation>
+        <translation>Inclure les sous-dossiers</translation>
     </message>
     <message>
         <location filename="../qml/SettingsPage.qml" line="729"/>
@@ -519,7 +519,7 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="274"/>
+        <location filename="../slideshow_controller.py" line="302"/>
         <source>Folder not found: {}</source>
         <translation>Dossier introuvable : {}</translation>
     </message>
