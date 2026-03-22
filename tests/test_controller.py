@@ -446,6 +446,12 @@ class TestSettingsSetters:
         ctrl.setLanguage("de")
         assert ctrl.language == "de"
 
+    def test_set_update_check_enabled(self, ctrl):
+        ctrl.setUpdateCheckEnabled(False)
+        assert ctrl.updateCheckEnabled is False
+        ctrl.setUpdateCheckEnabled(True)
+        assert ctrl.updateCheckEnabled is True
+
     def test_set_remote_enabled(self, ctrl):
         ctrl.setRemoteEnabled(True)
         assert ctrl.remoteEnabled is True
