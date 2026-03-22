@@ -50,6 +50,23 @@ pip install -r requirements.txt
 python main.py
 ```
 
+---
+
+## Running the tests
+
+```bash
+# Install test dependencies (one-time)
+pip install -r tests/requirements-test.txt
+
+# Run all tests
+python -m pytest
+
+# Run with verbose output
+python -m pytest -v
+```
+
+Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 
 ---
