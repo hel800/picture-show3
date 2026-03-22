@@ -8,11 +8,24 @@ import "."
 Popup {
     id: root
     anchors.centerIn: Overlay.overlay
-    width: Math.min(parent.width - 64, 520)
+    width: Math.min(parent.width - 64, 660)
     height: 640
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
+
+    enter: Transition {
+        ParallelAnimation {
+            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 250; easing.type: Easing.OutCubic }
+            NumberAnimation { property: "scale";   from: 0.92; to: 1; duration: 250; easing.type: Easing.OutCubic }
+        }
+    }
+    exit: Transition {
+        ParallelAnimation {
+            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.InCubic }
+            NumberAnimation { property: "scale";   from: 1; to: 0.92; duration: 200; easing.type: Easing.InCubic }
+        }
+    }
 
     // Capture the language at app start so we can show the restart notice
     // when the user picks a different language during this session.
@@ -88,7 +101,8 @@ Popup {
 
                 // ── Done button is keyboard-focused ───────────────────────────
                 if (root._doneFocused) {
-                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                    if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter ||
+                        event.key === Qt.Key_Escape) {
                         root.close()
                     } else if (event.key === Qt.Key_Up) {
                         root._doneFocused = false
