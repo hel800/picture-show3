@@ -8,7 +8,7 @@ import "."
 Popup {
     id: root
     anchors.centerIn: Overlay.overlay
-    width: Math.min(parent.width - 64, 660)
+    width: Math.min(Overlay.overlay.width - 32, 680)
     height: 640
     modal: true
     focus: true
