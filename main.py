@@ -202,6 +202,31 @@ def main() -> None:
     sys.exit(app.exec())
 
 
+def _find_target_screen(s: QSettings):
+    """
+    Return the QScreen the window should be restored to, or None.
+
+    Strategy (in order):
+    1. Match by saved screen name  ('window/screen' key) — exact identity.
+    2. Match by geometry: find the screen whose geometry contains the saved
+       windowed x/y — handles renames or missing name key.
+    """
+    screens = QGuiApplication.screens()
+    screen_name = s.value("window/screen", "")
+    if screen_name:
+        for screen in screens:
+            if screen.name() == screen_name:
+                return screen
+    # Geometry-based fallback
+    if s.contains("window/x"):
+        x = int(s.value("window/x"))
+        y = int(s.value("window/y"))
+        for screen in screens:
+            if screen.geometry().contains(x, y):
+                return screen
+    return None
+
+
 def _restore_window(win) -> None:
     s = QSettings()
     if s.contains("window/width"):
@@ -222,9 +247,16 @@ def _restore_window(win) -> None:
             # actually managed the window, so showFullScreen() still arrives too
             # early via that signal.  activeChanged fires only after the WM
             # grants focus — the window is fully mapped at that point.
+            #
+            # Additionally, setX/setY before show() are only position *hints* on
+            # X11 and are ignored entirely on Wayland.  We must use setScreen()
+            # to guarantee the fullscreen lands on the correct monitor.
             def _on_active() -> None:
                 if win.isActive():
                     win.activeChanged.disconnect(_on_active)
+                    target = _find_target_screen(s)
+                    if target is not None and target is not win.screen():
+                        win.setScreen(target)
                     win.showFullScreen()
             win.activeChanged.connect(_on_active)
             QTimer.singleShot(0, win.show)
@@ -236,6 +268,24 @@ def _restore_window(win) -> None:
         # Defer show() to the first event loop iteration (same pattern as above).
         # Calling win.show() before app.exec() starts leaves the native window surface
         # visible for several frames before Qt Quick's render loop fires — causing a white flash.
+        if sys.platform == "linux":
+            # Call setScreen() *before* show() so the native surface is created
+            # on the correct output from the start.  On Wayland the compositor
+            # decides final placement, but associating the QWindow with the right
+            # QScreen before the surface exists gives it the best chance of landing
+            # on the correct monitor.  On X11 this also helps; we additionally
+            # re-apply the saved x/y in activeChanged once the WM has mapped the
+            # window, which X11 WMs are more likely to honor at that point.
+            target = _find_target_screen(s)
+            if target is not None and target is not win.screen():
+                win.setScreen(target)
+            if s.contains("window/x"):
+                def _on_active_windowed() -> None:
+                    if win.isActive():
+                        win.activeChanged.disconnect(_on_active_windowed)
+                        win.setX(int(s.value("window/x")))
+                        win.setY(int(s.value("window/y")))
+                win.activeChanged.connect(_on_active_windowed)
         QTimer.singleShot(0, win.show)
 
 
@@ -247,6 +297,9 @@ def _save_window(win, helper: WindowHelper) -> None:
     s = QSettings()
     is_fullscreen = helper.is_fullscreen
     s.setValue("window/fullscreen", is_fullscreen)
+    # Always persist the screen name so restore can target the right monitor.
+    if win.screen() is not None:
+        s.setValue("window/screen", win.screen().name())
     if not is_fullscreen:
         # Windowed: persist current geometry.
         s.setValue("window/width",  win.width())
