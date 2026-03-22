@@ -34,14 +34,34 @@ Rectangle {
     property var  _panoLayer          : null    // the layer currently being animated
 
     // ── Cursor: hidden only in fullscreen ──────────────────────────────────────
+    // Delays mouse-nav actions so a double-click can cancel them and only
+    // trigger fullscreen toggle (no image change).
+    Timer {
+        id: mouseNavTimer
+        interval: 200
+        property int pendingButton: Qt.NoButton
+        onTriggered: {
+            if (pendingButton === Qt.LeftButton)       controller.nextImage()
+            else if (pendingButton === Qt.RightButton) controller.prevImage()
+        }
+    }
+
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
         cursorShape: Window.window && Window.window.visibility === Window.FullScreen
                      ? Qt.BlankCursor : Qt.ArrowCursor
-        acceptedButtons: Qt.LeftButton
+        acceptedButtons: Qt.LeftButton | Qt.RightButton
         onPressed: root.forceActiveFocus()
-        onDoubleClicked: toggleFullscreen()
+        onClicked: function(mouse) {
+            if (!controller.mouseNavEnabled) return
+            mouseNavTimer.pendingButton = mouse.button
+            mouseNavTimer.restart()
+        }
+        onDoubleClicked: {
+            mouseNavTimer.stop()   // cancel any queued navigation
+            toggleFullscreen()
+        }
     }
 
     // ── Layer A ───────────────────────────────────────────────────────────────
