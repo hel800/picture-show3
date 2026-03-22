@@ -11,6 +11,7 @@ from __future__ import annotations
 import os
 import random
 import sys
+import threading
 from datetime import datetime
 from pathlib import Path
 
@@ -56,6 +57,8 @@ class SlideshowController(QObject):
     settingsChanged     = Signal()
     folderHistoryChanged = Signal()
     errorOccurred       = Signal(str)
+    # Private: background scan thread → main thread handoff
+    _scanComplete       = Signal(object, int)   # (image list | None, generation)
 
     # ── Init ──────────────────────────────────────────────────────────────────
     def __init__(self, parent: QObject | None = None) -> None:
@@ -80,9 +83,12 @@ class SlideshowController(QObject):
         self._rating_cache    : dict[str, int]   = {}
         self._language        : str              = "auto"
         self._update_check_enabled: bool         = True
+        self._recursive           : bool         = False
+        self._scan_generation     : int          = 0
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
+        self._scanComplete.connect(self._on_scan_complete)
 
         self._load_settings()
 
@@ -103,6 +109,7 @@ class SlideshowController(QObject):
         self._min_rating           = s.value("minRating",         0,     type=int)
         self._language             = s.value("language",          "auto")
         self._update_check_enabled = s.value("updateCheckEnabled", True,  type=bool)
+        self._recursive            = s.value("recursive",          False, type=bool)
 
         # QSettings returns a str for single-item lists, list for multiple
         raw = s.value("folderHistory", [])
@@ -134,6 +141,7 @@ class SlideshowController(QObject):
         s.setValue("minRating",          self._min_rating)
         s.setValue("language",           self._language)
         s.setValue("updateCheckEnabled", self._update_check_enabled)
+        s.setValue("recursive",          self._recursive)
         s.setValue("folderHistory",      self._folder_history)
 
     # ── Properties ───────────────────────────────────────────────────────────
@@ -196,6 +204,9 @@ class SlideshowController(QObject):
 
     @Property(bool, notify=settingsChanged)
     def updateCheckEnabled(self) -> bool: return self._update_check_enabled
+
+    @Property(bool, notify=settingsChanged)
+    def recursiveSearch(self) -> bool: return self._recursive
 
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
@@ -262,17 +273,34 @@ class SlideshowController(QObject):
         self.folderHistoryChanged.emit()
 
     def _scan_images(self) -> None:
-        folder = Path(self._folder)
-        if not folder.is_dir():
-            self.errorOccurred.emit(self.tr("Folder not found: {}").format(self._folder))
-            images: list[str] = []
-        else:
-            images = [
-                str(f)
-                for f in folder.iterdir()
-                if f.is_file() and f.suffix.lower() in IMAGE_EXTENSIONS
-            ]
+        """Start a background scan.  Results arrive in _on_scan_complete."""
+        self._scan_generation += 1
+        threading.Thread(
+            target=self._scan_worker,
+            args=(self._folder, self._recursive, self._scan_generation),
+            daemon=True,
+        ).start()
 
+    def _scan_worker(self, folder_path: str, recursive: bool, gen: int) -> None:
+        folder = Path(folder_path)
+        if not folder.is_dir():
+            self._scanComplete.emit(None, gen)
+            return
+        iterator = folder.rglob("*") if recursive else folder.iterdir()
+        images = [
+            str(f)
+            for f in iterator
+            if f.is_file() and f.suffix.lower() in IMAGE_EXTENSIONS
+        ]
+        self._scanComplete.emit(images, gen)
+
+    @Slot(object, int)
+    def _on_scan_complete(self, images, gen: int) -> None:
+        if gen != self._scan_generation:
+            return  # stale scan — user changed folder/setting before this finished
+        if images is None:
+            self.errorOccurred.emit(self.tr("Folder not found: {}").format(self._folder))
+            images = []
         self._sort(images)
         self._all_images   = images
         self._rating_cache = {}
@@ -409,6 +437,16 @@ class SlideshowController(QObject):
     def setUpdateCheckEnabled(self, enabled: bool) -> None:
         self._update_check_enabled = enabled
         self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(bool)
+    def setRecursiveSearch(self, enabled: bool) -> None:
+        if self._recursive == enabled:
+            return
+        self._recursive = enabled
+        self._save_settings()
+        if self._folder:
+            self._scan_images()
         self.settingsChanged.emit()
 
     # ── Playback control ──────────────────────────────────────────────────────

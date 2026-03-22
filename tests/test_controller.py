@@ -35,18 +35,18 @@ class TestImageExtensions:
 # ── loadFolder — URL / path parsing ──────────────────────────────────────────
 
 class TestLoadFolder:
-    def test_plain_path(self, ctrl, image_folder):
-        ctrl.loadFolder(str(image_folder))
+    def test_plain_path(self, ctrl, image_folder, load_folder):
+        load_folder(ctrl, str(image_folder))
         assert ctrl.imageCount == 5
 
-    def test_file_url_triple_slash(self, ctrl, image_folder):
+    def test_file_url_triple_slash(self, ctrl, image_folder, load_folder):
         url = "file:///" + str(image_folder).replace("\\", "/")
-        ctrl.loadFolder(url)
+        load_folder(ctrl, url)
         assert ctrl.imageCount == 5
 
-    def test_file_url_double_slash(self, ctrl, image_folder):
+    def test_file_url_double_slash(self, ctrl, image_folder, load_folder):
         url = "file://" + str(image_folder).replace("\\", "/")
-        ctrl.loadFolder(url)
+        load_folder(ctrl, url)
         assert ctrl.imageCount == 5
 
     def test_empty_string_clears_images(self, ctrl_with_images):
@@ -57,19 +57,19 @@ class TestLoadFolder:
         ctrl.loadFolder("/this/does/not/exist/at/all")
         assert ctrl.imageCount == 0
 
-    def test_non_image_files_are_ignored(self, tmp_path, ctrl):
+    def test_non_image_files_are_ignored(self, tmp_path, ctrl, load_folder):
         (tmp_path / "readme.txt").write_text("hello")
         (tmp_path / "data.csv").write_text("a,b,c")
         make_plain_jpeg(tmp_path / "photo.jpg")
-        ctrl.loadFolder(str(tmp_path))
+        load_folder(ctrl, str(tmp_path))
         assert ctrl.imageCount == 1
 
-    def test_mixed_extensions(self, tmp_path, ctrl):
+    def test_mixed_extensions(self, tmp_path, ctrl, load_folder):
         for ext in (".jpg", ".png", ".bmp", ".txt", ".py"):
             (tmp_path / f"file{ext}").write_bytes(b"\xff\xd8\xff" if ext != ".txt" and ext != ".py" else b"x")
         # .txt and .py should not be counted — Pillow might fail to open them
         # so we simply verify the count matches only recognised extensions
-        ctrl.loadFolder(str(tmp_path))
+        load_folder(ctrl, str(tmp_path))
         # Count files whose suffix is in IMAGE_EXTENSIONS
         expected = sum(
             1 for f in tmp_path.iterdir()
@@ -77,32 +77,32 @@ class TestLoadFolder:
         )
         assert ctrl.imageCount == expected
 
-    def test_whitespace_stripped_from_path(self, ctrl, image_folder):
+    def test_whitespace_stripped_from_path(self, ctrl, image_folder, load_folder):
         # loadFolder strips leading/trailing whitespace from the parsed path
         plain = str(image_folder)
-        ctrl.loadFolder(plain)
+        load_folder(ctrl, plain)
         assert ctrl.imageCount == 5
 
 
 # ── Sorting ───────────────────────────────────────────────────────────────────
 
 class TestSorting:
-    def test_name_sort_is_case_insensitive(self, tmp_path, ctrl):
+    def test_name_sort_is_case_insensitive(self, tmp_path, ctrl, load_folder):
         for name in ("Banana.jpg", "apple.jpg", "Cherry.jpg"):
             make_plain_jpeg(tmp_path / name)
         ctrl.setSortOrder("name")
-        ctrl.loadFolder(str(tmp_path))
+        load_folder(ctrl, str(tmp_path))
         names = [Path(ctrl.imagePath(i)).name for i in range(ctrl.imageCount)]
         assert names == sorted(names, key=str.lower)
 
-    def test_random_sort_preserves_count(self, ctrl, image_folder):
+    def test_random_sort_preserves_count(self, ctrl, image_folder, load_folder):
         ctrl.setSortOrder("random")
-        ctrl.loadFolder(str(image_folder))
+        load_folder(ctrl, str(image_folder))
         assert ctrl.imageCount == 5
 
-    def test_date_sort_preserves_count(self, ctrl, image_folder):
+    def test_date_sort_preserves_count(self, ctrl, image_folder, load_folder):
         ctrl.setSortOrder("date")
-        ctrl.loadFolder(str(image_folder))
+        load_folder(ctrl, str(image_folder))
         assert ctrl.imageCount == 5
 
     def test_changing_sort_order_reapplies_to_loaded_images(self, ctrl_with_images):
@@ -111,13 +111,13 @@ class TestSorting:
         ctrl_with_images.setSortOrder("name")
         assert ctrl_with_images.imageCount == 5
 
-    def test_name_sort_after_folder_change(self, ctrl, tmp_path):
+    def test_name_sort_after_folder_change(self, ctrl, tmp_path, load_folder):
         d = tmp_path / "imgs"
         d.mkdir()
         for name in ("z.jpg", "a.jpg", "m.jpg"):
             make_plain_jpeg(d / name)
         ctrl.setSortOrder("name")
-        ctrl.loadFolder(str(d))
+        load_folder(ctrl, str(d))
         names = [Path(ctrl.imagePath(i)).name for i in range(ctrl.imageCount)]
         assert names == ["a.jpg", "m.jpg", "z.jpg"]
 
@@ -192,52 +192,52 @@ class TestNavigation:
 # ── Star-rating filter ────────────────────────────────────────────────────────
 
 class TestRatingFilter:
-    def test_rating_zero_shows_all(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_rating_zero_shows_all(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(0)
         assert ctrl.imageCount == 6
 
-    def test_filter_at_rating_3(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_filter_at_rating_3(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(3)
         assert ctrl.imageCount == 3   # r3, r4, r5
 
-    def test_filter_at_rating_5(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_filter_at_rating_5(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(5)
         assert ctrl.imageCount == 1   # only r5
 
-    def test_filter_applied_before_load(self, ctrl, rated_folder):
+    def test_filter_applied_before_load(self, ctrl, rated_folder, load_folder):
         ctrl.setMinRating(4)
-        ctrl.loadFolder(str(rated_folder))
+        load_folder(ctrl, str(rated_folder))
         assert ctrl.imageCount == 2   # r4, r5
 
-    def test_rating_clamped_above_5(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_rating_clamped_above_5(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(10)
         assert ctrl.minRating == 5
 
-    def test_rating_clamped_below_0(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_rating_clamped_below_0(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(-3)
         assert ctrl.minRating == 0
         assert ctrl.imageCount == 6
 
-    def test_total_image_count_unaffected_by_filter(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_total_image_count_unaffected_by_filter(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(4)
         assert ctrl.totalImageCount == 6
         assert ctrl.imageCount == 2
 
-    def test_same_rating_value_is_noop(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_same_rating_value_is_noop(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(3)
         count_before = ctrl.imageCount
         ctrl.setMinRating(3)            # identical value — no filter re-run
         assert ctrl.imageCount == count_before
 
-    def test_filter_resets_current_index_to_zero(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_filter_resets_current_index_to_zero(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         ctrl.goTo(4)
         ctrl.setMinRating(3)
         assert ctrl.currentIndex == 0
@@ -246,8 +246,8 @@ class TestRatingFilter:
 # ── Folder history ────────────────────────────────────────────────────────────
 
 class TestFolderHistory:
-    def test_start_show_adds_folder_to_history(self, ctrl, image_folder):
-        ctrl.loadFolder(str(image_folder))
+    def test_start_show_adds_folder_to_history(self, ctrl, image_folder, load_folder):
+        load_folder(ctrl, str(image_folder))
         ctrl.startShow()
         ctrl.stopShow()
         assert str(image_folder) in ctrl.folderHistory
@@ -403,8 +403,8 @@ class TestImageAccess:
     def test_image_rating_out_of_range_is_zero(self, ctrl_with_images):
         assert ctrl_with_images.imageRating(999) == 0
 
-    def test_image_rating_uses_cache(self, ctrl, rated_folder):
-        ctrl.loadFolder(str(rated_folder))
+    def test_image_rating_uses_cache(self, ctrl, rated_folder, load_folder):
+        load_folder(ctrl, str(rated_folder))
         # First call populates cache
         r = ctrl.imageRating(0)
         # Second call must return same value (from cache)
@@ -451,6 +451,12 @@ class TestSettingsSetters:
         assert ctrl.updateCheckEnabled is False
         ctrl.setUpdateCheckEnabled(True)
         assert ctrl.updateCheckEnabled is True
+
+    def test_set_recursive_search(self, ctrl):
+        ctrl.setRecursiveSearch(True)
+        assert ctrl.recursiveSearch is True
+        ctrl.setRecursiveSearch(False)
+        assert ctrl.recursiveSearch is False
 
     def test_set_remote_enabled(self, ctrl):
         ctrl.setRemoteEnabled(True)
@@ -511,3 +517,37 @@ class TestSignals:
         ctrl._update_history("/fake/x")
         with qtbot.waitSignal(ctrl.folderHistoryChanged, timeout=1000):
             ctrl.clearFolderHistory()
+
+
+# ── Recursive search ──────────────────────────────────────────────────────────
+
+class TestRecursiveSearch:
+    def test_flat_scan_misses_subfolder_images(self, tmp_path, ctrl, load_folder):
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        make_plain_jpeg(tmp_path / "top.jpg")
+        make_plain_jpeg(sub / "nested.jpg")
+        ctrl.setRecursiveSearch(False)
+        load_folder(ctrl, str(tmp_path))
+        assert ctrl.imageCount == 1
+
+    def test_recursive_scan_finds_subfolder_images(self, tmp_path, ctrl, load_folder):
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        make_plain_jpeg(tmp_path / "top.jpg")
+        make_plain_jpeg(sub / "nested.jpg")
+        ctrl.setRecursiveSearch(True)
+        load_folder(ctrl, str(tmp_path))
+        assert ctrl.imageCount == 2
+
+    def test_toggle_recursive_rescans(self, tmp_path, ctrl, load_folder, qtbot):
+        sub = tmp_path / "sub"
+        sub.mkdir()
+        make_plain_jpeg(tmp_path / "top.jpg")
+        make_plain_jpeg(sub / "nested.jpg")
+        load_folder(ctrl, str(tmp_path))
+        assert ctrl.imageCount == 1
+        # Enable recursive — setRecursiveSearch triggers a new background scan
+        with qtbot.waitSignal(ctrl.imagesChanged, timeout=3000):
+            ctrl.setRecursiveSearch(True)
+        assert ctrl.imageCount == 2

@@ -110,6 +110,15 @@ def ctrl(qapp, _isolate_settings):
 
 
 @pytest.fixture
-def ctrl_with_images(ctrl, image_folder):
-    ctrl.loadFolder(str(image_folder))
+def load_folder(qtbot):
+    """Call loadFolder and wait for imagesChanged (async scan)."""
+    def _load(ctrl, path):
+        with qtbot.waitSignal(ctrl.imagesChanged, timeout=3000):
+            ctrl.loadFolder(path)
+    return _load
+
+
+@pytest.fixture
+def ctrl_with_images(ctrl, image_folder, load_folder):
+    load_folder(ctrl, str(image_folder))
     return ctrl

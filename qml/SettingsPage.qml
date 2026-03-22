@@ -649,21 +649,67 @@ Item {
                         }
                     }
 
-                    Row {
-                        visible: controller.folder.length > 0
-                        spacing: 0
-                        Text {
-                            text: controller.imageCount > 0
-                                  ? qsTr("✓  %1 images found").arg(controller.imageCount)
-                                  : qsTr("⚠  No supported images found in this folder")
-                            color: controller.imageCount > 0 ? Theme.statusOk : Theme.statusWarn
-                            font.pixelSize: 12
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        // Image count status (left)
+                        Row {
+                            visible: controller.folder.length > 0
+                            spacing: 0
+                            Text {
+                                text: controller.imageCount > 0
+                                      ? qsTr("✓  %1 images found").arg(controller.imageCount)
+                                      : qsTr("⚠  No supported images found in this folder")
+                                color: controller.imageCount > 0 ? Theme.statusOk : Theme.statusWarn
+                                font.pixelSize: 12
+                            }
+                            Text {
+                                visible: controller.imageCount < controller.totalImageCount
+                                text: qsTr("  ·  filter active")
+                                color: Theme.textMuted
+                                font.pixelSize: 12
+                            }
                         }
-                        Text {
-                            visible: controller.imageCount < controller.totalImageCount
-                            text: qsTr("  ·  filter active")
-                            color: Theme.textMuted
-                            font.pixelSize: 12
+
+                        Item { Layout.fillWidth: true }
+
+                        // Include subfolders checkbox (right)
+                        MouseArea {
+                            width: recursiveRow.implicitWidth
+                            height: recursiveRow.implicitHeight
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: controller.setRecursiveSearch(!controller.recursiveSearch)
+
+                            Row {
+                                id: recursiveRow
+                                spacing: 6
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: qsTr("Include subfolders")
+                                    color: Theme.textMuted
+                                    font.pixelSize: 12
+                                }
+
+                                Rectangle {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 16; height: 16; radius: 3
+                                    color: controller.recursiveSearch ? Theme.accent : "transparent"
+                                    border.color: controller.recursiveSearch ? Theme.accent : Theme.textMuted
+                                    border.width: 1.5
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "✓"
+                                        color: "white"
+                                        font.pixelSize: 10
+                                        font.weight: Font.Bold
+                                        visible: controller.recursiveSearch
+                                    }
+                                }
+                            }
                         }
                     }
 
