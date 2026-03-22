@@ -23,8 +23,8 @@ Popup {
     property int _section: 0       // 0 General · 1 Controls · 2 HUD · 3 Remote
     property int _focusedOption: 0 // index of focused option within current section
 
-    // Options per section: General=[duration,language] Controls=[] HUD=[size] Remote=[enable,port]
-    readonly property var _optionCounts: [2, 0, 1, 2]
+    // Options per section: General=[duration,language] Controls=[mouseNav] HUD=[size] Remote=[enable,port]
+    readonly property var _optionCounts: [2, 1, 1, 2]
 
     // Returns false for options that are currently inactive and should be skipped
     function _optionEnabled(section, option) {
@@ -121,6 +121,9 @@ Popup {
                     } else if (root._section === 2 && root._focusedOption === 0) {
                         controller.setHudSize(
                             Math.max(50, Math.min(200, controller.hudSize + d * 10)))
+
+                    } else if (root._section === 1 && root._focusedOption === 0) {
+                        controller.setMouseNavEnabled(d > 0)
 
                     } else if (root._section === 3 && root._focusedOption === 0) {
                         controller.setRemoteEnabled(d > 0)
@@ -378,9 +381,69 @@ Popup {
 
             // ── Controls ──────────────────────────────────────────────────────
             Item {
-                Text {
-                    anchors.centerIn: parent; text: qsTr("No options yet")
-                    color: Theme.textDisabled; font.pixelSize: 13
+                ColumnLayout {
+                    width: parent.width
+                    spacing: 0
+
+                    // Option 0: Mouse navigation ──────────────────────────────
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: ctrl0Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: (root._section === 1 && root._focusedOption === 0)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: ctrl0Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: (root._section === 1 && root._focusedOption === 0)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("MOUSE")
+                                    color: (root._section === 1 && root._focusedOption === 0)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 4
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("Mouse button navigation"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("Left click → next  ·  Right click → previous"); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
+                                Item { Layout.fillWidth: true }
+                                Switch {
+                                    id: mouseNavSwitch
+                                    checked: controller.mouseNavEnabled
+                                    onToggled: controller.setMouseNavEnabled(checked)
+                                    indicator: Rectangle {
+                                        implicitWidth: 44; implicitHeight: 24; radius: 12
+                                        color: mouseNavSwitch.checked ? Theme.accent : Theme.surface
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                        Rectangle {
+                                            x: mouseNavSwitch.checked ? parent.width - width - 3 : 3
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 18; height: 18; radius: 9
+                                            color: mouseNavSwitch.checked ? "white" : Theme.textMuted
+                                            Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
                 }
             }
 
