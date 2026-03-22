@@ -71,6 +71,50 @@
       font-weight: 500;
     }
     nav a.btn-nav:hover { background: var(--accent-light); color: var(--bg-deep); }
+    .nav-hamburger {
+      display: none;
+      background: none;
+      border: none;
+      color: var(--text-sec);
+      cursor: pointer;
+      padding: 0.25rem;
+      border-radius: 6px;
+      transition: color 0.15s, background 0.15s;
+    }
+    .nav-hamburger:hover { color: var(--text); background: var(--surface); }
+    .nav-hamburger svg { width: 22px; height: 22px; display: block; }
+    @media (max-width: 680px) {
+      nav {
+        height: auto;
+        flex-wrap: wrap;
+        padding: 0.75rem 1.25rem;
+        gap: 0;
+      }
+      nav img { height: 24px; max-width: 120px; }
+      .nav-hamburger { display: block; }
+      nav ul {
+        display: none;
+        flex-direction: column;
+        align-items: stretch;
+        width: 100%;
+        gap: 0;
+        border-top: 1px solid var(--border);
+        margin-top: 0.6rem;
+        padding-top: 0.5rem;
+        padding-bottom: 0.4rem;
+      }
+      nav ul.open { display: flex; }
+      nav ul li a {
+        display: block;
+        padding: 0.55rem 0.25rem;
+        border-radius: 6px;
+      }
+      nav a.btn-nav {
+        margin-top: 0.4rem;
+        text-align: center;
+        padding: 0.55rem 0.75rem;
+      }
+    }
 
     /* ── Sections ─────────────────────────────────────────────── */
     section { padding: 5rem 2rem; }
@@ -437,7 +481,14 @@
 <!-- ── Nav ──────────────────────────────────────────────────────── -->
 <nav>
   <img src="logo.svg" alt="picture show 3">
-  <ul>
+  <button class="nav-hamburger" id="navToggle" aria-label="Toggle menu">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <line x1="3" y1="6"  x2="21" y2="6"/>
+      <line x1="3" y1="12" x2="21" y2="12"/>
+      <line x1="3" y1="18" x2="21" y2="18"/>
+    </svg>
+  </button>
+  <ul id="navMenu">
     <li><a href="#intro">About</a></li>
     <li><a href="#screenshots">Screenshots</a></li>
     <li><a href="#features">Features</a></li>
@@ -718,6 +769,13 @@
 </div>
 
 <script>
+  // ── Nav hamburger ─────────────────────────────────────────────
+  const navToggle = document.getElementById('navToggle');
+  const navMenu   = document.getElementById('navMenu');
+  navToggle.addEventListener('click', () => navMenu.classList.toggle('open'));
+  navMenu.querySelectorAll('a').forEach(a =>
+    a.addEventListener('click', () => navMenu.classList.remove('open')));
+
   const slides = [
     { src: 'screenshot_mainMenu.png', caption: 'Settings screen' },
     { src: 'screenshot_showStarted.png',   caption: 'Slideshow view'  },
