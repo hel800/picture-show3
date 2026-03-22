@@ -17,6 +17,7 @@ from image_provider import SlideshowImageProvider
 from qr_provider import QrImageProvider
 from remote_server import RemoteServer
 from slideshow_controller import SlideshowController
+from update_checker import UpdateChecker
 
 APP_VERSION = "0.9 beta"
 
@@ -175,19 +176,21 @@ def main() -> None:
     engine = QQmlApplicationEngine()
 
     # Store on app so Python's GC never collects them while QML holds references
-    app.controller    = SlideshowController()
-    app.provider      = SlideshowImageProvider(app.controller)
-    app.qr_provider   = QrImageProvider()
-    app.remote        = RemoteServer(app.controller, port=app.controller.remotePort)
-    app.window_helper = WindowHelper()
+    app.controller     = SlideshowController()
+    app.provider       = SlideshowImageProvider(app.controller)
+    app.qr_provider    = QrImageProvider()
+    app.remote         = RemoteServer(app.controller, port=app.controller.remotePort)
+    app.window_helper  = WindowHelper()
+    app.update_checker = UpdateChecker()
 
     engine.addImageProvider("slides", app.provider)
     engine.addImageProvider("qr",     app.qr_provider)
     ctx = engine.rootContext()
-    ctx.setContextProperty("controller",   app.controller)
-    ctx.setContextProperty("remoteServer", app.remote)
-    ctx.setContextProperty("windowHelper", app.window_helper)
-    ctx.setContextProperty("appVersion",   APP_VERSION)
+    ctx.setContextProperty("controller",    app.controller)
+    ctx.setContextProperty("remoteServer",  app.remote)
+    ctx.setContextProperty("windowHelper",  app.window_helper)
+    ctx.setContextProperty("updateChecker", app.update_checker)
+    ctx.setContextProperty("appVersion",    APP_VERSION)
 
     engine.load(_QML_ROOT)
 
@@ -198,6 +201,9 @@ def main() -> None:
     app.window_helper.set_window(win)
     _restore_window(win)
     app.aboutToQuit.connect(lambda: _save_window(win, app.window_helper))
+
+    if app.controller.updateCheckEnabled:
+        QTimer.singleShot(3000, lambda: app.update_checker.check(APP_VERSION))
 
     sys.exit(app.exec())
 
