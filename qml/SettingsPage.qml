@@ -15,6 +15,12 @@ Item {
     property string _folderAtStart   : ""
     property string _sortAtStart     : ""
     property int    _minRatingAtStart: 0
+    property string _updateVersion   : ""   // set when a newer GitHub release is found
+
+    Connections {
+        target: updateChecker
+        function onUpdateAvailable(version) { root._updateVersion = version }
+    }
 
     // Reset to "Start" when the user picks a different folder, sort order, or filter after a show
     Connections {
@@ -1269,6 +1275,32 @@ Item {
                                 hoverEnabled: true
                                 cursorShape: Qt.PointingHandCursor
                                 onClicked: root.openHelp()
+                            }
+                        }
+
+                        Item { Layout.fillWidth: true }
+
+                        // Update available badge — centered between Help and Advanced settings
+                        Rectangle {
+                            visible: root._updateVersion !== ""
+                            height: 26; radius: 8
+                            width: updateBadgeRow.implicitWidth + 20
+                            color: updateBadgeHover.containsMouse ? Theme.accentDeep : Theme.surface
+                            border.color: Theme.accent; border.width: 1
+                            Behavior on color { ColorAnimation { duration: 120 } }
+                            Row {
+                                id: updateBadgeRow
+                                anchors.centerIn: parent; spacing: 5
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: "✦ " + qsTr("Update available:") + " v" + root._updateVersion
+                                    color: Theme.accentLight; font.pixelSize: 11
+                                }
+                            }
+                            MouseArea {
+                                id: updateBadgeHover
+                                anchors.fill: parent; hoverEnabled: true; cursorShape: Qt.PointingHandCursor
+                                onClicked: Qt.openUrlExternally("https://github.com/hel800/picture-show3/releases/latest")
                             }
                         }
 

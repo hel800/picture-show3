@@ -79,6 +79,7 @@ class SlideshowController(QObject):
         self._min_rating      : int              = 0
         self._rating_cache    : dict[str, int]   = {}
         self._language        : str              = "auto"
+        self._update_check_enabled: bool         = True
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
@@ -98,9 +99,10 @@ class SlideshowController(QObject):
         self._interval         = s.value("interval",      5_000, type=int)
         self._remote_enabled   = s.value("remoteEnabled",   False, type=bool)
         self._remote_port      = s.value("remotePort",     8765,  type=int)
-        self._mouse_nav        = s.value("mouseNavEnabled", False, type=bool)
-        self._min_rating       = s.value("minRating",     0,     type=int)
-        self._language         = s.value("language",      "auto")
+        self._mouse_nav            = s.value("mouseNavEnabled",    False, type=bool)
+        self._min_rating           = s.value("minRating",         0,     type=int)
+        self._language             = s.value("language",          "auto")
+        self._update_check_enabled = s.value("updateCheckEnabled", True,  type=bool)
 
         # QSettings returns a str for single-item lists, list for multiple
         raw = s.value("folderHistory", [])
@@ -128,10 +130,11 @@ class SlideshowController(QObject):
         s.setValue("interval",       self._interval)
         s.setValue("remoteEnabled",   self._remote_enabled)
         s.setValue("remotePort",      self._remote_port)
-        s.setValue("mouseNavEnabled", self._mouse_nav)
-        s.setValue("minRating",      self._min_rating)
-        s.setValue("language",       self._language)
-        s.setValue("folderHistory",  self._folder_history)
+        s.setValue("mouseNavEnabled",    self._mouse_nav)
+        s.setValue("minRating",          self._min_rating)
+        s.setValue("language",           self._language)
+        s.setValue("updateCheckEnabled", self._update_check_enabled)
+        s.setValue("folderHistory",      self._folder_history)
 
     # ── Properties ───────────────────────────────────────────────────────────
     @Property(str, notify=settingsChanged)
@@ -190,6 +193,9 @@ class SlideshowController(QObject):
 
     @Property(str, notify=settingsChanged)
     def language(self) -> str: return self._language
+
+    @Property(bool, notify=settingsChanged)
+    def updateCheckEnabled(self) -> bool: return self._update_check_enabled
 
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
@@ -396,6 +402,12 @@ class SlideshowController(QObject):
     @Slot(str)
     def setLanguage(self, code: str) -> None:
         self._language = code
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(bool)
+    def setUpdateCheckEnabled(self, enabled: bool) -> None:
+        self._update_check_enabled = enabled
         self._save_settings()
         self.settingsChanged.emit()
 
