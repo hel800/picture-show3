@@ -4,113 +4,113 @@
 <context>
     <name>AdvancedSettingsDialog</name>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="189"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="203"/>
         <source>ADVANCED SETTINGS</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="306"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="320"/>
         <source>TRANSITION</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="315"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="329"/>
         <source>Duration</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="222"/>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="519"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="236"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="533"/>
         <source>HUD</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="222"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="236"/>
         <source>General</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="222"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="236"/>
         <source>Controls</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="222"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="236"/>
         <source>Remote</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="257"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="271"/>
         <source>sections</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="261"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="275"/>
         <source>option</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="265"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="279"/>
         <source>change</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="451"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="465"/>
         <source>MOUSE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="462"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="476"/>
         <source>Mouse button navigation</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="463"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="477"/>
         <source>Left click → next  ·  Right click → previous</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="528"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="542"/>
         <source>Size</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="597"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="611"/>
         <source>SMARTPHONE REMOTE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="606"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="620"/>
         <source>Enable remote control</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="656"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="670"/>
         <source>PORT</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="665"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="679"/>
         <source>Port</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="377"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="391"/>
         <source>LANGUAGE</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="398"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="412"/>
         <source>Auto</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="412"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="426"/>
         <source>⚠  Restart the app to apply the language change.</source>
         <translation type="unfinished"></translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="747"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="761"/>
         <source>Done</source>
         <translation type="unfinished"></translation>
     </message>
