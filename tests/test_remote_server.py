@@ -137,6 +137,7 @@ class TestHttpEndpoints:
         ctrl.loadFolder(str(d))
         qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         ctrl.setSortOrder("name")
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         ctrl.goTo(0)
 
         status, body = _http_get(qtbot, f"http://127.0.0.1:{port}/next")
@@ -153,6 +154,7 @@ class TestHttpEndpoints:
         ctrl.loadFolder(str(d))
         qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         ctrl.setSortOrder("name")
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         ctrl.goTo(1)
 
         status, body = _http_get(qtbot, f"http://127.0.0.1:{port}/prev")

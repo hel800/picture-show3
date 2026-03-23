@@ -58,8 +58,9 @@ class SlideshowController(QObject):
     folderHistoryChanged = Signal()
     errorOccurred       = Signal(str)
     scanningChanged     = Signal()
-    # Private: background scan thread → main thread handoff
+    # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
+    _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
 
     # ── Init ──────────────────────────────────────────────────────────────────
     def __init__(self, parent: QObject | None = None) -> None:
@@ -91,6 +92,7 @@ class SlideshowController(QObject):
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
         self._scanComplete.connect(self._on_scan_complete)
+        self._sortComplete.connect(self._on_sort_complete)
 
         self._load_settings()
 
@@ -339,6 +341,36 @@ class SlideshowController(QObject):
         # changed it while the background scan was running
         self._apply_filter()   # emits imagesChanged + currentIndexChanged
 
+    def _sort_in_background(self) -> None:
+        """Re-sort already-loaded images in a background thread."""
+        self._scanning = True
+        self.scanningChanged.emit()
+        self._scan_generation += 1
+        threading.Thread(
+            target=self._sort_worker,
+            args=(list(self._all_images), self._sort_order, self._scan_generation),
+            daemon=True,
+        ).start()
+
+    def _sort_worker(self, images: list[str], sort_order: str, gen: int) -> None:
+        match sort_order:
+            case "name":
+                images.sort(key=lambda p: Path(p).name.lower())
+            case "date":
+                images.sort(key=SlideshowController._date_key)
+            case "random":
+                random.shuffle(images)
+        self._sortComplete.emit(images, gen)
+
+    @Slot(object, int)
+    def _on_sort_complete(self, images: list[str], gen: int) -> None:
+        if gen != self._scan_generation:
+            return
+        self._scanning = False
+        self.scanningChanged.emit()
+        self._all_images = images
+        self._apply_filter()   # fast — uses existing _rating_cache
+
     def _sort(self, images: list[str]) -> None:
         match self._sort_order:
             case "name":
@@ -408,8 +440,7 @@ class SlideshowController(QObject):
     def setSortOrder(self, order: SortOrder) -> None:
         self._sort_order = order
         if self._all_images:
-            self._sort(self._all_images)
-            self._apply_filter()   # emits imagesChanged + currentIndexChanged
+            self._sort_in_background()   # async — avoids blocking on date sort (EXIF reads)
         self._save_settings()
         self.settingsChanged.emit()
 

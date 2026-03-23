@@ -17,6 +17,8 @@ Item {
     property int    _minRatingAtStart: 0
     property string _updateVersion   : ""   // set when a newer GitHub release is found
 
+    readonly property bool _canStart: controller.imageCount > 0 && !controller.scanning
+
     Connections {
         target: updateChecker
         function onUpdateAvailable(version) { root._updateVersion = version }
@@ -37,7 +39,7 @@ Item {
     signal openHelp()
 
     function launchShow() {
-        if (controller.imageCount === 0) return
+        if (!root._canStart) return
         if (root.hasStarted)
             root.startShow()   // resume: skip fancy transition, show fades in via SlideshowPage intro
         else
@@ -66,7 +68,7 @@ Item {
             break
         case Qt.Key_Return:
         case Qt.Key_Enter:
-            if (controller.imageCount > 0)
+            if (root._canStart)
                 launchShow()
             break
         case Qt.Key_T: {
@@ -735,17 +737,17 @@ Item {
                         Layout.fillWidth: true
                         height: 54
                         radius: 14
-                        color: controller.imageCount > 0
+                        color: root._canStart
                                ? (startArea.pressed ? Theme.accentPress : Theme.accent)
                                : Theme.surface
                         Behavior on color { ColorAnimation { duration: 180 } }
 
                         Text {
                             anchors.centerIn: parent
-                            text: controller.imageCount > 0
+                            text: root._canStart
                                   ? (root.hasStarted ? qsTr("▶  Resume Picture Show") : qsTr("▶  Start Picture Show"))
-                                  : qsTr("Select a folder to continue")
-                            color: controller.imageCount > 0 ? "white" : Theme.textDisabled
+                                  : (controller.scanning ? qsTr("Scanning and sorting images…") : qsTr("Select a folder to continue"))
+                            color: root._canStart ? "white" : Theme.textDisabled
                             font.pixelSize: 16
                             font.weight: Font.Bold
                         }
@@ -753,14 +755,14 @@ Item {
                         KeyHint {
                             anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
                             label: "↵"
-                            opacity: controller.imageCount > 0 ? 1 : 0
+                            opacity: root._canStart ? 1 : 0
                         }
 
                         MouseArea {
                             id: startArea
                             anchors.fill: parent
-                            enabled: controller.imageCount > 0
-                            cursorShape: controller.imageCount > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            enabled: root._canStart
+                            cursorShape: root._canStart ? Qt.PointingHandCursor : Qt.ArrowCursor
                             onClicked: launchShow()
                         }
                     }
