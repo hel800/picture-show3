@@ -57,8 +57,9 @@ class SlideshowController(QObject):
     settingsChanged     = Signal()
     folderHistoryChanged = Signal()
     errorOccurred       = Signal(str)
+    scanningChanged     = Signal()
     # Private: background scan thread → main thread handoff
-    _scanComplete       = Signal(object, int)   # (image list | None, generation)
+    _scanComplete       = Signal(object, int)   # (result dict | None, generation)
 
     # ── Init ──────────────────────────────────────────────────────────────────
     def __init__(self, parent: QObject | None = None) -> None:
@@ -85,6 +86,7 @@ class SlideshowController(QObject):
         self._update_check_enabled: bool         = True
         self._recursive           : bool         = False
         self._scan_generation     : int          = 0
+        self._scanning            : bool         = False
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
@@ -208,6 +210,9 @@ class SlideshowController(QObject):
     @Property(bool, notify=settingsChanged)
     def recursiveSearch(self) -> bool: return self._recursive
 
+    @Property(bool, notify=scanningChanged)
+    def scanning(self) -> bool: return self._scanning
+
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
         """
@@ -255,6 +260,13 @@ class SlideshowController(QObject):
             return
 
         self._folder = str(Path(path))
+        # Clear immediately so imageCount == 0 during the async scan
+        self._all_images = []
+        self._images = []
+        self._current_index = 0
+        self._rating_cache = {}
+        self.imagesChanged.emit()
+        self.currentIndexChanged.emit()
         self._scan_images()
         self.settingsChanged.emit()
 
@@ -273,38 +285,59 @@ class SlideshowController(QObject):
         self.folderHistoryChanged.emit()
 
     def _scan_images(self) -> None:
-        """Start a background scan.  Results arrive in _on_scan_complete."""
+        """Start a background scan.  Results (sorted + filtered) arrive in _on_scan_complete."""
+        self._scanning = True
+        self.scanningChanged.emit()
         self._scan_generation += 1
         threading.Thread(
             target=self._scan_worker,
-            args=(self._folder, self._recursive, self._scan_generation),
+            args=(self._folder, self._recursive, self._sort_order, self._scan_generation),
             daemon=True,
         ).start()
 
-    def _scan_worker(self, folder_path: str, recursive: bool, gen: int) -> None:
+    def _scan_worker(self, folder_path: str, recursive: bool, sort_order: str, gen: int) -> None:
         folder = Path(folder_path)
         if not folder.is_dir():
             self._scanComplete.emit(None, gen)
             return
         iterator = folder.rglob("*") if recursive else folder.iterdir()
-        images = [
+        all_images = [
             str(f)
             for f in iterator
             if f.is_file() and f.suffix.lower() in IMAGE_EXTENSIONS
         ]
-        self._scanComplete.emit(images, gen)
+        # Sort in background — avoids blocking the main thread (date sort reads EXIF)
+        match sort_order:
+            case "name":
+                all_images.sort(key=lambda p: Path(p).name.lower())
+            case "date":
+                all_images.sort(key=SlideshowController._date_key)
+            case "random":
+                random.shuffle(all_images)
+        # Pre-read all XMP ratings in background so subsequent setMinRating calls
+        # are instant (in-memory only, no file I/O on the main thread)
+        rating_cache: dict[str, int] = {
+            p: SlideshowController._read_xmp_rating(p) for p in all_images
+        }
+        self._scanComplete.emit({"all": all_images, "ratings": rating_cache}, gen)
 
     @Slot(object, int)
-    def _on_scan_complete(self, images, gen: int) -> None:
+    def _on_scan_complete(self, result, gen: int) -> None:
         if gen != self._scan_generation:
-            return  # stale scan — user changed folder/setting before this finished
-        if images is None:
+            return  # stale — a newer scan is already running
+        self._scanning = False
+        self.scanningChanged.emit()
+        if result is None:
             self.errorOccurred.emit(self.tr("Folder not found: {}").format(self._folder))
-            images = []
-        self._sort(images)
-        self._all_images   = images
-        self._rating_cache = {}
-        self._apply_filter()
+            self._all_images = []
+            self._images = []
+            self._rating_cache = {}
+        else:
+            self._all_images = result["all"]
+            self._rating_cache = result["ratings"]
+        # Re-apply filter with the *current* _min_rating — the user may have
+        # changed it while the background scan was running
+        self._apply_filter()   # emits imagesChanged + currentIndexChanged
 
     def _sort(self, images: list[str]) -> None:
         match self._sort_order:

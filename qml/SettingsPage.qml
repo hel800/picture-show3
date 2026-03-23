@@ -657,7 +657,24 @@ Item {
                         Row {
                             visible: controller.folder.length > 0
                             spacing: 0
+                            Row {
+                                visible: controller.scanning
+                                spacing: 5
+                                ThemedIcon {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    source: "../img/icon_scan.svg"
+                                    size: 13
+                                    iconColor: Theme.textMuted
+                                }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: qsTr("Scanning…")
+                                    color: Theme.textMuted
+                                    font.pixelSize: 12
+                                }
+                            }
                             Text {
+                                visible: !controller.scanning
                                 text: controller.imageCount > 0
                                       ? qsTr("✓  %1 images found").arg(controller.imageCount)
                                       : qsTr("⚠  No supported images found in this folder")
@@ -665,7 +682,7 @@ Item {
                                 font.pixelSize: 12
                             }
                             Text {
-                                visible: controller.imageCount < controller.totalImageCount
+                                visible: !controller.scanning && controller.imageCount < controller.totalImageCount
                                 text: qsTr("  ·  filter active")
                                 color: Theme.textMuted
                                 font.pixelSize: 12

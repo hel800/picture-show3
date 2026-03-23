@@ -111,10 +111,10 @@ def ctrl(qapp, _isolate_settings):
 
 @pytest.fixture
 def load_folder(qtbot):
-    """Call loadFolder and wait for imagesChanged (async scan)."""
+    """Call loadFolder and wait until the background scan is complete."""
     def _load(ctrl, path):
-        with qtbot.waitSignal(ctrl.imagesChanged, timeout=3000):
-            ctrl.loadFolder(path)
+        ctrl.loadFolder(path)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
     return _load
 
 

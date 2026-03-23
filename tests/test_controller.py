@@ -548,6 +548,6 @@ class TestRecursiveSearch:
         load_folder(ctrl, str(tmp_path))
         assert ctrl.imageCount == 1
         # Enable recursive — setRecursiveSearch triggers a new background scan
-        with qtbot.waitSignal(ctrl.imagesChanged, timeout=3000):
-            ctrl.setRecursiveSearch(True)
+        ctrl.setRecursiveSearch(True)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert ctrl.imageCount == 2
