@@ -670,7 +670,9 @@ Item {
                                 }
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: qsTr("Scanning…")
+                                    text: controller.scanProgress > 0
+                                          ? qsTr("Scanning… %1 / %2").arg(controller.scanProgress).arg(controller.totalImageCount)
+                                          : qsTr("Scanning…")
                                     color: Theme.textMuted
                                     font.pixelSize: 12
                                 }

@@ -59,10 +59,12 @@ class SlideshowController(QObject):
     folderHistoryChanged = Signal()
     errorOccurred       = Signal(str)
     scanningChanged     = Signal()
+    scanProgressChanged = Signal()
     # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
     _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
     _ratingsComplete    = Signal(object, int)   # (rating_cache dict, generation)
+    _progressUpdate     = Signal(int)           # files processed so far
 
     # ── Init ──────────────────────────────────────────────────────────────────
     def __init__(self, parent: QObject | None = None) -> None:
@@ -90,6 +92,7 @@ class SlideshowController(QObject):
         self._recursive           : bool         = False
         self._scan_generation     : int          = 0
         self._scanning            : bool         = False
+        self._scan_progress       : int          = 0   # files processed (metadata phase only)
         self._cancel_event        : threading.Event = threading.Event()
 
         self._timer = QTimer(self)
@@ -97,6 +100,7 @@ class SlideshowController(QObject):
         self._scanComplete.connect(self._on_scan_complete)
         self._sortComplete.connect(self._on_sort_complete)
         self._ratingsComplete.connect(self._on_ratings_complete)
+        self._progressUpdate.connect(self._on_progress_update)
 
         self._load_settings()
 
@@ -222,6 +226,9 @@ class SlideshowController(QObject):
 
     @Property(bool, notify=scanningChanged)
     def scanning(self) -> bool: return self._scanning
+
+    @Property(int, notify=scanProgressChanged)
+    def scanProgress(self) -> int: return self._scan_progress
 
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
@@ -357,11 +364,12 @@ class SlideshowController(QObject):
                 pass
         self._scanComplete.emit({"all": all_images}, gen)
 
-    @staticmethod
-    def _parallel_date_sort(images: list[str], cancel: threading.Event,
-                            max_workers: int = 8) -> list[str] | None:
+    def _parallel_date_sort(self, images: list[str], cancel: threading.Event,
+                            max_workers: int = 8,
+                            report_progress: bool = False) -> list[str] | None:
         """Sort images by EXIF date using parallel reads.  Returns None if cancelled."""
         keyed: list[tuple[datetime, str]] = []
+        done = 0
         with ThreadPoolExecutor(max_workers=max_workers) as pool:
             futures = {pool.submit(SlideshowController._date_key, p): p for p in images}
             for future in futures:
@@ -379,6 +387,9 @@ class SlideshowController(QObject):
                         dt = datetime.min
                         break
                 keyed.append((dt, futures[future]))
+                if report_progress:
+                    done += 1
+                    self._progressUpdate.emit(done)
         keyed.sort()
         return [p for _, p in keyed]
 
@@ -406,6 +417,10 @@ class SlideshowController(QObject):
         if not self._scanning:
             self._scanning = True
             self.scanningChanged.emit()
+        # Reset progress — only shown during metadata phases (date sort / ratings)
+        if self._scan_progress != 0:
+            self._scan_progress = 0
+            self.scanProgressChanged.emit()
         self._scan_generation += 1
         threading.Thread(
             target=self._sort_worker,
@@ -419,7 +434,7 @@ class SlideshowController(QObject):
             case "name":
                 images.sort(key=lambda p: Path(p).name.lower())
             case "date":
-                images = self._parallel_date_sort(images, cancel)
+                images = self._parallel_date_sort(images, cancel, report_progress=True)
                 if images is None:
                     return  # cancelled
             case "random":
@@ -441,7 +456,9 @@ class SlideshowController(QObject):
             self._read_ratings_in_background()
         else:
             self._scanning = False
+            self._scan_progress = 0
             self.scanningChanged.emit()
+            self.scanProgressChanged.emit()
             self._apply_filter()   # emit signals only at pipeline end
 
     # ── Lazy rating reads ──────────────────────────────────────────────────────
@@ -453,6 +470,8 @@ class SlideshowController(QObject):
         if not self._scanning:
             self._scanning = True
             self.scanningChanged.emit()
+        self._scan_progress = 0
+        self.scanProgressChanged.emit()
         self._scan_generation += 1
         threading.Thread(
             target=self._ratings_worker,
@@ -463,9 +482,11 @@ class SlideshowController(QObject):
     def _ratings_worker(self, images: list[str], gen: int,
                         cancel: threading.Event) -> None:
         rating_cache: dict[str, int] = {}
+        done = 0
         with ThreadPoolExecutor(max_workers=8) as pool:
             futures = {pool.submit(SlideshowController._read_xmp_rating, p): p
                        for p in images}
+            total = len(futures)
             for future in futures:
                 # Poll with short timeout so cancel checks happen frequently
                 while True:
@@ -481,6 +502,8 @@ class SlideshowController(QObject):
                         rating = 0
                         break
                 rating_cache[futures[future]] = rating
+                done += 1
+                self._progressUpdate.emit(done)
         if not cancel.is_set():
             self._ratingsComplete.emit(rating_cache, gen)
 
@@ -490,8 +513,15 @@ class SlideshowController(QObject):
             return
         self._rating_cache = rating_cache
         self._scanning = False
+        self._scan_progress = 0
         self.scanningChanged.emit()
+        self.scanProgressChanged.emit()
         self._apply_filter()   # re-apply with real ratings
+
+    @Slot(int)
+    def _on_progress_update(self, done: int) -> None:
+        self._scan_progress = done
+        self.scanProgressChanged.emit()
 
     def _sort(self, images: list[str]) -> None:
         match self._sort_order:
