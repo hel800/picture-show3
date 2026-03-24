@@ -7,6 +7,7 @@ All tested methods are synchronous; no Qt timer or event-loop spinning needed.
 """
 from __future__ import annotations
 
+import os
 from datetime import datetime
 from pathlib import Path
 
@@ -557,3 +558,173 @@ class TestRecursiveSearch:
         ctrl.setRecursiveSearch(True)
         qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert ctrl.imageCount == 2
+
+
+# ── Parallel loading pipeline ─────────────────────────────────────────────────
+
+class TestParallelLoading:
+    """Background scan → sort → ratings pipeline behaviour."""
+
+    # ── scanning flag ────────────────────────────────────────────────────────
+
+    def test_scanning_true_during_load(self, ctrl, image_folder, qtbot):
+        ctrl.loadFolder(str(image_folder))
+        # scanning must be True immediately (before pipeline finishes)
+        assert ctrl.scanning is True
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+    def test_scanning_false_after_pipeline(self, ctrl, image_folder, load_folder):
+        load_folder(ctrl, str(image_folder))
+        assert ctrl.scanning is False
+
+    def test_scanning_true_during_date_sort(self, tmp_path, ctrl, qtbot):
+        for n in ("a.jpg", "b.jpg", "c.jpg"):
+            make_plain_jpeg(tmp_path / n)
+        ctrl.setSortOrder("date")
+        ctrl.loadFolder(str(tmp_path))
+        assert ctrl.scanning is True
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+    # ── scanProgress lifecycle ────────────────────────────────────────────────
+
+    def test_scan_progress_zero_after_name_sort(self, ctrl, image_folder, load_folder):
+        """No metadata phase for name sort → progress stays 0."""
+        load_folder(ctrl, str(image_folder))
+        assert ctrl.scanProgress == 0
+
+    def test_scan_progress_zero_after_random_sort(self, ctrl, image_folder, load_folder):
+        ctrl.setSortOrder("random")
+        load_folder(ctrl, str(image_folder))
+        assert ctrl.scanProgress == 0
+
+    def test_scan_progress_resets_after_date_sort(self, tmp_path, ctrl, load_folder):
+        """scanProgress resets to 0 once date sort pipeline completes."""
+        for n in ("a.jpg", "b.jpg", "c.jpg"):
+            make_plain_jpeg(tmp_path / n)
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(tmp_path))
+        assert ctrl.scanProgress == 0
+
+    def test_scan_progress_emitted_during_date_sort(self, tmp_path, ctrl, qtbot):
+        """scanProgressChanged fires with increasing values during EXIF reads."""
+        for n in ("a.jpg", "b.jpg", "c.jpg"):
+            make_plain_jpeg(tmp_path / n)
+        ctrl.setSortOrder("date")
+
+        progress_values: list[int] = []
+        ctrl.scanProgressChanged.connect(lambda: progress_values.append(ctrl.scanProgress))
+
+        ctrl.loadFolder(str(tmp_path))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        assert any(v > 0 for v in progress_values), "No progress > 0 emitted"
+        assert ctrl.scanProgress == 0   # reset at end
+
+    def test_scan_progress_resets_after_rating_reads(self, tmp_path, ctrl, load_folder, qtbot):
+        """scanProgress resets to 0 once ratings pipeline completes."""
+        for r in range(1, 4):
+            make_jpeg_with_xmp_attr(tmp_path / f"r{r}.jpg", r)
+        ctrl.setMinRating(1)
+        load_folder(ctrl, str(tmp_path))
+        assert ctrl.scanProgress == 0
+
+    def test_scan_progress_emitted_during_rating_reads(self, tmp_path, ctrl, qtbot):
+        """scanProgressChanged fires with increasing values during XMP reads."""
+        for r in range(1, 6):
+            make_jpeg_with_xmp_attr(tmp_path / f"r{r}.jpg", r)
+        ctrl.setMinRating(1)
+
+        progress_values: list[int] = []
+        ctrl.scanProgressChanged.connect(lambda: progress_values.append(ctrl.scanProgress))
+
+        ctrl.loadFolder(str(tmp_path))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        assert any(v > 0 for v in progress_values), "No progress > 0 emitted"
+        assert ctrl.scanProgress == 0   # reset at end
+
+    # ── date sort ordering ────────────────────────────────────────────────────
+
+    def test_date_sort_orders_by_mtime_oldest_first(self, tmp_path, ctrl, load_folder):
+        """Without EXIF, date sort falls back to mtime; oldest file comes first."""
+        names = ("first.jpg", "second.jpg", "third.jpg")
+        for i, name in enumerate(names):
+            p = tmp_path / name
+            make_plain_jpeg(p)
+            os.utime(p, (1_000_000 + i * 3600, 1_000_000 + i * 3600))
+
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(tmp_path))
+
+        result = [Path(ctrl.imagePath(i)).name for i in range(ctrl.imageCount)]
+        assert result == list(names)
+
+    def test_date_sort_preserves_all_files(self, ctrl, image_folder, load_folder):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert ctrl.imageCount == 5
+
+    # ── rating cache population ───────────────────────────────────────────────
+
+    def test_rating_cache_empty_without_filter(self, ctrl, rated_folder, load_folder):
+        """No star filter → ratings are not pre-read; cache stays empty."""
+        load_folder(ctrl, str(rated_folder))
+        assert ctrl._rating_cache == {}
+
+    def test_rating_cache_populated_when_filter_active(self, ctrl, rated_folder,
+                                                        load_folder, qtbot):
+        """With star filter active, all ratings are read into cache."""
+        ctrl.setMinRating(1)
+        load_folder(ctrl, str(rated_folder))
+        assert len(ctrl._rating_cache) == 6   # one entry per image
+
+    def test_rating_cache_populated_on_filter_change_after_load(self, ctrl, rated_folder,
+                                                                  load_folder, qtbot):
+        """Activating filter after plain load triggers background rating read."""
+        load_folder(ctrl, str(rated_folder))
+        assert ctrl._rating_cache == {}
+        ctrl.setMinRating(1)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+        assert len(ctrl._rating_cache) == 6
+
+    # ── sort change mid-scan ──────────────────────────────────────────────────
+
+    def test_sort_change_during_scan_is_applied(self, tmp_path, ctrl, qtbot):
+        """Sort order changed while file discovery runs → final result uses new order."""
+        for name in ("c.jpg", "a.jpg", "b.jpg"):
+            make_plain_jpeg(tmp_path / name)
+
+        ctrl.setSortOrder("random")
+        ctrl.loadFolder(str(tmp_path))
+        ctrl.setSortOrder("name")    # change while scan is in-flight
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        names = [Path(ctrl.imagePath(i)).name for i in range(ctrl.imageCount)]
+        assert names == ["a.jpg", "b.jpg", "c.jpg"]
+
+    # ── folder switch cancels previous scan ───────────────────────────────────
+
+    def test_new_folder_cancels_previous_scan(self, tmp_path, ctrl, qtbot):
+        """Loading a second folder cancels the first; final state reflects d2."""
+        d1 = tmp_path / "d1"
+        d2 = tmp_path / "d2"
+        d1.mkdir(); d2.mkdir()
+        for n in ("x.jpg", "y.jpg"):
+            make_plain_jpeg(d1 / n)
+        make_plain_jpeg(d2 / "z.jpg")
+
+        ctrl.loadFolder(str(d1))
+        ctrl.loadFolder(str(d2))   # cancels d1 scan
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        assert ctrl.imageCount == 1
+        assert Path(ctrl.imagePath(0)).parent == d2
+
+    # ── cancelAll ────────────────────────────────────────────────────────────
+
+    def test_cancel_all_does_not_crash(self, ctrl, image_folder, qtbot):
+        """cancelAll() while scanning completes without errors."""
+        ctrl.loadFolder(str(image_folder))
+        ctrl.cancelAll()
+        qtbot.wait(200)   # let in-flight thread exit
+        # Pass if no exception raised
