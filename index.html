@@ -416,34 +416,6 @@
       white-space: nowrap;
     }
 
-    /* ── Keys ─────────────────────────────────────────────────── */
-    #keys .key-cols {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 2rem;
-    }
-    @media (max-width: 600px) { #keys .key-cols { grid-template-columns: 1fr; } }
-    .key-group h3 {
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--text-muted);
-      margin-bottom: 1rem;
-      padding-bottom: 0.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-    .key-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: baseline;
-      gap: 1rem;
-      padding: 0.35rem 0;
-      border-bottom: 1px solid rgba(37,44,64,0.5);
-      font-size: 0.875rem;
-    }
-    .key-row:last-child { border-bottom: none; }
-    .key-row span { color: var(--text-sec); }
     kbd {
       display: inline-block;
       background: var(--surface);
@@ -495,7 +467,6 @@
     <li><a href="#features">Features</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#deploy">Deploy</a></li>
-    <li><a href="#keys">Keys</a></li>
 <li><a href="https://github.com/hel800/picture-show3" target="_blank" rel="noopener">GitHub</a></li>
     <li><a href="https://github.com/hel800/picture-show3/releases" target="_blank" rel="noopener" class="btn-nav">Download</a></li>
   </ul>
@@ -665,40 +636,6 @@
   </div>
 </section>
 
-<!-- ── Keyboard shortcuts ──────────────────────────────────────── -->
-<section id="keys">
-  <div class="inner">
-    <h2>Keyboard <span>shortcuts</span></h2>
-    <div class="section-sep"></div><div class="key-cols">
-      <div class="key-group">
-        <h3>Settings screen</h3>
-        <div class="key-row"><kbd>Enter</kbd>    <span>Start / resume picture show</span></div>
-        <div class="key-row"><kbd>T</kbd>         <span>Cycle transition style</span></div>
-        <div class="key-row"><kbd>S</kbd>         <span>Cycle sort order</span></div>
-        <div class="key-row"><kbd>L</kbd>         <span>Toggle loop</span></div>
-        <div class="key-row"><kbd>A</kbd>         <span>Toggle autoplay</span></div>
-        <div class="key-row"><kbd>B</kbd>         <span>Open folder browser</span></div>
-        <div class="key-row"><kbd>H</kbd>         <span>Recent folders</span></div>
-        <div class="key-row"><kbd>R</kbd>         <span>Cycle star rating filter</span></div>
-        <div class="key-row"><kbd>V</kbd>         <span>Advanced settings</span></div>
-        <div class="key-row"><kbd>F</kbd>         <span>Toggle fullscreen</span></div>
-        <div class="key-row"><kbd>?</kbd>         <span>Help overlay</span></div>
-        <div class="key-row"><kbd>Esc</kbd>       <span>Quit dialog</span></div>
-      </div>
-      <div class="key-group">
-        <h3>During the picture show</h3>
-        <div class="key-row"><kbd>→</kbd> / <kbd>←</kbd> <span>Next / previous photo</span></div>
-        <div class="key-row"><kbd>Space</kbd>     <span>Play / pause autoplay</span></div>
-        <div class="key-row"><kbd>F</kbd>         <span>Toggle fullscreen</span></div>
-        <div class="key-row"><kbd>I</kbd>         <span>Toggle HUD info bar</span></div>
-        <div class="key-row"><kbd>J</kbd>         <span>Jump to image by number</span></div>
-        <div class="key-row"><kbd>P</kbd>         <span>Panorama mode</span></div>
-        <div class="key-row"><kbd>?</kbd>         <span>Help overlay</span></div>
-        <div class="key-row"><kbd>Esc</kbd>       <span>Return to settings</span></div>
-      </div>
-    </div>
-  </div>
-</section>
 
 
 <!-- ── Roadmap ───────────────────────────────────────────────────── -->
