@@ -301,6 +301,13 @@ class SlideshowController(QObject):
         self._save_settings()
         self.folderHistoryChanged.emit()
 
+    @Slot(str)
+    def removeFolderHistory(self, path: str) -> None:
+        if path in self._folder_history:
+            self._folder_history.remove(path)
+            self._save_settings()
+            self.folderHistoryChanged.emit()
+
     def _cancel_and_new_event(self) -> threading.Event:
         """Signal the running worker to stop and return a fresh cancel event."""
         self._cancel_event.set()

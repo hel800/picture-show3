@@ -287,6 +287,23 @@ class TestFolderHistory:
         h.append("/intruder")
         assert "/intruder" not in ctrl.folderHistory
 
+    def test_remove_existing_entry(self, ctrl):
+        ctrl._update_history("/fake/alpha")
+        ctrl._update_history("/fake/beta")
+        ctrl.removeFolderHistory("/fake/alpha")
+        assert "/fake/alpha" not in ctrl.folderHistory
+        assert "/fake/beta" in ctrl.folderHistory
+
+    def test_remove_nonexistent_entry_is_noop(self, ctrl):
+        ctrl._update_history("/fake/alpha")
+        ctrl.removeFolderHistory("/fake/does-not-exist")
+        assert ctrl.folderHistory == ["/fake/alpha"]
+
+    def test_remove_only_entry_leaves_empty(self, ctrl):
+        ctrl._update_history("/fake/alpha")
+        ctrl.removeFolderHistory("/fake/alpha")
+        assert ctrl.folderHistory == []
+
 
 # ── Playback state machine ────────────────────────────────────────────────────
 
@@ -524,6 +541,16 @@ class TestSignals:
         ctrl._update_history("/fake/x")
         with qtbot.waitSignal(ctrl.folderHistoryChanged, timeout=1000):
             ctrl.clearFolderHistory()
+
+    def test_folder_history_changed_on_remove(self, ctrl, qtbot):
+        ctrl._update_history("/fake/x")
+        with qtbot.waitSignal(ctrl.folderHistoryChanged, timeout=1000):
+            ctrl.removeFolderHistory("/fake/x")
+
+    def test_folder_history_no_signal_on_remove_missing(self, ctrl, qtbot):
+        ctrl._update_history("/fake/x")
+        with qtbot.assertNotEmitted(ctrl.folderHistoryChanged):
+            ctrl.removeFolderHistory("/fake/does-not-exist")
 
 
 # ── Recursive search ──────────────────────────────────────────────────────────
