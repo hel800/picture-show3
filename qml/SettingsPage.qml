@@ -524,6 +524,14 @@ Item {
                                     event.accepted = true
                                     break
                                 }
+                                case Qt.Key_Delete: {
+                                    var delPath = controller.folderHistory[recentPopup.selectedIndex]
+                                    if (recentPopup.selectedIndex >= controller.folderHistory.length - 1)
+                                        recentPopup.selectedIndex = Math.max(0, recentPopup.selectedIndex - 1)
+                                    controller.removeFolderHistory(delPath)
+                                    event.accepted = true
+                                    break
+                                }
                                 default:
                                     break
                                 }
@@ -583,25 +591,63 @@ Item {
                                             model: controller.folderHistory
 
                                             delegate: Rectangle {
+                                                id: recentDelegate
                                                 width: recentListCol.width - 10
                                                 height: 40
                                                 radius: 10
                                                 color: (recentPopup.selectedIndex === index)
                                                        ? Theme.accentDeep
-                                                       : (recentItemArea.containsMouse ? Theme.surface : "transparent")
+                                                       : (rowHover.hovered ? Theme.surface : "transparent")
                                                 Behavior on color { ColorAnimation { duration: 100 } }
                                                 border.color: recentPopup.selectedIndex === index ? Theme.accent : "transparent"
                                                 border.width: 1
 
+                                                // Tracks hover over the entire row (including over child MouseAreas)
+                                                HoverHandler { id: rowHover }
+
                                                 Text {
-                                                    anchors { left: parent.left; right: parent.right
+                                                    anchors { left: parent.left; right: deleteBtn.left
                                                               verticalCenter: parent.verticalCenter
-                                                              leftMargin: 12; rightMargin: 12 }
+                                                              leftMargin: 12; rightMargin: 4 }
                                                     text: modelData
-                                                    color: recentPopup.selectedIndex === index ? Theme.textPrimary : Theme.textPrimary
+                                                    color: Theme.textPrimary
                                                     font.pixelSize: 13
                                                     elide: Text.ElideLeft
                                                 }
+
+                                                // Delete button — visible on row hover
+                                                Rectangle {
+                                                    id: deleteBtn
+                                                    anchors { right: parent.right; rightMargin: 6
+                                                              verticalCenter: parent.verticalCenter }
+                                                    width: 28; height: 28
+                                                    radius: 6
+                                                    z: 1
+                                                    color: deleteArea.containsMouse ? Theme.accentPress : "transparent"
+                                                    Behavior on color { ColorAnimation { duration: 80 } }
+                                                    visible: rowHover.hovered
+
+                                                    Text {
+                                                        anchors.centerIn: parent
+                                                        text: "×"
+                                                        color: deleteArea.containsMouse ? "white" : Theme.textMuted
+                                                        font.pixelSize: 16
+                                                    }
+                                                    MouseArea {
+                                                        id: deleteArea
+                                                        anchors.fill: parent
+                                                        hoverEnabled: true
+                                                        cursorShape: Qt.PointingHandCursor
+                                                        onClicked: {
+                                                            var path = modelData
+                                                            // Clamp selected index so it doesn't go out of bounds
+                                                            if (recentPopup.selectedIndex >= controller.folderHistory.length - 1)
+                                                                recentPopup.selectedIndex = Math.max(0, recentPopup.selectedIndex - 1)
+                                                            controller.removeFolderHistory(path)
+                                                        }
+                                                    }
+                                                }
+
                                                 MouseArea {
                                                     id: recentItemArea
                                                     anchors.fill: parent
