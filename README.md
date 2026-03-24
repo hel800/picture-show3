@@ -15,6 +15,8 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Autoplay** | Configurable interval (1–30 s), timer restarts on manual navigation |
 | **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken |
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
+| **Recursive folders** | Optional: include subfolders in the scan (toggle in settings) |
+| **Background scanning** | Folder scanning and sorting run in background threads — UI stays responsive; Start button enables when ready |
 | **Jump to image** | Instantly jump to any image by number with a live preview |
 | **Panorama mode** | Auto-detects wide images and scrolls them smoothly across the screen |
 | **Mouse navigation** | Optional left/right click to advance or go back (toggle in Advanced settings) |
@@ -66,7 +68,7 @@ python -m pytest
 python -m pytest -v
 ```
 
-Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+156 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
 
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 

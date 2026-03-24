@@ -1,0 +1,12 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Hourglass outline -->
+  <path d="M 5,3 H19 L12,12 L19,21 H5 L12,12 Z"
+        fill="none" stroke="white" stroke-width="1.8"
+        stroke-linecap="round" stroke-linejoin="round"/>
+  <!-- Sand in upper chamber (mostly full — scan just started) -->
+  <path d="M 6,4 H18 L12,11 Z"
+        fill="white"/>
+  <!-- Sand accumulated at bottom -->
+  <path d="M 9,19.5 H15 L12,15 Z"
+        fill="white" opacity="0.5"/>
+</svg>

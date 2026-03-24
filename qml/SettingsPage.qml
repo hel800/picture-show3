@@ -17,6 +17,8 @@ Item {
     property int    _minRatingAtStart: 0
     property string _updateVersion   : ""   // set when a newer GitHub release is found
 
+    readonly property bool _canStart: controller.imageCount > 0 && !controller.scanning
+
     Connections {
         target: updateChecker
         function onUpdateAvailable(version) { root._updateVersion = version }
@@ -37,7 +39,7 @@ Item {
     signal openHelp()
 
     function launchShow() {
-        if (controller.imageCount === 0) return
+        if (!root._canStart) return
         if (root.hasStarted)
             root.startShow()   // resume: skip fancy transition, show fades in via SlideshowPage intro
         else
@@ -66,7 +68,7 @@ Item {
             break
         case Qt.Key_Return:
         case Qt.Key_Enter:
-            if (controller.imageCount > 0)
+            if (root._canStart)
                 launchShow()
             break
         case Qt.Key_T: {
@@ -649,21 +651,86 @@ Item {
                         }
                     }
 
-                    Row {
-                        visible: controller.folder.length > 0
-                        spacing: 0
-                        Text {
-                            text: controller.imageCount > 0
-                                  ? qsTr("✓  %1 images found").arg(controller.imageCount)
-                                  : qsTr("⚠  No supported images found in this folder")
-                            color: controller.imageCount > 0 ? Theme.statusOk : Theme.statusWarn
-                            font.pixelSize: 12
+                    RowLayout {
+                        Layout.fillWidth: true
+                        spacing: 8
+
+                        // Image count status (left)
+                        Row {
+                            visible: controller.folder.length > 0
+                            spacing: 0
+                            Row {
+                                visible: controller.scanning
+                                spacing: 5
+                                ThemedIcon {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    source: "../img/icon_scan.svg"
+                                    size: 13
+                                    iconColor: Theme.textMuted
+                                }
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: controller.scanProgress > 0
+                                          ? qsTr("Scanning… %1 / %2").arg(controller.scanProgress).arg(controller.totalImageCount)
+                                          : qsTr("Scanning…")
+                                    color: Theme.textMuted
+                                    font.pixelSize: 12
+                                }
+                            }
+                            Text {
+                                visible: !controller.scanning
+                                text: controller.imageCount > 0
+                                      ? qsTr("✓  %1 images found").arg(controller.imageCount)
+                                      : qsTr("⚠  No supported images found in this folder")
+                                color: controller.imageCount > 0 ? Theme.statusOk : Theme.statusWarn
+                                font.pixelSize: 12
+                            }
+                            Text {
+                                visible: !controller.scanning && controller.imageCount < controller.totalImageCount
+                                text: qsTr("  ·  filter active")
+                                color: Theme.textMuted
+                                font.pixelSize: 12
+                            }
                         }
-                        Text {
-                            visible: controller.imageCount < controller.totalImageCount
-                            text: qsTr("  ·  filter active")
-                            color: Theme.textMuted
-                            font.pixelSize: 12
+
+                        Item { Layout.fillWidth: true }
+
+                        // Include subfolders checkbox (right)
+                        MouseArea {
+                            width: recursiveRow.implicitWidth
+                            height: recursiveRow.implicitHeight
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: controller.setRecursiveSearch(!controller.recursiveSearch)
+
+                            Row {
+                                id: recursiveRow
+                                spacing: 6
+
+                                Text {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    text: qsTr("Include subfolders")
+                                    color: Theme.textMuted
+                                    font.pixelSize: 12
+                                }
+
+                                Rectangle {
+                                    anchors.verticalCenter: parent.verticalCenter
+                                    width: 16; height: 16; radius: 3
+                                    color: controller.recursiveSearch ? Theme.accent : "transparent"
+                                    border.color: controller.recursiveSearch ? Theme.accent : Theme.textMuted
+                                    border.width: 1.5
+                                    Behavior on color { ColorAnimation { duration: 150 } }
+
+                                    Text {
+                                        anchors.centerIn: parent
+                                        text: "✓"
+                                        color: "white"
+                                        font.pixelSize: 10
+                                        font.weight: Font.Bold
+                                        visible: controller.recursiveSearch
+                                    }
+                                }
+                            }
                         }
                     }
 
@@ -672,17 +739,17 @@ Item {
                         Layout.fillWidth: true
                         height: 54
                         radius: 14
-                        color: controller.imageCount > 0
+                        color: root._canStart
                                ? (startArea.pressed ? Theme.accentPress : Theme.accent)
                                : Theme.surface
                         Behavior on color { ColorAnimation { duration: 180 } }
 
                         Text {
                             anchors.centerIn: parent
-                            text: controller.imageCount > 0
+                            text: root._canStart
                                   ? (root.hasStarted ? qsTr("▶  Resume Picture Show") : qsTr("▶  Start Picture Show"))
-                                  : qsTr("Select a folder to continue")
-                            color: controller.imageCount > 0 ? "white" : Theme.textDisabled
+                                  : (controller.scanning ? qsTr("Scanning and sorting images…") : qsTr("Select a folder to continue"))
+                            color: root._canStart ? "white" : Theme.textDisabled
                             font.pixelSize: 16
                             font.weight: Font.Bold
                         }
@@ -690,14 +757,14 @@ Item {
                         KeyHint {
                             anchors { right: parent.right; rightMargin: 16; verticalCenter: parent.verticalCenter }
                             label: "↵"
-                            opacity: controller.imageCount > 0 ? 1 : 0
+                            opacity: root._canStart ? 1 : 0
                         }
 
                         MouseArea {
                             id: startArea
                             anchors.fill: parent
-                            enabled: controller.imageCount > 0
-                            cursorShape: controller.imageCount > 0 ? Qt.PointingHandCursor : Qt.ArrowCursor
+                            enabled: root._canStart
+                            cursorShape: root._canStart ? Qt.PointingHandCursor : Qt.ArrowCursor
                             onClicked: launchShow()
                         }
                     }
