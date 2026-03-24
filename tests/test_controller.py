@@ -197,14 +197,16 @@ class TestRatingFilter:
         ctrl.setMinRating(0)
         assert ctrl.imageCount == 6
 
-    def test_filter_at_rating_3(self, ctrl, rated_folder, load_folder):
+    def test_filter_at_rating_3(self, ctrl, rated_folder, load_folder, qtbot):
         load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(3)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert ctrl.imageCount == 3   # r3, r4, r5
 
-    def test_filter_at_rating_5(self, ctrl, rated_folder, load_folder):
+    def test_filter_at_rating_5(self, ctrl, rated_folder, load_folder, qtbot):
         load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(5)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert ctrl.imageCount == 1   # only r5
 
     def test_filter_applied_before_load(self, ctrl, rated_folder, load_folder):
@@ -212,9 +214,10 @@ class TestRatingFilter:
         load_folder(ctrl, str(rated_folder))
         assert ctrl.imageCount == 2   # r4, r5
 
-    def test_rating_clamped_above_5(self, ctrl, rated_folder, load_folder):
+    def test_rating_clamped_above_5(self, ctrl, rated_folder, load_folder, qtbot):
         load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(10)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert ctrl.minRating == 5
 
     def test_rating_clamped_below_0(self, ctrl, rated_folder, load_folder):
@@ -223,23 +226,26 @@ class TestRatingFilter:
         assert ctrl.minRating == 0
         assert ctrl.imageCount == 6
 
-    def test_total_image_count_unaffected_by_filter(self, ctrl, rated_folder, load_folder):
+    def test_total_image_count_unaffected_by_filter(self, ctrl, rated_folder, load_folder, qtbot):
         load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(4)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert ctrl.totalImageCount == 6
         assert ctrl.imageCount == 2
 
-    def test_same_rating_value_is_noop(self, ctrl, rated_folder, load_folder):
+    def test_same_rating_value_is_noop(self, ctrl, rated_folder, load_folder, qtbot):
         load_folder(ctrl, str(rated_folder))
         ctrl.setMinRating(3)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         count_before = ctrl.imageCount
         ctrl.setMinRating(3)            # identical value — no filter re-run
         assert ctrl.imageCount == count_before
 
-    def test_filter_resets_current_index_to_zero(self, ctrl, rated_folder, load_folder):
+    def test_filter_resets_current_index_to_zero(self, ctrl, rated_folder, load_folder, qtbot):
         load_folder(ctrl, str(rated_folder))
         ctrl.goTo(4)
         ctrl.setMinRating(3)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert ctrl.currentIndex == 0
 
 

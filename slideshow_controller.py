@@ -12,6 +12,7 @@ import os
 import random
 import sys
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
@@ -61,6 +62,7 @@ class SlideshowController(QObject):
     # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
     _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
+    _ratingsComplete    = Signal(object, int)   # (rating_cache dict, generation)
 
     # ── Init ──────────────────────────────────────────────────────────────────
     def __init__(self, parent: QObject | None = None) -> None:
@@ -88,11 +90,13 @@ class SlideshowController(QObject):
         self._recursive           : bool         = False
         self._scan_generation     : int          = 0
         self._scanning            : bool         = False
+        self._cancel_event        : threading.Event = threading.Event()
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
         self._scanComplete.connect(self._on_scan_complete)
         self._sortComplete.connect(self._on_sort_complete)
+        self._ratingsComplete.connect(self._on_ratings_complete)
 
         self._load_settings()
 
@@ -127,7 +131,11 @@ class SlideshowController(QObject):
 
         if self._folder_history:
             self._folder = self._folder_history[0]
-            self._scan_images()
+            # Mark scanning immediately so QML shows the scanning state from the
+            # first frame, but defer the actual thread start so the window can
+            # render before any network I/O begins.
+            self._scanning = True
+            QTimer.singleShot(0, self._scan_images)
 
     def _save_settings(self) -> None:
         s = QSettings()
@@ -286,90 +294,204 @@ class SlideshowController(QObject):
         self._save_settings()
         self.folderHistoryChanged.emit()
 
+    def _cancel_and_new_event(self) -> threading.Event:
+        """Signal the running worker to stop and return a fresh cancel event."""
+        self._cancel_event.set()
+        self._cancel_event = threading.Event()
+        return self._cancel_event
+
+    @Slot()
+    def cancelAll(self) -> None:
+        """Cancel any running background workers.  Call on app quit."""
+        self._cancel_event.set()
+
     def _scan_images(self) -> None:
-        """Start a background scan.  Results (sorted + filtered) arrive in _on_scan_complete."""
+        """Start a background scan.  Discovery → sort → ratings pipeline."""
+        cancel = self._cancel_and_new_event()
         self._scanning = True
         self.scanningChanged.emit()
         self._scan_generation += 1
         threading.Thread(
             target=self._scan_worker,
-            args=(self._folder, self._recursive, self._sort_order, self._scan_generation),
+            args=(self._folder, self._recursive, self._scan_generation, cancel),
             daemon=True,
         ).start()
 
-    def _scan_worker(self, folder_path: str, recursive: bool, sort_order: str, gen: int) -> None:
+    def _scan_worker(self, folder_path: str, recursive: bool, gen: int,
+                     cancel: threading.Event) -> None:
+        """Discover image files only — sorting happens in _on_scan_complete."""
         folder = Path(folder_path)
         if not folder.is_dir():
             self._scanComplete.emit(None, gen)
             return
-        iterator = folder.rglob("*") if recursive else folder.iterdir()
-        all_images = [
-            str(f)
-            for f in iterator
-            if f.is_file() and f.suffix.lower() in IMAGE_EXTENSIONS
-        ]
-        # Sort in background — avoids blocking the main thread (date sort reads EXIF)
-        match sort_order:
-            case "name":
-                all_images.sort(key=lambda p: Path(p).name.lower())
-            case "date":
-                all_images.sort(key=SlideshowController._date_key)
-            case "random":
-                random.shuffle(all_images)
-        # Pre-read all XMP ratings in background so subsequent setMinRating calls
-        # are instant (in-memory only, no file I/O on the main thread)
-        rating_cache: dict[str, int] = {
-            p: SlideshowController._read_xmp_rating(p) for p in all_images
-        }
-        self._scanComplete.emit({"all": all_images, "ratings": rating_cache}, gen)
+        # os.scandir avoids extra stat calls vs rglob
+        all_images: list[str] = []
+        if recursive:
+            stack = [str(folder)]
+            while stack:
+                if cancel.is_set():
+                    return
+                current = stack.pop()
+                try:
+                    with os.scandir(current) as it:
+                        for entry in it:
+                            if cancel.is_set():
+                                return
+                            if entry.is_dir(follow_symlinks=False):
+                                stack.append(entry.path)
+                            elif entry.is_file(follow_symlinks=False):
+                                if Path(entry.name).suffix.lower() in IMAGE_EXTENSIONS:
+                                    all_images.append(entry.path)
+                except PermissionError:
+                    pass
+        else:
+            try:
+                with os.scandir(str(folder)) as it:
+                    for entry in it:
+                        if cancel.is_set():
+                            return
+                        if entry.is_file(follow_symlinks=False):
+                            if Path(entry.name).suffix.lower() in IMAGE_EXTENSIONS:
+                                all_images.append(entry.path)
+            except PermissionError:
+                pass
+        self._scanComplete.emit({"all": all_images}, gen)
+
+    @staticmethod
+    def _parallel_date_sort(images: list[str], cancel: threading.Event,
+                            max_workers: int = 8) -> list[str] | None:
+        """Sort images by EXIF date using parallel reads.  Returns None if cancelled."""
+        keyed: list[tuple[datetime, str]] = []
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(SlideshowController._date_key, p): p for p in images}
+            for future in futures:
+                # Poll with short timeout so cancel checks happen frequently
+                while True:
+                    if cancel.is_set():
+                        pool.shutdown(wait=False, cancel_futures=True)
+                        return None
+                    try:
+                        dt = future.result(timeout=0.1)
+                        break
+                    except TimeoutError:
+                        continue
+                    except Exception:
+                        dt = datetime.min
+                        break
+                keyed.append((dt, futures[future]))
+        keyed.sort()
+        return [p for _, p in keyed]
 
     @Slot(object, int)
     def _on_scan_complete(self, result, gen: int) -> None:
         if gen != self._scan_generation:
             return  # stale — a newer scan is already running
-        self._scanning = False
-        self.scanningChanged.emit()
         if result is None:
             self.errorOccurred.emit(self.tr("Folder not found: {}").format(self._folder))
             self._all_images = []
             self._images = []
             self._rating_cache = {}
-        else:
-            self._all_images = result["all"]
-            self._rating_cache = result["ratings"]
-        # Re-apply filter with the *current* _min_rating — the user may have
-        # changed it while the background scan was running
-        self._apply_filter()   # emits imagesChanged + currentIndexChanged
+            self._scanning = False
+            self.scanningChanged.emit()
+            self._apply_filter()
+            return
+        self._all_images = result["all"]
+        # Chain into sort — don't emit signals yet, the pipeline end will.
+        self._sort_in_background()
 
     def _sort_in_background(self) -> None:
-        """Re-sort already-loaded images in a background thread."""
-        self._scanning = True
-        self.scanningChanged.emit()
+        """Re-sort already-loaded images in a background thread.
+        Stays in scanning state — caller must already have _scanning=True."""
+        cancel = self._cancel_and_new_event()
+        if not self._scanning:
+            self._scanning = True
+            self.scanningChanged.emit()
         self._scan_generation += 1
         threading.Thread(
             target=self._sort_worker,
-            args=(list(self._all_images), self._sort_order, self._scan_generation),
+            args=(list(self._all_images), self._sort_order, self._scan_generation, cancel),
             daemon=True,
         ).start()
 
-    def _sort_worker(self, images: list[str], sort_order: str, gen: int) -> None:
+    def _sort_worker(self, images: list[str], sort_order: str, gen: int,
+                     cancel: threading.Event) -> None:
         match sort_order:
             case "name":
                 images.sort(key=lambda p: Path(p).name.lower())
             case "date":
-                images.sort(key=SlideshowController._date_key)
+                images = self._parallel_date_sort(images, cancel)
+                if images is None:
+                    return  # cancelled
             case "random":
                 random.shuffle(images)
-        self._sortComplete.emit(images, gen)
+        if not cancel.is_set():
+            self._sortComplete.emit({"images": images, "order": sort_order}, gen)
 
     @Slot(object, int)
-    def _on_sort_complete(self, images: list[str], gen: int) -> None:
+    def _on_sort_complete(self, result, gen: int) -> None:
         if gen != self._scan_generation:
             return
+        self._all_images = result["images"]
+        # If the user changed sort order while we were sorting, re-sort
+        if result["order"] != self._sort_order:
+            self._sort_in_background()
+            return
+        # Chain into ratings read if star filter is active and cache is empty
+        if self._min_rating > 0 and not self._rating_cache:
+            self._read_ratings_in_background()
+        else:
+            self._scanning = False
+            self.scanningChanged.emit()
+            self._apply_filter()   # emit signals only at pipeline end
+
+    # ── Lazy rating reads ──────────────────────────────────────────────────────
+
+    def _read_ratings_in_background(self) -> None:
+        """Read XMP ratings for all images in parallel background threads.
+        Stays in scanning state — caller must already have _scanning=True."""
+        cancel = self._cancel_and_new_event()
+        if not self._scanning:
+            self._scanning = True
+            self.scanningChanged.emit()
+        self._scan_generation += 1
+        threading.Thread(
+            target=self._ratings_worker,
+            args=(list(self._all_images), self._scan_generation, cancel),
+            daemon=True,
+        ).start()
+
+    def _ratings_worker(self, images: list[str], gen: int,
+                        cancel: threading.Event) -> None:
+        rating_cache: dict[str, int] = {}
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            futures = {pool.submit(SlideshowController._read_xmp_rating, p): p
+                       for p in images}
+            for future in futures:
+                # Poll with short timeout so cancel checks happen frequently
+                while True:
+                    if cancel.is_set():
+                        pool.shutdown(wait=False, cancel_futures=True)
+                        return
+                    try:
+                        rating = future.result(timeout=0.1)
+                        break
+                    except TimeoutError:
+                        continue
+                    except Exception:
+                        rating = 0
+                        break
+                rating_cache[futures[future]] = rating
+        if not cancel.is_set():
+            self._ratingsComplete.emit(rating_cache, gen)
+
+    @Slot(object, int)
+    def _on_ratings_complete(self, rating_cache: dict[str, int], gen: int) -> None:
+        if gen != self._scan_generation:
+            return
+        self._rating_cache = rating_cache
         self._scanning = False
         self.scanningChanged.emit()
-        self._all_images = images
-        self._apply_filter()   # fast — uses existing _rating_cache
+        self._apply_filter()   # re-apply with real ratings
 
     def _sort(self, images: list[str]) -> None:
         match self._sort_order:
@@ -440,7 +562,10 @@ class SlideshowController(QObject):
     def setSortOrder(self, order: SortOrder) -> None:
         self._sort_order = order
         if self._all_images:
-            self._sort_in_background()   # async — avoids blocking on date sort (EXIF reads)
+            # Cancel any running sort/ratings and re-sort immediately.
+            # During scan phase _all_images is empty, so we just save and
+            # the pipeline will use the current _sort_order after discovery.
+            self._sort_in_background()
         self._save_settings()
         self.settingsChanged.emit()
 
@@ -450,7 +575,19 @@ class SlideshowController(QObject):
         if clamped == self._min_rating:
             return
         self._min_rating = clamped
-        self._apply_filter()   # emits imagesChanged + currentIndexChanged
+        if self._all_images:
+            # Cancel any running sort/ratings and re-apply.
+            # During scan phase _all_images is empty, so we just save and
+            # the pipeline will use the current _min_rating after discovery.
+            if clamped > 0 and not self._rating_cache:
+                self._read_ratings_in_background()
+            else:
+                # If a sort/ratings worker was running, cancel it
+                if self._scanning:
+                    self._cancel_event.set()
+                    self._scanning = False
+                    self.scanningChanged.emit()
+                self._apply_filter()
         self._save_settings()
         self.settingsChanged.emit()
 
