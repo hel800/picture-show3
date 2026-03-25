@@ -310,7 +310,6 @@ Rectangle {
             break
         case Qt.Key_Space:
             controller.togglePlay()
-            playPauseAnim.restart()
             break
         case Qt.Key_Escape:
             root.exitShow()
@@ -561,6 +560,13 @@ Rectangle {
             KeyHint { label: "Esc"; uiScale: root.hudScale }
             Text { text: qsTr("exit");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
         }
+    }
+
+    // Show the play/pause popup whenever the playing state changes
+    // (keyboard, remote control, or any other source).
+    Connections {
+        target: controller
+        function onIsPlayingChanged() { playPauseAnim.restart() }
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────

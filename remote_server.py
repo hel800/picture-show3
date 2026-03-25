@@ -108,15 +108,6 @@ _REMOTE_HTML = """\
   }
   .wide img { height: 1.6em; vertical-align: middle; pointer-events: none; }
   .wide .label { color: var(--text-sec); font-size: .95rem; }
-  kbd {
-    display: inline-block;
-    background: var(--card);
-    border: 1px solid var(--border);
-    border-radius: 6px;
-    padding: 2px 8px;
-    font-size: .75rem;
-    color: var(--muted);
-  }
   footer { font-size: .75rem; color: var(--border); text-align: center; }
 </style>
 </head>
@@ -144,10 +135,7 @@ _REMOTE_HTML = """\
   </button>
 </div>
 
-<footer>
-  On the picture show: <kbd>←</kbd><kbd>→</kbd> navigate &nbsp;·&nbsp;
-  <kbd>Space</kbd> play/pause &nbsp;·&nbsp; <kbd>Esc</kbd> exit
-</footer>
+<footer>v__APP_VERSION__</footer>
 
 <script>
   function cmd(action) {
@@ -193,11 +181,13 @@ class RemoteServer(QObject):
         self,
         controller: SlideshowController,
         port: int = 8765,
+        version: str = "",
         parent: QObject | None = None,
     ) -> None:
         super().__init__(parent)
         self._controller  = controller
         self._port        = port
+        self._version     = version
         self._show_active = False
         self._server      = QTcpServer(self)
         self._clients: list[QTcpSocket] = []
@@ -283,7 +273,8 @@ class RemoteServer(QObject):
         ctrl = self._controller
         match path:
             case "/":
-                self._respond(sock, "200 OK", "text/html; charset=utf-8", _REMOTE_HTML)
+                html = _REMOTE_HTML.replace("__APP_VERSION__", self._version)
+                self._respond(sock, "200 OK", "text/html; charset=utf-8", html)
             case "/logo.svg":
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("logo.svg"))
             case "/icon_play.svg":
