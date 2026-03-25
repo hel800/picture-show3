@@ -19,7 +19,7 @@ from remote_server import RemoteServer
 from slideshow_controller import SlideshowController
 from update_checker import UpdateChecker
 
-APP_VERSION = "0.9 beta"
+APP_VERSION = "3.0"
 
 _FROZEN = getattr(sys, "frozen", False)
 
