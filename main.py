@@ -179,7 +179,7 @@ def main() -> None:
     app.controller     = SlideshowController()
     app.provider       = SlideshowImageProvider(app.controller)
     app.qr_provider    = QrImageProvider()
-    app.remote         = RemoteServer(app.controller, port=app.controller.remotePort)
+    app.remote         = RemoteServer(app.controller, port=app.controller.remotePort, version=APP_VERSION)
     app.window_helper  = WindowHelper()
     app.update_checker = UpdateChecker()
 
