@@ -734,12 +734,14 @@
 
       <div class="card">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Recursive folder: folder with sub-folder inside -->
-          <path d="M2 6 Q2 4 4 4 L9 4 L10.5 6 L20 6 Q22 6 22 8 L22 18 Q22 20 20 20 L4 20 Q2 20 2 18 Z" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round"/>
-          <path d="M7 11 Q7 10 8 10 L11 10 L11.8 11 L16 11 Q17 11 17 12 L17 16 Q17 17 16 17 L8 17 Q7 17 7 16 Z" fill="currentColor" opacity="0.4"/>
+          <!-- Panorama: wide landscape with expand arrows -->
+          <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/>
+          <path d="M2 12 Q7 8 12 12 Q17 16 22 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.5"/>
+          <path d="M5 9 L2 12 L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <path d="M19 9 L22 12 L19 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg></div>
-        <h3>Recursive Folder Scan</h3>
-        <p>Opt in to include all subfolders when loading a folder — great for large, nested photo libraries.</p>
+        <h3>Automatic Panorama Mode</h3>
+        <p>Wide images are detected automatically and displayed in a slow pan — bringing panoramic shots to life without any manual setup.</p>
       </div>
 
       <div class="card">
@@ -778,10 +780,37 @@
         <p>Start the show directly via <kbd>picture-show3 --folder /photos</kbd> — skips the dialog, ideal for automation and kiosk setups.</p>
       </div>
 
+
+      <div class="card">
+        <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Smartphone with play/timer indicator -->
+          <rect x="5" y="2" width="14" height="20" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
+          <line x1="5" y1="6" x2="19" y2="6" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+          <line x1="5" y1="18" x2="19" y2="18" stroke="currentColor" stroke-width="1" opacity="0.4"/>
+          <path d="M10 10 L15 12 L10 14 Z" fill="currentColor"/>
+          <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.3" opacity="0.5"/>
+        </svg></div>
+        <h3>Remote Unsupervised Start</h3>
+        <p>Trigger the show from the smartphone remote without anyone at the computer — perfect for unattended presentations.</p>
+      </div>
+
+      <div class="card">
+        <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- Text edit / caption: lines with pencil -->
+          <line x1="3" y1="7" x2="14" y2="7" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="3" y1="11" x2="12" y2="11" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="3" y1="15" x2="10" y2="15" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity="0.4"/>
+          <path d="M16 14 L19.5 10.5 L20.5 11.5 L17 15 Z" fill="currentColor"/>
+          <path d="M19.5 10.5 L20.8 9.2 Q21.4 8.6 20.8 8 L20 7.2 Q19.4 6.6 18.8 7.2 L17.5 8.5 Z" fill="currentColor"/>
+        </svg></div>
+        <h3>Edit Captions</h3>
+        <p>Change or add a caption for any image directly within the app — stored as metadata, shown during the show.</p>
+      </div>
+
     </div>
     <p style="margin-top:2rem;font-size:0.85rem;color:var(--text-subtle)">
-      See all open issues and vote on features on
-      <a href="https://github.com/hel800/picture-show3/issues" target="_blank" rel="noopener" style="color:var(--accent-light)">GitHub</a>.
+      See all open issues and vote with 👍 on
+      <a href="https://github.com/hel800/picture-show3/issues" target="_blank" rel="noopener" style="color:var(--accent-light)">GitHub Issues</a>.
     </p>
   </div>
 </section>
