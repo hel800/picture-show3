@@ -138,8 +138,12 @@
         <translation>—  AIDE</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="119"/>
         <source>A full-screen photo slideshow viewer. Browse to a folder, configure transitions and sort order, then press ↵ to start. Control the show from the keyboard or from a smartphone via the built-in remote.</source>
+        <translation type="vanished">Un visionneur de diaporama photo en plein écran. Parcourez un dossier, configurez les transitions et l&apos;ordre de tri, puis appuyez sur ↵ pour démarrer. Contrôlez le picture show depuis le clavier ou depuis un smartphone via la télécommande intégrée.</translation>
+    </message>
+    <message>
+        <location filename="../qml/HelpOverlay.qml" line="119"/>
+        <source>A full-screen photo slideshow viewer. Browse to a folder, configure transitions and sort order, then press ↵ to start. Control the slideshow using your keyboard or a smartphone with the built-in remote.</source>
         <translation>Un visionneur de diaporama photo en plein écran. Parcourez un dossier, configurez les transitions et l&apos;ordre de tri, puis appuyez sur ↵ pour démarrer. Contrôlez le picture show depuis le clavier ou depuis un smartphone via la télécommande intégrée.</translation>
     </message>
     <message>
@@ -179,8 +183,22 @@
     </message>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="169"/>
-        <source>Start / resume show</source>
+        <source>Start / resume slideshow</source>
         <translation>Démarrer / reprendre le picture show</translation>
+    </message>
+    <message>
+        <location filename="../qml/HelpOverlay.qml" line="214"/>
+        <source>IN SLIDESHOW</source>
+        <translation>PENDANT LE DIAPORAMA</translation>
+    </message>
+    <message>
+        <location filename="../qml/HelpOverlay.qml" line="230"/>
+        <source>Exit slideshow</source>
+        <translation>Quitter le diaporama</translation>
+    </message>
+    <message>
+        <source>Start / resume show</source>
+        <translation type="vanished">Démarrer / reprendre le picture show</translation>
     </message>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="170"/>
@@ -205,9 +223,8 @@
         <translation>Aide</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="214"/>
         <source>IN SHOW</source>
-        <translation>PENDANT LE DIAPORAMA</translation>
+        <translation type="vanished">PENDANT LE DIAPORAMA</translation>
     </message>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="224"/>
@@ -235,9 +252,8 @@
         <translation>Mode panorama</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="230"/>
         <source>Exit show</source>
-        <translation>Quitter le diaporama</translation>
+        <translation type="vanished">Quitter le diaporama</translation>
     </message>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="273"/>
@@ -507,8 +523,12 @@
     </message>
     <message>
         <location filename="../qml/SettingsPage.qml" line="1463"/>
-        <source>In show commands:</source>
+        <source>Slideshow commands:</source>
         <translation>Commandes pendant le diaporama :</translation>
+    </message>
+    <message>
+        <source>In show commands:</source>
+        <translation type="vanished">Commandes pendant le diaporama :</translation>
     </message>
     <message>
         <location filename="../qml/SettingsPage.qml" line="1471"/>
