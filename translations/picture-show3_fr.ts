@@ -131,6 +131,24 @@
     </message>
 </context>
 <context>
+    <name>ExifPanel</name>
+    <message>
+        <location filename="../qml/ExifPanel.qml" line="97"/>
+        <source>EXIF INFO</source>
+        <translation>INFOS EXIF</translation>
+    </message>
+    <message>
+        <location filename="../qml/ExifPanel.qml" line="132"/>
+        <source>No EXIF data available</source>
+        <translation>Aucune donnée EXIF disponible</translation>
+    </message>
+    <message>
+        <location filename="../qml/ExifPanel.qml" line="160"/>
+        <source>close</source>
+        <translation>fermer</translation>
+    </message>
+</context>
+<context>
     <name>HelpOverlay</name>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="102"/>
@@ -192,7 +210,12 @@
         <translation>PENDANT LE DIAPORAMA</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="230"/>
+        <location filename="../qml/HelpOverlay.qml" line="228"/>
+        <source>Extended EXIF details</source>
+        <translation>Détails EXIF étendus</translation>
+    </message>
+    <message>
+        <location filename="../qml/HelpOverlay.qml" line="231"/>
         <source>Exit slideshow</source>
         <translation>Quitter le diaporama</translation>
     </message>
@@ -218,7 +241,7 @@
     </message>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="173"/>
-        <location filename="../qml/HelpOverlay.qml" line="231"/>
+        <location filename="../qml/HelpOverlay.qml" line="232"/>
         <source>Help</source>
         <translation>Aide</translation>
     </message>
@@ -242,12 +265,12 @@
         <translation>Afficher/masquer le HUD</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="228"/>
+        <location filename="../qml/HelpOverlay.qml" line="229"/>
         <source>Jump to image</source>
         <translation>Aller à l&apos;image</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="229"/>
+        <location filename="../qml/HelpOverlay.qml" line="230"/>
         <source>Panorama mode</source>
         <translation>Mode panorama</translation>
     </message>
@@ -256,19 +279,42 @@
         <translation type="vanished">Quitter le diaporama</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="273"/>
+        <location filename="../qml/HelpOverlay.qml" line="274"/>
         <source>Press</source>
         <translation>Appuyez sur</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="275"/>
+        <location filename="../qml/HelpOverlay.qml" line="276"/>
         <source>or</source>
         <translation>ou</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="277"/>
+        <location filename="../qml/HelpOverlay.qml" line="278"/>
         <source>to close</source>
         <translation>pour fermer</translation>
+    </message>
+</context>
+<context>
+    <name>HudBar</name>
+    <message>
+        <location filename="../qml/HudBar.qml" line="105"/>
+        <source>fullscreen</source>
+        <translation>plein écran</translation>
+    </message>
+    <message>
+        <location filename="../qml/HudBar.qml" line="107"/>
+        <source>info</source>
+        <translation>info</translation>
+    </message>
+    <message>
+        <location filename="../qml/HudBar.qml" line="109"/>
+        <source>details</source>
+        <translation>détails</translation>
+    </message>
+    <message>
+        <location filename="../qml/HudBar.qml" line="111"/>
+        <source>exit</source>
+        <translation>quitter</translation>
     </message>
 </context>
 <context>
@@ -554,7 +600,7 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="408"/>
+        <location filename="../slideshow_controller.py" line="424"/>
         <source>Folder not found: {}</source>
         <translation>Dossier introuvable : {}</translation>
     </message>
@@ -562,47 +608,44 @@
 <context>
     <name>SlideshowPage</name>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="558"/>
         <source>fullscreen</source>
-        <translation>plein écran</translation>
+        <translation type="vanished">plein écran</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="560"/>
         <source>info</source>
-        <translation>info</translation>
+        <translation type="vanished">info</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="562"/>
         <source>exit</source>
-        <translation>quitter</translation>
+        <translation type="vanished">quitter</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="601"/>
+        <location filename="../qml/SlideshowPage.qml" line="542"/>
         <source>AUTOPLAY</source>
         <translation>LECTURE AUTO</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="609"/>
+        <location filename="../qml/SlideshowPage.qml" line="550"/>
         <source>Play (%1 s)</source>
         <translation>Lecture (%1 s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="610"/>
+        <location filename="../qml/SlideshowPage.qml" line="551"/>
         <source>Pause</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="672"/>
+        <location filename="../qml/SlideshowPage.qml" line="613"/>
         <source>JUMP TO IMAGE</source>
         <translation>ALLER À L&apos;IMAGE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="737"/>
+        <location filename="../qml/SlideshowPage.qml" line="678"/>
         <source>go</source>
         <translation>aller</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="740"/>
+        <location filename="../qml/SlideshowPage.qml" line="681"/>
         <source>cancel</source>
         <translation>annuler</translation>
     </message>
