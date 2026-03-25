@@ -46,12 +46,17 @@ _REMOTE_HTML = """\
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
-    --bg:     #0f0f1a;
-    --card:   #1a1a2e;
-    --btn:    #1e1e3a;
-    --accent: #7c3aed;
-    --text:   #e2e8f0;
-    --muted:  #64748b;
+    --bg:           #111820;
+    --card:         #131e2a;
+    --btn:          #1e293a;
+    --btn-hover:    #293952;
+    --accent:       #526796;
+    --accent-press: #32405e;
+    --accent-light: #96a5c5;
+    --text:         #e2e8f0;
+    --text-sec:     #94a3b8;
+    --muted:        #64748b;
+    --border:       #252c40;
   }
   body {
     background: var(--bg);
@@ -79,28 +84,40 @@ _REMOTE_HTML = """\
   }
   button {
     padding: 32px 8px;
-    border: none;
-    border-radius: 20px;
-    font-size: 2rem;
+    border: 1px solid var(--border);
+    border-radius: 12px;
     background: var(--btn);
     color: var(--text);
     cursor: pointer;
-    transition: transform .1s, background .15s, opacity .2s;
+    transition: transform .1s, background .15s, border-color .15s, opacity .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
   }
-  button:active:not(:disabled) { transform: scale(.92); background: var(--accent); }
+  button svg { width: 2em; height: 2em; pointer-events: none; }
+  button:active:not(:disabled) {
+    transform: scale(.92);
+    background: var(--accent-press);
+    border-color: var(--accent);
+  }
   button:disabled { opacity: 0.25; cursor: not-allowed; }
-  button img { height: 1.4em; vertical-align: middle; pointer-events: none; }
-  .wide { grid-column: 1 / -1; font-size: 1.1rem; padding: 22px; }
+  .wide {
+    grid-column: 1 / -1;
+    padding: 22px;
+    gap: 10px;
+  }
+  .wide img { height: 1.6em; vertical-align: middle; pointer-events: none; }
+  .wide .label { color: var(--text-sec); font-size: .95rem; }
   kbd {
     display: inline-block;
     background: var(--card);
-    border: 1px solid #334155;
+    border: 1px solid var(--border);
     border-radius: 6px;
     padding: 2px 8px;
     font-size: .75rem;
     color: var(--muted);
   }
-  footer { font-size: .75rem; color: #334155; text-align: center; }
+  footer { font-size: .75rem; color: var(--border); text-align: center; }
 </style>
 </head>
 <body>
@@ -110,10 +127,20 @@ _REMOTE_HTML = """\
 </header>
 
 <div class="grid">
-  <button id="prevBtn" onclick="cmd('prev')" title="Previous" disabled>◀</button>
-  <button id="nextBtn" onclick="cmd('next')" title="Next" disabled>▶</button>
+  <button id="prevBtn" onclick="cmd('prev')" title="Previous" disabled>
+    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.5"/>
+      <path d="M 20,8 10,16 20,24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </button>
+  <button id="nextBtn" onclick="cmd('next')" title="Next" disabled>
+    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+      <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.5"/>
+      <path d="M 12,8 22,16 12,24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </svg>
+  </button>
   <button class="wide" id="playBtn" onclick="cmd('toggle')" disabled>
-    <img id="playBtnIcon" src="/icon_play.svg"><span id="playBtnLabel"> Play</span>
+    <img id="playBtnIcon" src="/icon_play.svg"><span class="label" id="playBtnLabel"> Play</span>
   </button>
 </div>
 
