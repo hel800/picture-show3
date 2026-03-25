@@ -75,6 +75,11 @@ Name: "desktopicon"; \
   GroupDescription: "{cm:AdditionalIcons}"; \
   Flags: unchecked
 
+[InstallDelete]
+; Remove the old PyInstaller runtime bundle so that files dropped in
+; newer builds do not leave orphaned remnants behind.
+Type: filesandordirs; Name: "{app}\_internal"
+
 [Files]
 ; Main executable
 Source: "dist\picture-show3\{#MyAppExeName}"; \
