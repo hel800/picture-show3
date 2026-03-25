@@ -144,7 +144,7 @@
     <message>
         <location filename="../qml/HelpOverlay.qml" line="119"/>
         <source>A full-screen photo slideshow viewer. Browse to a folder, configure transitions and sort order, then press ↵ to start. Control the slideshow using your keyboard or a smartphone with the built-in remote.</source>
-        <translation type="vanished">Ein Fotodiashow-Programm mit Vollbildfunktion. Ordner auswählen, Übergänge und Sortierung konfigurieren, dann ↵ drücken. Steuerung über Tastatur oder Smartphone-Fernbedienung.</translation>
+        <translation>Ein Fotodiashow-Programm mit Vollbildfunktion. Ordner auswählen, Übergänge und Sortierung konfigurieren, dann ↵ drücken. Steuerung über Tastatur oder Smartphone-Fernbedienung.</translation>
     </message>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="153"/>
