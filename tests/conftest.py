@@ -110,6 +110,15 @@ def ctrl(qapp, _isolate_settings):
 
 
 @pytest.fixture
-def ctrl_with_images(ctrl, image_folder):
-    ctrl.loadFolder(str(image_folder))
+def load_folder(qtbot):
+    """Call loadFolder and wait until the background scan is complete."""
+    def _load(ctrl, path):
+        ctrl.loadFolder(path)
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+    return _load
+
+
+@pytest.fixture
+def ctrl_with_images(ctrl, image_folder, load_folder):
+    load_folder(ctrl, str(image_folder))
     return ctrl

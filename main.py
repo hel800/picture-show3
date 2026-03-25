@@ -200,6 +200,7 @@ def main() -> None:
     win = engine.rootObjects()[0]
     app.window_helper.set_window(win)
     _restore_window(win)
+    app.aboutToQuit.connect(app.controller.cancelAll)
     app.aboutToQuit.connect(lambda: _save_window(win, app.window_helper))
 
     if app.controller.updateCheckEnabled:

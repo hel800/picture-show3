@@ -11,6 +11,8 @@ from __future__ import annotations
 import os
 import random
 import sys
+import threading
+from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from pathlib import Path
 
@@ -56,6 +58,13 @@ class SlideshowController(QObject):
     settingsChanged     = Signal()
     folderHistoryChanged = Signal()
     errorOccurred       = Signal(str)
+    scanningChanged     = Signal()
+    scanProgressChanged = Signal()
+    # Private: background thread → main thread handoffs
+    _scanComplete       = Signal(object, int)   # (result dict | None, generation)
+    _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
+    _ratingsComplete    = Signal(object, int)   # (rating_cache dict, generation)
+    _progressUpdate     = Signal(int)           # files processed so far
 
     # ── Init ──────────────────────────────────────────────────────────────────
     def __init__(self, parent: QObject | None = None) -> None:
@@ -80,9 +89,18 @@ class SlideshowController(QObject):
         self._rating_cache    : dict[str, int]   = {}
         self._language        : str              = "auto"
         self._update_check_enabled: bool         = True
+        self._recursive           : bool         = False
+        self._scan_generation     : int          = 0
+        self._scanning            : bool         = False
+        self._scan_progress       : int          = 0   # files processed (metadata phase only)
+        self._cancel_event        : threading.Event = threading.Event()
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
+        self._scanComplete.connect(self._on_scan_complete)
+        self._sortComplete.connect(self._on_sort_complete)
+        self._ratingsComplete.connect(self._on_ratings_complete)
+        self._progressUpdate.connect(self._on_progress_update)
 
         self._load_settings()
 
@@ -103,6 +121,7 @@ class SlideshowController(QObject):
         self._min_rating           = s.value("minRating",         0,     type=int)
         self._language             = s.value("language",          "auto")
         self._update_check_enabled = s.value("updateCheckEnabled", True,  type=bool)
+        self._recursive            = s.value("recursive",          False, type=bool)
 
         # QSettings returns a str for single-item lists, list for multiple
         raw = s.value("folderHistory", [])
@@ -116,7 +135,11 @@ class SlideshowController(QObject):
 
         if self._folder_history:
             self._folder = self._folder_history[0]
-            self._scan_images()
+            # Mark scanning immediately so QML shows the scanning state from the
+            # first frame, but defer the actual thread start so the window can
+            # render before any network I/O begins.
+            self._scanning = True
+            QTimer.singleShot(0, self._scan_images)
 
     def _save_settings(self) -> None:
         s = QSettings()
@@ -134,6 +157,7 @@ class SlideshowController(QObject):
         s.setValue("minRating",          self._min_rating)
         s.setValue("language",           self._language)
         s.setValue("updateCheckEnabled", self._update_check_enabled)
+        s.setValue("recursive",          self._recursive)
         s.setValue("folderHistory",      self._folder_history)
 
     # ── Properties ───────────────────────────────────────────────────────────
@@ -197,6 +221,15 @@ class SlideshowController(QObject):
     @Property(bool, notify=settingsChanged)
     def updateCheckEnabled(self) -> bool: return self._update_check_enabled
 
+    @Property(bool, notify=settingsChanged)
+    def recursiveSearch(self) -> bool: return self._recursive
+
+    @Property(bool, notify=scanningChanged)
+    def scanning(self) -> bool: return self._scanning
+
+    @Property(int, notify=scanProgressChanged)
+    def scanProgress(self) -> int: return self._scan_progress
+
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
         """
@@ -244,6 +277,13 @@ class SlideshowController(QObject):
             return
 
         self._folder = str(Path(path))
+        # Clear immediately so imageCount == 0 during the async scan
+        self._all_images = []
+        self._images = []
+        self._current_index = 0
+        self._rating_cache = {}
+        self.imagesChanged.emit()
+        self.currentIndexChanged.emit()
         self._scan_images()
         self.settingsChanged.emit()
 
@@ -261,22 +301,234 @@ class SlideshowController(QObject):
         self._save_settings()
         self.folderHistoryChanged.emit()
 
-    def _scan_images(self) -> None:
-        folder = Path(self._folder)
-        if not folder.is_dir():
-            self.errorOccurred.emit(self.tr("Folder not found: {}").format(self._folder))
-            images: list[str] = []
-        else:
-            images = [
-                str(f)
-                for f in folder.iterdir()
-                if f.is_file() and f.suffix.lower() in IMAGE_EXTENSIONS
-            ]
+    @Slot(str)
+    def removeFolderHistory(self, path: str) -> None:
+        if path in self._folder_history:
+            self._folder_history.remove(path)
+            self._save_settings()
+            self.folderHistoryChanged.emit()
 
-        self._sort(images)
-        self._all_images   = images
-        self._rating_cache = {}
-        self._apply_filter()
+    def _cancel_and_new_event(self) -> threading.Event:
+        """Signal the running worker to stop and return a fresh cancel event."""
+        self._cancel_event.set()
+        self._cancel_event = threading.Event()
+        return self._cancel_event
+
+    @Slot()
+    def cancelAll(self) -> None:
+        """Cancel any running background workers.  Call on app quit."""
+        self._cancel_event.set()
+
+    def _scan_images(self) -> None:
+        """Start a background scan.  Discovery → sort → ratings pipeline."""
+        cancel = self._cancel_and_new_event()
+        self._scanning = True
+        self.scanningChanged.emit()
+        self._scan_generation += 1
+        threading.Thread(
+            target=self._scan_worker,
+            args=(self._folder, self._recursive, self._scan_generation, cancel),
+            daemon=True,
+        ).start()
+
+    def _scan_worker(self, folder_path: str, recursive: bool, gen: int,
+                     cancel: threading.Event) -> None:
+        """Discover image files only — sorting happens in _on_scan_complete."""
+        folder = Path(folder_path)
+        if not folder.is_dir():
+            self._scanComplete.emit(None, gen)
+            return
+        # os.scandir avoids extra stat calls vs rglob
+        all_images: list[str] = []
+        if recursive:
+            stack = [str(folder)]
+            while stack:
+                if cancel.is_set():
+                    return
+                current = stack.pop()
+                try:
+                    with os.scandir(current) as it:
+                        for entry in it:
+                            if cancel.is_set():
+                                return
+                            if entry.is_dir(follow_symlinks=False):
+                                stack.append(entry.path)
+                            elif entry.is_file(follow_symlinks=False):
+                                if Path(entry.name).suffix.lower() in IMAGE_EXTENSIONS:
+                                    all_images.append(entry.path)
+                except PermissionError:
+                    pass
+        else:
+            try:
+                with os.scandir(str(folder)) as it:
+                    for entry in it:
+                        if cancel.is_set():
+                            return
+                        if entry.is_file(follow_symlinks=False):
+                            if Path(entry.name).suffix.lower() in IMAGE_EXTENSIONS:
+                                all_images.append(entry.path)
+            except PermissionError:
+                pass
+        self._scanComplete.emit({"all": all_images}, gen)
+
+    def _parallel_date_sort(self, images: list[str], cancel: threading.Event,
+                            max_workers: int = 8,
+                            report_progress: bool = False) -> list[str] | None:
+        """Sort images by EXIF date using parallel reads.  Returns None if cancelled."""
+        keyed: list[tuple[datetime, str]] = []
+        done = 0
+        with ThreadPoolExecutor(max_workers=max_workers) as pool:
+            futures = {pool.submit(SlideshowController._date_key, p): p for p in images}
+            for future in futures:
+                # Poll with short timeout so cancel checks happen frequently
+                while True:
+                    if cancel.is_set():
+                        pool.shutdown(wait=False, cancel_futures=True)
+                        return None
+                    try:
+                        dt = future.result(timeout=0.1)
+                        break
+                    except TimeoutError:
+                        continue
+                    except Exception:
+                        dt = datetime.min
+                        break
+                keyed.append((dt, futures[future]))
+                if report_progress:
+                    done += 1
+                    self._progressUpdate.emit(done)
+        keyed.sort()
+        return [p for _, p in keyed]
+
+    @Slot(object, int)
+    def _on_scan_complete(self, result, gen: int) -> None:
+        if gen != self._scan_generation:
+            return  # stale — a newer scan is already running
+        if result is None:
+            self.errorOccurred.emit(self.tr("Folder not found: {}").format(self._folder))
+            self._all_images = []
+            self._images = []
+            self._rating_cache = {}
+            self._scanning = False
+            self.scanningChanged.emit()
+            self._apply_filter()
+            return
+        self._all_images = result["all"]
+        # Chain into sort — don't emit signals yet, the pipeline end will.
+        self._sort_in_background()
+
+    def _sort_in_background(self) -> None:
+        """Re-sort already-loaded images in a background thread.
+        Stays in scanning state — caller must already have _scanning=True."""
+        cancel = self._cancel_and_new_event()
+        if not self._scanning:
+            self._scanning = True
+            self.scanningChanged.emit()
+        # Reset progress — only shown during metadata phases (date sort / ratings)
+        if self._scan_progress != 0:
+            self._scan_progress = 0
+            self.scanProgressChanged.emit()
+        self._scan_generation += 1
+        threading.Thread(
+            target=self._sort_worker,
+            args=(list(self._all_images), self._sort_order, self._scan_generation, cancel),
+            daemon=True,
+        ).start()
+
+    def _sort_worker(self, images: list[str], sort_order: str, gen: int,
+                     cancel: threading.Event) -> None:
+        match sort_order:
+            case "name":
+                images.sort(key=lambda p: Path(p).name.lower())
+            case "date":
+                images = self._parallel_date_sort(images, cancel, report_progress=True)
+                if images is None:
+                    return  # cancelled
+            case "random":
+                random.shuffle(images)
+        if not cancel.is_set():
+            self._sortComplete.emit({"images": images, "order": sort_order}, gen)
+
+    @Slot(object, int)
+    def _on_sort_complete(self, result, gen: int) -> None:
+        if gen != self._scan_generation:
+            return
+        self._all_images = result["images"]
+        # If the user changed sort order while we were sorting, re-sort
+        if result["order"] != self._sort_order:
+            self._sort_in_background()
+            return
+        # Chain into ratings read if star filter is active and cache is empty
+        if self._min_rating > 0 and not self._rating_cache:
+            self._read_ratings_in_background()
+        else:
+            self._scanning = False
+            self._scan_progress = 0
+            self.scanningChanged.emit()
+            self.scanProgressChanged.emit()
+            self._apply_filter()   # emit signals only at pipeline end
+
+    # ── Lazy rating reads ──────────────────────────────────────────────────────
+
+    def _read_ratings_in_background(self) -> None:
+        """Read XMP ratings for all images in parallel background threads.
+        Stays in scanning state — caller must already have _scanning=True."""
+        cancel = self._cancel_and_new_event()
+        if not self._scanning:
+            self._scanning = True
+            self.scanningChanged.emit()
+        self._scan_progress = 0
+        self.scanProgressChanged.emit()
+        self._scan_generation += 1
+        threading.Thread(
+            target=self._ratings_worker,
+            args=(list(self._all_images), self._scan_generation, cancel),
+            daemon=True,
+        ).start()
+
+    def _ratings_worker(self, images: list[str], gen: int,
+                        cancel: threading.Event) -> None:
+        rating_cache: dict[str, int] = {}
+        done = 0
+        with ThreadPoolExecutor(max_workers=8) as pool:
+            futures = {pool.submit(SlideshowController._read_xmp_rating, p): p
+                       for p in images}
+            total = len(futures)
+            for future in futures:
+                # Poll with short timeout so cancel checks happen frequently
+                while True:
+                    if cancel.is_set():
+                        pool.shutdown(wait=False, cancel_futures=True)
+                        return
+                    try:
+                        rating = future.result(timeout=0.1)
+                        break
+                    except TimeoutError:
+                        continue
+                    except Exception:
+                        rating = 0
+                        break
+                rating_cache[futures[future]] = rating
+                done += 1
+                self._progressUpdate.emit(done)
+        if not cancel.is_set():
+            self._ratingsComplete.emit(rating_cache, gen)
+
+    @Slot(object, int)
+    def _on_ratings_complete(self, rating_cache: dict[str, int], gen: int) -> None:
+        if gen != self._scan_generation:
+            return
+        self._rating_cache = rating_cache
+        self._scanning = False
+        self._scan_progress = 0
+        self.scanningChanged.emit()
+        self.scanProgressChanged.emit()
+        self._apply_filter()   # re-apply with real ratings
+
+    @Slot(int)
+    def _on_progress_update(self, done: int) -> None:
+        self._scan_progress = done
+        self.scanProgressChanged.emit()
 
     def _sort(self, images: list[str]) -> None:
         match self._sort_order:
@@ -347,8 +599,10 @@ class SlideshowController(QObject):
     def setSortOrder(self, order: SortOrder) -> None:
         self._sort_order = order
         if self._all_images:
-            self._sort(self._all_images)
-            self._apply_filter()   # emits imagesChanged + currentIndexChanged
+            # Cancel any running sort/ratings and re-sort immediately.
+            # During scan phase _all_images is empty, so we just save and
+            # the pipeline will use the current _sort_order after discovery.
+            self._sort_in_background()
         self._save_settings()
         self.settingsChanged.emit()
 
@@ -358,7 +612,19 @@ class SlideshowController(QObject):
         if clamped == self._min_rating:
             return
         self._min_rating = clamped
-        self._apply_filter()   # emits imagesChanged + currentIndexChanged
+        if self._all_images:
+            # Cancel any running sort/ratings and re-apply.
+            # During scan phase _all_images is empty, so we just save and
+            # the pipeline will use the current _min_rating after discovery.
+            if clamped > 0 and not self._rating_cache:
+                self._read_ratings_in_background()
+            else:
+                # If a sort/ratings worker was running, cancel it
+                if self._scanning:
+                    self._cancel_event.set()
+                    self._scanning = False
+                    self.scanningChanged.emit()
+                self._apply_filter()
         self._save_settings()
         self.settingsChanged.emit()
 
@@ -409,6 +675,16 @@ class SlideshowController(QObject):
     def setUpdateCheckEnabled(self, enabled: bool) -> None:
         self._update_check_enabled = enabled
         self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(bool)
+    def setRecursiveSearch(self, enabled: bool) -> None:
+        if self._recursive == enabled:
+            return
+        self._recursive = enabled
+        self._save_settings()
+        if self._folder:
+            self._scan_images()
         self.settingsChanged.emit()
 
     # ── Playback control ──────────────────────────────────────────────────────

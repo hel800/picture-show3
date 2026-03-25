@@ -15,6 +15,8 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Autoplay** | Configurable interval (1–30 s), timer restarts on manual navigation |
 | **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken |
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
+| **Recursive folders** | Optional: include subfolders in the scan (toggle in settings) |
+| **Background scanning** | Folder scanning and sorting run in background threads — UI stays responsive; Start button enables when ready |
 | **Jump to image** | Instantly jump to any image by number with a live preview |
 | **Panorama mode** | Auto-detects wide images and scrolls them smoothly across the screen |
 | **Mouse navigation** | Optional left/right click to advance or go back (toggle in Advanced settings) |
@@ -23,6 +25,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Help overlay** | Press `?` at any time to see all keyboard shortcuts |
 | **Cursor** | Hidden in fullscreen; visible in windowed mode |
 | **Multilingual** | UI language selectable in Advanced settings; `Auto` follows system locale |
+| **Update check** | Checks GitHub Releases for a newer version on startup — opt-out in Advanced settings |
 
 ---
 
@@ -65,7 +68,7 @@ python -m pytest
 python -m pytest -v
 ```
 
-Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+156 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
 
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 
@@ -148,7 +151,7 @@ Settings are grouped into four tabs:
 
 | Tab | Options |
 |---|---|
-| **General** | Transition duration (100–3000 ms) · UI language |
+| **General** | Transition duration (100–3000 ms) · UI language · Update check on startup |
 | **Controls** | Mouse button navigation (left = next, right = previous) |
 | **HUD** | HUD size (50–200 %) |
 | **Remote** | Smartphone remote enable/disable · Port |
@@ -173,37 +176,37 @@ The UI language is selected in **Advanced settings › LANGUAGE**.
 The active language is stored as `language` in the settings INI file and can be set manually:
 
 ```ini
-language = de     ; e.g. de, en, auto
+language = de     ; e.g. de, fr, auto
+```
+
+Two helper scripts live in `translations/`:
+
+```bash
+# Pull new strings from source, report unfinished per language
+python translations/update.py
+
+# Build .qm files for use in dev mode
+python translations/compile.py
 ```
 
 ### Adding a new language
 
-1. Copy `translations/picture-show3_en.ts` to `translations/picture-show3_<code>.ts`
-   (e.g. `picture-show3_fr.ts` for French).
-2. Open the file in **Qt Linguist** (`pyside6-linguist`) or any text editor and fill in the `<translation>` elements.
-3. Compile the `.ts` file to a `.qm` file:
-   ```bash
-   .venv/Scripts/pyside6-lrelease translations/picture-show3_fr.ts \
-       -qm translations/picture-show3_fr.qm
-   ```
-4. Restart the app — the new language appears automatically in the language selector.
+1. Run `python translations/update.py` to make sure all `.ts` files are current.
+2. Create `translations/picture-show3_<code>.ts` (e.g. `picture-show3_es.ts` for Spanish)
+   by copying an existing `.ts` file and clearing the `<translation>` values.
+3. Open it in **Qt Linguist** (`pyside6-linguist`) or any text editor and fill in the `<translation>` elements.
+4. Run `python translations/compile.py` to build the `.qm` file.
+5. Restart the app — the new language appears automatically in the language selector.
 
 Commit the `.ts` source file; `.qm` files are generated and excluded from git.
 
 ### Keeping translations up to date
 
-After adding or changing `qsTr()`/`self.tr()` strings in the source, regenerate the `.ts` files:
+After adding or changing `qsTr()`/`self.tr()` strings in the source:
 
 ```bash
-.venv/Scripts/pyside6-lupdate qml/*.qml slideshow_controller.py \
-    -ts translations/picture-show3_en.ts translations/picture-show3_de.ts
-```
-
-New strings are added with `type="unfinished"`; existing translations are preserved.
-Compile all `.ts` files at once:
-
-```bash
-.venv/Scripts/pyside6-lrelease translations/picture-show3_*.ts
+python translations/update.py   # updates all .ts files, lists what still needs translating
+python translations/compile.py  # rebuilds .qm files
 ```
 
 The build script (`install/windows/compile_resources.py`) runs `pyside6-lrelease` automatically as part of the build.

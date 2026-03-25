@@ -135,7 +135,9 @@ class TestHttpEndpoints:
         for n in ("a.jpg", "b.jpg"):
             make_plain_jpeg(d / n)
         ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         ctrl.setSortOrder("name")
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         ctrl.goTo(0)
 
         status, body = _http_get(qtbot, f"http://127.0.0.1:{port}/next")
@@ -150,7 +152,9 @@ class TestHttpEndpoints:
         for n in ("a.jpg", "b.jpg"):
             make_plain_jpeg(d / n)
         ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         ctrl.setSortOrder("name")
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         ctrl.goTo(1)
 
         status, body = _http_get(qtbot, f"http://127.0.0.1:{port}/prev")
@@ -164,6 +168,7 @@ class TestHttpEndpoints:
         d.mkdir()
         make_plain_jpeg(d / "x.jpg")
         ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
 
         assert ctrl.isPlaying is False
         status, _ = _http_get(qtbot, f"http://127.0.0.1:{port}/toggle")
