@@ -34,6 +34,55 @@
       line-height: 1.6;
     }
 
+    /* ── Release banner ───────────────────────────────────────── */
+    #release-banner {
+      display: none;
+      margin-bottom: 4rem;
+    }
+    #release-banner.visible { display: block; }
+    .banner-card {
+      max-width: 960px;
+      margin: 0 auto;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-left: 3px solid var(--accent-light);
+      border-radius: 10px;
+      padding: 1rem 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      position: relative;
+    }
+    .banner-icon {
+      color: var(--accent-light);
+      flex-shrink: 0;
+    }
+    .banner-icon svg { width: 20px; height: 20px; display: block; }
+    .banner-body { flex: 1; }
+    .banner-body strong { color: var(--text); font-size: 0.95rem; }
+    .banner-body span { color: var(--text-subtle); font-size: 0.82rem; margin-left: 0.5rem; }
+    .banner-link {
+      color: var(--accent-light);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 500;
+      white-space: nowrap;
+      flex-shrink: 0;
+    }
+    .banner-link:hover { text-decoration: underline; }
+    .banner-dismiss {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      font-size: 1rem;
+      line-height: 1;
+      padding: 0.25rem;
+      flex-shrink: 0;
+      transition: color 0.15s;
+    }
+    .banner-dismiss:hover { color: var(--text); }
+
     /* ── Nav ──────────────────────────────────────────────────── */
     nav {
       position: sticky;
@@ -131,7 +180,7 @@
 
     /* ── Hero ─────────────────────────────────────────────────── */
     #hero {
-      padding: 6rem 2rem 5rem;
+      padding: 4rem 2rem 3rem;
       text-align: center;
       background: radial-gradient(ellipse 80% 60% at 50% 0%, #1a2740 0%, var(--bg-deep) 70%);
     }
@@ -475,6 +524,21 @@
 <!-- ── Hero ─────────────────────────────────────────────────────── -->
 <section id="hero">
   <div class="inner">
+    <div id="release-banner">
+      <div class="banner-card">
+        <div class="banner-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/>
+            <line x1="7" y1="7" x2="7.01" y2="7"/>
+          </svg>
+        </div>
+        <div class="banner-body">
+          <span id="banner-text"></span>
+        </div>
+        <a id="banner-link" href="#" target="_blank" rel="noopener" class="banner-link">Release notes →</a>
+        <button class="banner-dismiss" id="banner-dismiss" aria-label="Dismiss">&#x2715;</button>
+      </div>
+    </div>
     <img src="logo.svg" alt="picture show 3" class="logo">
     <p class="tagline">A full-screen photo slideshow viewer.</p>
     <div class="hero-btns">
@@ -792,6 +856,28 @@
 </div>
 
 <script>
+  // ── Release banner ────────────────────────────────────────────
+  const banner        = document.getElementById('release-banner');
+  const bannerText    = document.getElementById('banner-text');
+  const bannerDismiss = document.getElementById('banner-dismiss');
+
+  fetch('https://api.github.com/repos/hel800/picture-show3/releases/latest')
+    .then(r => r.ok ? r.json() : null)
+    .then(data => {
+      if (!data) return;
+      const key = 'dismissed-release-' + data.tag_name;
+      if (sessionStorage.getItem(key)) return;
+      const date = new Date(data.published_at).toLocaleDateString('en', { year: 'numeric', month: 'short', day: 'numeric' });
+      bannerText.innerHTML = `<strong>${data.tag_name}</strong><span>released ${date}</span>`;
+      document.getElementById('banner-link').href = data.html_url;
+      banner.classList.add('visible');
+      bannerDismiss.addEventListener('click', () => {
+        banner.classList.remove('visible');
+        sessionStorage.setItem(key, '1');
+      });
+    })
+    .catch(() => {});
+
   // ── Nav hamburger ─────────────────────────────────────────────
   const navToggle = document.getElementById('navToggle');
   const navMenu   = document.getElementById('navMenu');
