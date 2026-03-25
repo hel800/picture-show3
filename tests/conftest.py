@@ -9,6 +9,7 @@ import struct
 import pytest
 from pathlib import Path
 from PIL import Image
+from PIL.TiffImagePlugin import IFDRational
 
 from PySide6.QtCore import QSettings
 
@@ -75,6 +76,47 @@ def make_jpeg_with_xmp_elem(path: Path, rating: int) -> Path:
     buf = io.BytesIO()
     Image.new("RGB", (4, 4)).save(buf, format="JPEG")
     path.write_bytes(_inject_app1(buf.getvalue(), ns + xmp))
+    return path
+
+
+def make_jpeg_with_exif(
+    path: Path,
+    *,
+    make: str = "",
+    model: str = "",
+    fnumber: tuple[int, int] | None = None,
+    exposure_time: tuple[int, int] | None = None,
+    iso: int | None = None,
+    focal_length: tuple[int, int] | None = None,
+    exposure_program: int | None = None,
+    flash: int | None = None,
+    size: tuple[int, int] = (100, 80),
+) -> Path:
+    """JPEG with configurable EXIF tags (IFD0 + ExifIFD). All fields optional."""
+    img = Image.new("RGB", size)
+    exif = img.getexif()
+    if make:
+        exif[271] = make
+    if model:
+        exif[272] = model
+    exif_ifd: dict = {}
+    if fnumber is not None:
+        exif_ifd[33437] = IFDRational(*fnumber)
+    if exposure_time is not None:
+        exif_ifd[33434] = IFDRational(*exposure_time)
+    if iso is not None:
+        exif_ifd[34855] = iso
+    if focal_length is not None:
+        exif_ifd[37386] = IFDRational(*focal_length)
+    if exposure_program is not None:
+        exif_ifd[34850] = exposure_program
+    if flash is not None:
+        exif_ifd[37385] = flash
+    exif_ifd[40962] = size[0]
+    exif_ifd[40963] = size[1]
+    if exif_ifd:
+        exif[0x8769] = exif_ifd
+    img.save(path, format="JPEG", exif=exif.tobytes())
     return path
 
 

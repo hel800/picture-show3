@@ -24,8 +24,24 @@ from PIL import Image, IptcImagePlugin, UnidentifiedImageError
 Image.MAX_IMAGE_PIXELS = 500_000_000
 from PySide6.QtCore import Property, QLocale, QObject, QSettings, QTimer, Signal, Slot
 
-# EXIF tag id for DateTimeOriginal (when the shutter was pressed)
-_EXIF_DATE_TAKEN = 36867
+# EXIF tag ids
+_EXIF_DATE_TAKEN       = 36867   # DateTimeOriginal
+_EXIF_MAKE             = 271
+_EXIF_MODEL            = 272
+_EXIF_EXPOSURE_TIME    = 33434
+_EXIF_FNUMBER          = 33437
+_EXIF_EXPOSURE_PROGRAM = 34850
+_EXIF_ISO              = 34855
+_EXIF_FLASH            = 37385
+_EXIF_FOCAL_LENGTH     = 37386
+_EXIF_PIXEL_X          = 40962
+_EXIF_PIXEL_Y          = 40963
+
+_EXPOSURE_PROGRAMS: dict[int, str] = {
+    0: "Not defined", 1: "Manual", 2: "Auto",
+    3: "Aperture priority", 4: "Shutter priority",
+    5: "Creative", 6: "Action", 7: "Portrait", 8: "Landscape",
+}
 
 # Maximum number of recent folders to remember
 _MAX_HISTORY = 100
@@ -785,6 +801,94 @@ class SlideshowController(QObject):
         except Exception:
             pass
         return ""
+
+    @Slot(int, result='QVariantList')
+    def imageExifInfo(self, index: int) -> list:
+        """Return a list of {label, value} dicts with EXIF metadata for QML display."""
+        path = self.imagePath(index)
+        if not path:
+            return []
+        rows: list[dict] = []
+        try:
+            with Image.open(path) as img:
+                pil_w, pil_h = img.size
+                try:
+                    exif = img._getexif() or {}
+                except Exception:
+                    exif = {}
+        except Exception:
+            return []
+
+        # Camera (Manufacturer + Model)
+        make  = str(exif.get(_EXIF_MAKE,  "") or "").strip()
+        model = str(exif.get(_EXIF_MODEL, "") or "").strip()
+        if make or model:
+            # Avoid "Canon Canon EOS R5" when model string already starts with make
+            camera = model if model.startswith(make) else f"{make} {model}".strip()
+            rows.append({"label": "Camera", "value": camera})
+
+        # Aperture (F-number)
+        fnumber = exif.get(_EXIF_FNUMBER)
+        if fnumber is not None:
+            try:
+                f = float(fnumber)
+                rows.append({"label": "Aperture", "value": f"f/{f:.1f}"})
+            except Exception:
+                pass
+
+        # Shutter speed (Exposure time)
+        exp_time = exif.get(_EXIF_EXPOSURE_TIME)
+        if exp_time is not None:
+            try:
+                f = float(exp_time)
+                if f > 0:
+                    if f < 1.0:
+                        rows.append({"label": "Shutter", "value": f"1/{round(1 / f)} s"})
+                    else:
+                        rows.append({"label": "Shutter", "value": f"{f:.1f} s"})
+            except Exception:
+                pass
+
+        # ISO
+        iso = exif.get(_EXIF_ISO)
+        if iso is not None:
+            if isinstance(iso, (list, tuple)):
+                iso = iso[0] if iso else None
+            if iso is not None:
+                rows.append({"label": "ISO", "value": str(iso)})
+
+        # Focal length
+        fl = exif.get(_EXIF_FOCAL_LENGTH)
+        if fl is not None:
+            try:
+                f = float(fl)
+                val = f"{f:.0f}" if f == int(f) else f"{f:.1f}"
+                rows.append({"label": "Focal length", "value": f"{val} mm"})
+            except Exception:
+                pass
+
+        # Exposure program
+        ep = exif.get(_EXIF_EXPOSURE_PROGRAM)
+        if ep is not None:
+            rows.append({"label": "Exposure", "value": _EXPOSURE_PROGRAMS.get(ep, str(ep))})
+
+        # Flash
+        flash = exif.get(_EXIF_FLASH)
+        if flash is not None:
+            try:
+                rows.append({"label": "Flash", "value": "Fired" if (int(flash) & 0x01) else "Did not fire"})
+            except Exception:
+                pass
+
+        # Dimensions — prefer EXIF compressed-image size tags, fall back to PIL
+        px = exif.get(_EXIF_PIXEL_X, pil_w)
+        py = exif.get(_EXIF_PIXEL_Y, pil_h)
+        try:
+            rows.append({"label": "Dimensions", "value": f"{int(px)} × {int(py)}"})
+        except Exception:
+            rows.append({"label": "Dimensions", "value": f"{pil_w} × {pil_h}"})
+
+        return rows
 
     @Slot(int, result=int)
     def imageRating(self, index: int) -> int:

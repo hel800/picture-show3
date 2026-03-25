@@ -18,10 +18,11 @@ Rectangle {
     property bool showingA  : true   // which layer is currently the foreground
     property int  navDir    : 1      // +1 forward, -1 backward (for slide direction)
     property int  transDur  : controller.transitionDuration
-    property bool   hudVisible: controller.hudVisible  // restored from settings
-    property real   hudScale  : controller.hudSize / 100.0
-    property string hudCaption: controller.imageCaption(controller.currentIndex)
-    property int    hudRating : controller.imageRating(controller.currentIndex)
+    property bool   hudVisible  : controller.hudVisible  // restored from settings
+    property real   hudScale   : controller.hudSize / 100.0
+    property string hudCaption : controller.imageCaption(controller.currentIndex)
+    property int    hudRating  : controller.imageRating(controller.currentIndex)
+    property bool   _exifVisible: false
 
     onWidthChanged:  if (panoramaActive) _panoramaAbort()
     onHeightChanged: if (panoramaActive) _panoramaAbort()
@@ -255,6 +256,10 @@ Rectangle {
         target: controller
         function onCurrentIndexChanged() {
             if (root.panoramaActive) _panoramaAbort()
+            if (root._exifVisible) {
+                exifPanel.close()
+                root._exifVisible = false
+            }
             showImage(true)
         }
     }
@@ -313,7 +318,12 @@ Rectangle {
             playPauseAnim.restart()
             break
         case Qt.Key_Escape:
-            root.exitShow()
+            if (root._exifVisible) {
+                root._exifVisible = false
+                exifPanel.close()
+            } else {
+                root.exitShow()
+            }
             break
         case Qt.Key_F:
             toggleFullscreen()
@@ -327,6 +337,18 @@ Rectangle {
             break
         case Qt.Key_P:
             startPanorama()
+            break
+        case Qt.Key_Comma:
+            if (root._exifVisible) {
+                root._exifVisible = false
+                exifPanel.close()
+            } else {
+                // Set data first so the panel pre-renders at full height,
+                // then open() defers the animation by one layout tick.
+                exifPanel.exifData = controller.imageExifInfo(controller.currentIndex)
+                root._exifVisible = true
+                exifPanel.open()
+            }
             break
         case Qt.Key_Question:
             root.openHelp()
@@ -468,7 +490,18 @@ Rectangle {
         hudVisible    : root.hudVisible
         hudCaption    : root.hudCaption
         hudRating     : root.hudRating
-        exifPanelOpen : false   // will be bound to exifPanel.visible in Phase 3
+        exifPanelOpen : root._exifVisible
+    }
+
+    ExifPanel {
+        id: exifPanel
+        // Anchored above the HUD — QML owns the final position, no height
+        // measurement needed; the slide animation uses transform: Translate.
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: hud.top
+        anchors.bottomMargin: 8
+        // exifData is set explicitly in the key handler before open() is called,
+        // not via a reactive binding — prevents content changing mid-animation.
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────
