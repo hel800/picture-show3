@@ -116,7 +116,7 @@ Popup {
             // ── Description ───────────────────────────────────────────────────
             Text {
                 Layout.fillWidth: true
-                text: qsTr("A full-screen photo slideshow viewer. Browse to a folder, configure transitions and sort order, then press ↵ to start. Control the show from the keyboard or from a smartphone via the built-in remote.")
+                text: qsTr("A full-screen photo slideshow viewer. Browse to a folder, configure transitions and sort order, then press ↵ to start. Control the slideshow using your keyboard or a smartphone with the built-in remote.")
                 color: Theme.textSecondary
                 font.pixelSize: 13
                 wrapMode: Text.Wrap
@@ -166,7 +166,7 @@ Popup {
                             { keys: ["A"],   desc: qsTr("Toggle autoplay")     },
                             { keys: ["B"],   desc: qsTr("Browse folder")       },
                             { keys: ["R"],   desc: qsTr("Star rating filter")  },
-                            { keys: ["↵"],   desc: qsTr("Start / resume show") },
+                            { keys: ["↵"],   desc: qsTr("Start / resume slideshow") },
                             { keys: ["V"],   desc: qsTr("Advanced settings")   },
                             { keys: ["F"],   desc: qsTr("Toggle fullscreen")   },
                             { keys: ["Esc"], desc: qsTr("Quit dialog")         },
@@ -211,7 +211,7 @@ Popup {
                     spacing: 6
 
                     Text {
-                        text: qsTr("IN SHOW")
+                        text: qsTr("IN SLIDESHOW")
                         color: Theme.textMuted
                         font.pixelSize: 10
                         font.weight: Font.Medium
@@ -227,7 +227,7 @@ Popup {
                             { keys: ["I"],      desc: qsTr("Toggle info HUD")   },
                             { keys: ["J"],      desc: qsTr("Jump to image")     },
                             { keys: ["P"],      desc: qsTr("Panorama mode")     },
-                            { keys: ["Esc"],    desc: qsTr("Exit show")         },
+                            { keys: ["Esc"],    desc: qsTr("Exit slideshow")         },
                             { keys: ["?"],      desc: qsTr("Help")              }
                         ]
                         RowLayout {

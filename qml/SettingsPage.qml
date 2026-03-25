@@ -1460,7 +1460,7 @@ Item {
 
                 Text {
                     anchors.verticalCenter: parent.verticalCenter
-                    text: qsTr("In show commands:")
+                    text: qsTr("Slideshow commands:")
                     color: Theme.textGhost
                     font.pixelSize: 11
                 }
