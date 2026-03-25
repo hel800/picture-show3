@@ -18,6 +18,7 @@ import re
 import shutil
 import subprocess
 import sys
+import zipfile
 from pathlib import Path
 
 ROOT    = Path(__file__).parent.parent.parent
@@ -32,6 +33,7 @@ if not _match:
 VERSION       = _match.group(1)                            # e.g. "0.5 beta"
 VERSION_SAFE  = VERSION.replace(" ", "-")                  # e.g. "0.5-beta"
 INSTALLER_NAME = f"picture-show3-setup-{VERSION_SAFE}"    # e.g. "picture-show3-setup-0.5-beta"
+PORTABLE_NAME  = f"picture-show3-portable-{VERSION_SAFE}" # e.g. "picture-show3-portable-0.5-beta"
 
 print(f"╔══════════════════════════════════════════╗")
 print(f"  picture-show3 Windows build  v{VERSION}")
@@ -57,7 +59,17 @@ run(
     "--workpath", str(WINDOWS / "build"),
 )
 
-# ── Step 4: Inno Setup ───────────────────────────────────────────────────────
+# ── Step 4: Portable ZIP ─────────────────────────────────────────────────────
+_bundle_dir = WINDOWS / "dist" / "picture-show3"
+_zip_path   = WINDOWS / "dist" / "installer" / (PORTABLE_NAME + ".zip")
+_zip_path.parent.mkdir(parents=True, exist_ok=True)
+print(f"▶ Creating portable archive {_zip_path}\n")
+with zipfile.ZipFile(_zip_path, "w", zipfile.ZIP_DEFLATED) as zf:
+    for file in sorted(_bundle_dir.rglob("*")):
+        if file.is_file():
+            zf.write(file, f"picture-show3/{file.relative_to(_bundle_dir)}")
+
+# ── Step 5: Inno Setup ───────────────────────────────────────────────────────
 run(
     "iscc",
     f"/DMyAppVersion={VERSION}",
@@ -65,7 +77,7 @@ run(
     str(WINDOWS / "picture-show3.iss"),
 )
 
-# ── Step 5: Clean up intermediate build artefacts ────────────────────────────
+# ── Step 6: Clean up intermediate build artefacts ────────────────────────────
 for _path in [
     WINDOWS / "build",                  # PyInstaller work dir
     WINDOWS / "dist" / "picture-show3", # PyInstaller onedir bundle
@@ -74,5 +86,6 @@ for _path in [
         print(f"▶ Removing {_path}")
         shutil.rmtree(_path)
 
-print(f"\n✔  Installer ready:")
+print(f"\n✔  Build artefacts ready:")
 print(f"   {WINDOWS / 'dist' / 'installer' / (INSTALLER_NAME + '.exe')}")
+print(f"   {_zip_path}")
