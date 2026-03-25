@@ -14,6 +14,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Loop** | Optional looping after the last photo |
 | **Autoplay** | Configurable interval (1–30 s), timer restarts on manual navigation |
 | **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken |
+| **EXIF panel** | Press `,` during the show for a detailed EXIF overlay: camera, aperture, shutter, ISO, focal length, exposure program, flash, dimensions |
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
 | **Recursive folders** | Optional: include subfolders in the scan (toggle in settings) |
 | **Background scanning** | Folder scanning and sorting run in background threads — UI stays responsive; Start button enables when ready |
@@ -68,7 +69,7 @@ python -m pytest
 python -m pytest -v
 ```
 
-156 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+176 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
 
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 
@@ -101,6 +102,7 @@ Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\pict
 | `Space` | Play / pause autoplay |
 | `F` | Toggle fullscreen |
 | `I` | Toggle HUD info bar |
+| `,` | Show / hide extended EXIF info panel |
 | `J` | Jump to image by number |
 | `P` | Panorama mode (wide images only) |
 | `?` | Help overlay |
@@ -222,6 +224,7 @@ AVIF support requires Pillow ≥ 9.1 (satisfied by the `≥ 10.0` constraint).
 
 EXIF orientation is applied automatically.
 EXIF `DateTimeOriginal` is read for date-based sorting and HUD display.
+Extended EXIF data (aperture, shutter, ISO, focal length, exposure program, flash, dimensions) is shown in the EXIF panel (`,` key).
 IPTC `Caption/Abstract` (tag 2:120) is shown in the HUD when available.
 
 ---
