@@ -138,6 +138,12 @@
         <translation>EXIF INFO</translation>
     </message>
     <message>
+        <location filename="../qml/ExifPanel.qml" line="116"/>
+        <source>100</source>
+        <comment>exif_label_width</comment>
+        <translation>120</translation>
+    </message>
+    <message>
         <location filename="../qml/ExifPanel.qml" line="132"/>
         <source>No EXIF data available</source>
         <translation>Keine EXIF-Daten verfügbar</translation>
@@ -600,9 +606,106 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="424"/>
+        <location filename="../slideshow_controller.py" line="419"/>
         <source>Folder not found: {}</source>
         <translation>Ordner nicht gefunden: {}</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="802"/>
+        <source>Not defined</source>
+        <translation>Nicht definiert</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="803"/>
+        <source>Manual</source>
+        <translation>Manuell</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="804"/>
+        <source>Auto</source>
+        <translation>Auto</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="805"/>
+        <source>Aperture priority</source>
+        <translation>Blendenvorwahl</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="806"/>
+        <source>Shutter priority</source>
+        <translation>Zeitvorwahl</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="807"/>
+        <source>Creative</source>
+        <translation>Kreativ</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="808"/>
+        <source>Action</source>
+        <translation>Action</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="809"/>
+        <source>Portrait</source>
+        <translation>Porträt</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="810"/>
+        <source>Landscape</source>
+        <translation>Landschaft</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="837"/>
+        <source>Camera</source>
+        <translation>Kamera</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="844"/>
+        <source>Aperture</source>
+        <translation>Blende</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="855"/>
+        <location filename="../slideshow_controller.py" line="857"/>
+        <source>Shutter</source>
+        <translation>Belichtungszeit</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="867"/>
+        <source>ISO</source>
+        <translation>ISO</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="875"/>
+        <source>Focal length</source>
+        <translation>Brennweite</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="882"/>
+        <source>Exposure</source>
+        <translation>Belichtungsprogramm</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="888"/>
+        <source>Flash</source>
+        <translation>Blitz</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="888"/>
+        <source>Fired</source>
+        <translation>Ausgelöst</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="888"/>
+        <source>Did not fire</source>
+        <translation>Nicht ausgelöst</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="896"/>
+        <location filename="../slideshow_controller.py" line="898"/>
+        <source>Dimensions</source>
+        <translation>Abmessungen</translation>
     </message>
 </context>
 <context>

@@ -113,7 +113,8 @@ Rectangle {
                     text: modelData.label
                     color: Theme.textSubtle
                     font.pixelSize: 12
-                    Layout.preferredWidth: 100
+                    Layout.preferredWidth: Number(qsTr("100", "exif_label_width"))
+                    elide: Text.ElideRight
                 }
                 Text {
                     text: modelData.value

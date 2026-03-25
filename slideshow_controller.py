@@ -37,11 +37,6 @@ _EXIF_FOCAL_LENGTH     = 37386
 _EXIF_PIXEL_X          = 40962
 _EXIF_PIXEL_Y          = 40963
 
-_EXPOSURE_PROGRAMS: dict[int, str] = {
-    0: "Not defined", 1: "Manual", 2: "Auto",
-    3: "Aperture priority", 4: "Shutter priority",
-    5: "Creative", 6: "Action", 7: "Portrait", 8: "Landscape",
-}
 
 # Maximum number of recent folders to remember
 _MAX_HISTORY = 100
@@ -802,6 +797,20 @@ class SlideshowController(QObject):
             pass
         return ""
 
+    def _exposure_program_str(self, code: int) -> str:
+        programs = {
+            0: self.tr("Not defined"),
+            1: self.tr("Manual"),
+            2: self.tr("Auto"),
+            3: self.tr("Aperture priority"),
+            4: self.tr("Shutter priority"),
+            5: self.tr("Creative"),
+            6: self.tr("Action"),
+            7: self.tr("Portrait"),
+            8: self.tr("Landscape"),
+        }
+        return programs.get(code, str(code))
+
     @Slot(int, result='QVariantList')
     def imageExifInfo(self, index: int) -> list:
         """Return a list of {label, value} dicts with EXIF metadata for QML display."""
@@ -825,14 +834,14 @@ class SlideshowController(QObject):
         if make or model:
             # Avoid "Canon Canon EOS R5" when model string already starts with make
             camera = model if model.startswith(make) else f"{make} {model}".strip()
-            rows.append({"label": "Camera", "value": camera})
+            rows.append({"label": self.tr("Camera"), "value": camera})
 
         # Aperture (F-number)
         fnumber = exif.get(_EXIF_FNUMBER)
         if fnumber is not None:
             try:
                 f = float(fnumber)
-                rows.append({"label": "Aperture", "value": f"f/{f:.1f}"})
+                rows.append({"label": self.tr("Aperture"), "value": f"f/{f:.1f}"})
             except Exception:
                 pass
 
@@ -843,9 +852,9 @@ class SlideshowController(QObject):
                 f = float(exp_time)
                 if f > 0:
                     if f < 1.0:
-                        rows.append({"label": "Shutter", "value": f"1/{round(1 / f)} s"})
+                        rows.append({"label": self.tr("Shutter"), "value": f"1/{round(1 / f)} s"})
                     else:
-                        rows.append({"label": "Shutter", "value": f"{f:.1f} s"})
+                        rows.append({"label": self.tr("Shutter"), "value": f"{f:.1f} s"})
             except Exception:
                 pass
 
@@ -855,7 +864,7 @@ class SlideshowController(QObject):
             if isinstance(iso, (list, tuple)):
                 iso = iso[0] if iso else None
             if iso is not None:
-                rows.append({"label": "ISO", "value": str(iso)})
+                rows.append({"label": self.tr("ISO"), "value": str(iso)})
 
         # Focal length
         fl = exif.get(_EXIF_FOCAL_LENGTH)
@@ -863,20 +872,20 @@ class SlideshowController(QObject):
             try:
                 f = float(fl)
                 val = f"{f:.0f}" if f == int(f) else f"{f:.1f}"
-                rows.append({"label": "Focal length", "value": f"{val} mm"})
+                rows.append({"label": self.tr("Focal length"), "value": f"{val} mm"})
             except Exception:
                 pass
 
         # Exposure program
         ep = exif.get(_EXIF_EXPOSURE_PROGRAM)
         if ep is not None:
-            rows.append({"label": "Exposure", "value": _EXPOSURE_PROGRAMS.get(ep, str(ep))})
+            rows.append({"label": self.tr("Exposure"), "value": self._exposure_program_str(ep)})
 
         # Flash
         flash = exif.get(_EXIF_FLASH)
         if flash is not None:
             try:
-                rows.append({"label": "Flash", "value": "Fired" if (int(flash) & 0x01) else "Did not fire"})
+                rows.append({"label": self.tr("Flash"), "value": self.tr("Fired") if (int(flash) & 0x01) else self.tr("Did not fire")})
             except Exception:
                 pass
 
@@ -884,9 +893,9 @@ class SlideshowController(QObject):
         px = exif.get(_EXIF_PIXEL_X, pil_w)
         py = exif.get(_EXIF_PIXEL_Y, pil_h)
         try:
-            rows.append({"label": "Dimensions", "value": f"{int(px)} × {int(py)}"})
+            rows.append({"label": self.tr("Dimensions"), "value": f"{int(px)} × {int(py)}"})
         except Exception:
-            rows.append({"label": "Dimensions", "value": f"{pil_w} × {pil_h}"})
+            rows.append({"label": self.tr("Dimensions"), "value": f"{pil_w} × {pil_h}"})
 
         return rows
 
