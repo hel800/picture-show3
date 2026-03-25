@@ -462,105 +462,13 @@ Rectangle {
         scrollLeftAnim.start()
     }
 
-    Rectangle {
+    HudBar {
         id: hud
-        z: 10   // always on top of image layers (which use z 0–2)
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: Math.round(52 * root.hudScale)
-        color: Qt.rgba(0, 0, 0, 0.65)
-        opacity: 0
-
-        state: root.hudVisible ? "shown" : "hidden"
-        states: [
-            State { name: "shown";  PropertyChanges { target: hud; opacity: 1 } },
-            State { name: "hidden"; PropertyChanges { target: hud; opacity: 0 } }
-        ]
-        transitions: Transition {
-            NumberAnimation { property: "opacity"; duration: 300 }
-        }
-
-        // Subtle top border line
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 1
-            color: Qt.rgba(1, 1, 1, 0.08)
-        }
-
-        RowLayout {
-            anchors { fill: parent; leftMargin: Math.round(20 * root.hudScale); rightMargin: Math.round(20 * root.hudScale) }
-            spacing: Math.round(6 * root.hudScale)
-
-            // index counter
-            Text {
-                text: (controller.currentIndex + 1) + " / " + controller.imageCount
-                color: "white"; font.pixelSize: Math.round(16 * root.hudScale); font.weight: Font.Bold
-            }
-
-            // filename
-            Text { text: "≡"; color: Theme.textSubtle; font.pixelSize: Math.round(14 * root.hudScale); Layout.leftMargin: Math.round(10 * root.hudScale) }
-            Text {
-                text: controller.imagePath(controller.currentIndex).split(/[/\\]/).pop()
-                color: Theme.textSecondary; font.pixelSize: Math.round(13 * root.hudScale)
-                elide: Text.ElideMiddle
-                Layout.maximumWidth: Math.round(220 * root.hudScale)
-            }
-
-            // caption — always-present filler; text shown only when available
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: root.hudCaption.length > 0 }
-            Text { text: "✎"; color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale); visible: root.hudCaption.length > 0 }
-            Item {
-                Layout.fillWidth: true
-                implicitHeight: captionText.implicitHeight
-                Text {
-                    id: captionText
-                    anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                    width: parent.width
-                    text: root.hudCaption
-                    color: Theme.textSecondary; font.pixelSize: Math.round(13 * root.hudScale)
-                    visible: root.hudCaption.length > 0
-                    elide: Text.ElideRight
-                }
-            }
-
-            // star rating (hidden when 0 / unset)
-            Row {
-                spacing: Math.round(2 * root.hudScale)
-                visible: root.hudRating > 0
-                Repeater {
-                    model: 5
-                    ThemedIcon {
-                        source: "../img/icon_star.svg"
-                        size: Math.round(12 * root.hudScale)
-                        iconColor: index < root.hudRating ? Theme.accentLight : Theme.starInactive
-                    }
-                }
-            }
-
-            // date taken (hidden when unavailable)
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: dateText.visible && captionText.truncated }
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: root.hudRating > 0 && dateText.visible }
-            ThemedIcon { source: "../img/icon_clock.svg"; size: Math.round(13 * root.hudScale); iconColor: Theme.textSubtle; visible: dateText.visible }
-            Text {
-                id: dateText
-                text: controller.imageDateTaken(controller.currentIndex)
-                color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale)
-                visible: text.length > 0
-            }
-
-
-
-            // ⌨ keyboard hints
-            KeyHint { label: "F"; uiScale: root.hudScale; Layout.leftMargin: Math.round(10 * root.hudScale) }
-            Text { text: qsTr("fullscreen"); color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
-            KeyHint { label: "I";   uiScale: root.hudScale }
-            Text { text: qsTr("info");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
-            KeyHint { label: "Esc"; uiScale: root.hudScale }
-            Text { text: qsTr("exit");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
-        }
+        hudScale      : root.hudScale
+        hudVisible    : root.hudVisible
+        hudCaption    : root.hudCaption
+        hudRating     : root.hudRating
+        exifPanelOpen : false   // will be bound to exifPanel.visible in Phase 3
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────
