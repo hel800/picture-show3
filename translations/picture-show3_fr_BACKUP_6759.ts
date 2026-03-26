@@ -389,6 +389,7 @@
         <translation>Effacer l&apos;historique</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="726"/>
         <source>Filtering by star… %1 / %2</source>
         <translation>Filtrage par étoiles… %1 / %2</translation>
@@ -410,186 +411,338 @@
     </message>
     <message>
         <location filename="../qml/SettingsPage.qml" line="731"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="722"/>
+        <source>Scanning… %1 / %2</source>
+        <translation>Analyse en cours… %1 / %2</translation>
+    </message>
+    <message>
+        <location filename="../qml/SettingsPage.qml" line="723"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Scanning…</source>
         <translation>Analyse en cours…</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="740"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="731"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>✓  %1 images found</source>
         <translation>✓  %1 images trouvées</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="741"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="732"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>⚠  No supported images found in this folder</source>
         <translation>⚠  Aucune image prise en charge dans ce dossier</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="747"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="738"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>  ·  filter active</source>
         <translation>  ·  filtre actif</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="768"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="759"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Include subfolders</source>
         <translation>Inclure les sous-dossiers</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="807"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="798"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>▶  Resume Picture Show</source>
         <translation>▶  Reprendre le picture show</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="807"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="798"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>▶  Start Picture Show</source>
         <translation>▶  Démarrer le picture show</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="808"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="799"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Select a folder to continue</source>
         <translation>Sélectionnez un dossier pour continuer</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="808"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="799"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Scanning and sorting images…</source>
         <translation>Analyse et tri des images en cours…</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="840"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="831"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>TRANSITION</source>
         <translation>TRANSITION</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="854"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="845"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Fade</source>
         <translation>Fondu</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="855"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="846"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Slide</source>
         <translation>Glissement</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="856"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="847"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Zoom</source>
         <translation>Zoom</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="857"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="848"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Fade/Black</source>
         <translation>Fondu/Noir</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="918"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="909"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>SORT ORDER</source>
         <translation>ORDRE DE TRI</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="932"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="923"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>By Name</source>
         <translation>Par nom</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="933"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="924"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>By Date</source>
         <translation>Par date</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="934"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="925"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Random</source>
         <translation>Aléatoire</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="988"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="979"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>FILTER</source>
         <translation>FILTRE</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1083"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1074"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>STAR RATING</source>
         <translation>ÉVALUATION</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1095"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1086"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>All</source>
         <translation>Toutes</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1096"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1087"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>1 star and above</source>
         <translation>1 étoile et plus</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1097"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1088"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>2 stars and above</source>
         <translation>2 étoiles et plus</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1098"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1089"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>3 stars and above</source>
         <translation>3 étoiles et plus</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1099"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1090"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>4 stars and above</source>
         <translation>4 étoiles et plus</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1100"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1091"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>5 stars</source>
         <translation>5 étoiles</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1177"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1168"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Loop</source>
         <translation>Boucle</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1178"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1169"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Repeat after last photo</source>
         <translation>Recommencer après la dernière photo</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1221"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1212"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Autoplay</source>
         <translation>Lecture automatique</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1222"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1213"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Advance automatically</source>
         <translation>Avancer automatiquement</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1263"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1254"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Interval</source>
         <translation>Intervalle</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1312"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1303"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Smartphone Remote</source>
         <translation>Télécommande smartphone</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1314"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1305"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Open %1 on your phone during the show</source>
         <translation>Ouvrez %1 sur votre téléphone pendant le picture show</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1390"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1381"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Help</source>
         <translation>Aide</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1420"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1411"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Update available:</source>
         <translation>Mise à jour disponible :</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1445"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1436"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Advanced settings ›</source>
         <translation>Paramètres avancés ›</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1474"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1465"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Slideshow commands:</source>
         <translation>Commandes pendant le diaporama :</translation>
     </message>
@@ -598,22 +751,38 @@
         <translation type="vanished">Commandes pendant le diaporama :</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1482"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1473"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Navigate</source>
         <translation>Naviguer</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1495"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1486"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Play/Pause</source>
         <translation>Lecture/Pause</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1508"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1499"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Fullscreen</source>
         <translation>Plein écran</translation>
     </message>
     <message>
+<<<<<<< HEAD
         <location filename="../qml/SettingsPage.qml" line="1521"/>
+=======
+        <location filename="../qml/SettingsPage.qml" line="1512"/>
+>>>>>>> 9d287801b9b83ca725a9357102237fe3bbe000a5
         <source>Exit</source>
         <translation>Quitter</translation>
     </message>
