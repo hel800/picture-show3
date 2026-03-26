@@ -316,7 +316,6 @@ Rectangle {
         case Qt.Key_Space:
             _closeExifIfOpen()
             controller.togglePlay()
-            playPauseAnim.restart()
             break
         case Qt.Key_Escape:
             if (root._exifVisible) {
@@ -526,6 +525,13 @@ Rectangle {
         anchors.bottomMargin: 8
         // exifData is set explicitly in the key handler before open() is called,
         // not via a reactive binding — prevents content changing mid-animation.
+    }
+
+    // Show the play/pause popup whenever the playing state changes
+    // (keyboard, remote control, or any other source).
+    Connections {
+        target: controller
+        function onIsPlayingChanged() { playPauseAnim.restart() }
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────

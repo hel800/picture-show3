@@ -217,6 +217,29 @@ Item {
                     spacing: 10
 
                     Rectangle {
+                        id: yesBtn
+                        Layout.fillWidth: true
+                        height: 42
+                        radius: 10
+                        color: activeFocus ? Theme.accentPress : Theme.accent
+                        border.color: activeFocus ? Theme.accentLight : "transparent"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("Yes")
+                            color: "white"
+                            font.pixelSize: 14
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Qt.quit()
+                        }
+                    }
+
+                    Rectangle {
                         id: noBtn
                         Layout.fillWidth: true
                         height: 42
@@ -239,28 +262,7 @@ Item {
                         }
                     }
 
-                    Rectangle {
-                        id: yesBtn
-                        Layout.fillWidth: true
-                        height: 42
-                        radius: 10
-                        color: activeFocus ? Theme.accentPress : Theme.accent
-                        border.color: activeFocus ? Theme.accentLight : "transparent"
-                        border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: qsTr("Yes")
-                            color: "white"
-                            font.pixelSize: 14
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Qt.quit()
-                        }
-                    }
                 }
             }
         }
@@ -316,18 +318,18 @@ Item {
             spacing: 0
 
             // ── Header ────────────────────────────────────────────────────────
-            Item { Layout.preferredHeight: 44 }
+            Item { Layout.preferredHeight: 36 }
 
             Image {
                 id: headerLogo
                 source: "../img/logo.svg"
                 fillMode: Image.PreserveAspectFit
-                width: 500
-                height: 150
+                width: 420
+                height: 126
                 sourceSize.width: 1000
                 sourceSize.height: 300
-                Layout.preferredWidth: 500
-                Layout.preferredHeight: 150
+                Layout.preferredWidth: 420
+                Layout.preferredHeight: 126
                 Layout.fillWidth: false
                 Layout.alignment: Qt.AlignHCenter
                 smooth: true
@@ -336,7 +338,7 @@ Item {
                 transform: Translate { id: logoTranslate; y: 0 }
             }
 
-            Item { Layout.fillHeight: true; Layout.minimumHeight: 32 }
+            Item { Layout.fillHeight: true; Layout.minimumHeight: 24 }
 
             // ── Settings card ─────────────────────────────────────────────────
             Rectangle {
@@ -346,15 +348,15 @@ Item {
                 color: Theme.bgCard
                 border.color: Theme.surface
                 border.width: 1
-                implicitHeight: cardCol.implicitHeight + 44
+                implicitHeight: cardCol.implicitHeight + 36
 
                 ColumnLayout {
                     id: cardCol
                     anchors {
                         left: parent.left; right: parent.right; top: parent.top
-                        margins: 28
+                        margins: 22
                     }
-                    spacing: 24
+                    spacing: 18
 
                     // ── Folder picker ─────────────────────────────────────────
                     Text {
@@ -372,7 +374,7 @@ Item {
 
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 44
+                            height: 38
                             radius: 10
                             color: Theme.bgDeep
                             border.color: folderInput.text.length > 0 ? Theme.accentPress : Theme.borderMuted
@@ -409,7 +411,7 @@ Item {
 
                         // Browse button
                         Rectangle {
-                            width: 124; height: 44
+                            width: 124; height: 38
                             radius: 10
                             color: browseArea.containsMouse ? Theme.surfaceHover : Theme.surface
                             Behavior on color { ColorAnimation { duration: 120 } }
@@ -442,7 +444,7 @@ Item {
                         // Recent folders button (only shown when history exists)
                         Rectangle {
                             id: recentBtn
-                            width: 64; height: 44
+                            width: 64; height: 38
                             radius: 10
                             visible: controller.folderHistory.length > 0
                             color: recentBtnArea.containsMouse ? Theme.surfaceHover : Theme.surface
@@ -783,7 +785,7 @@ Item {
                     // ── Start button ──────────────────────────────────────────
                     Rectangle {
                         Layout.fillWidth: true
-                        height: 54
+                        height: 46
                         radius: 14
                         color: root._canStart
                                ? (startArea.pressed ? Theme.accentPress : Theme.accent)
@@ -848,7 +850,7 @@ Item {
 
                                 delegate: Rectangle {
                                     Layout.fillWidth: true
-                                    height: 58
+                                    height: 50
                                     radius: 12
                                     color: controller.transitionStyle === modelData.id
                                            ? Theme.accentDeep
@@ -925,7 +927,7 @@ Item {
 
                                     delegate: Rectangle {
                                         Layout.fillWidth: true
-                                        height: 58
+                                        height: 50
                                         radius: 12
                                         color: controller.sortOrder === modelData.id
                                                ? Theme.accentDeep
@@ -985,7 +987,7 @@ Item {
                             // ── Filter button ──────────────────────────────────
                             Rectangle {
                                 id: filterBtn
-                                Layout.fillWidth: true; height: 58
+                                Layout.fillWidth: true; height: 50
                                 radius: 12
                                 color: filterBtnArea.containsMouse ? Theme.surfaceHover : Theme.surface
                                 border.color: (filterPopup.opened || controller.minRating > 0) ? Theme.accent : "transparent"
@@ -1154,12 +1156,12 @@ Item {
                         // Loop
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 64
+                            height: 54
                             radius: 12
                             color: Theme.surface
 
                             RowLayout {
-                                anchors { fill: parent; margins: 16 }
+                                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 14 }
 
                                 Column {
                                     spacing: 2
@@ -1198,12 +1200,12 @@ Item {
                         // Autoplay
                         Rectangle {
                             Layout.fillWidth: true
-                            height: 64
+                            height: 54
                             radius: 12
                             color: Theme.surface
 
                             RowLayout {
-                                anchors { fill: parent; margins: 16 }
+                                anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 14 }
 
                                 Column {
                                     spacing: 2
@@ -1307,7 +1309,7 @@ Item {
 
                         // QR code button
                         Rectangle {
-                            width: 44; height: 44
+                            width: 38; height: 38
                             radius: 10
                             color: qrBtnArea.containsMouse ? Theme.surfaceHover : Theme.surface
                             Behavior on color { ColorAnimation { duration: 120 } }
@@ -1455,7 +1457,7 @@ Item {
             // ── Keyboard hint ─────────────────────────────────────────────────
             Row {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 14
+                Layout.topMargin: 10
                 spacing: 6
 
                 Text {
@@ -1515,14 +1517,14 @@ Item {
 
             Text {
                 Layout.alignment: Qt.AlignHCenter
-                Layout.topMargin: 14
+                Layout.topMargin: 10
                 text: "v" + appVersion
                 color: Theme.surfaceHover
                 font.pixelSize: 11
                 font.letterSpacing: 0.3
             }
 
-            Item { Layout.fillHeight: true; Layout.minimumHeight: 48 }
+            Item { Layout.fillHeight: true; Layout.minimumHeight: 36 }
         }
     }
 
@@ -1542,8 +1544,8 @@ Item {
             id: splashLogo
             source: "../img/logo.svg"
             fillMode: Image.PreserveAspectFit
-            width: 500
-            height: 150
+            width: 420
+            height: 126
             sourceSize.width: 1000
             sourceSize.height: 300
             x: parent.width / 2 - width / 2
@@ -1578,7 +1580,7 @@ Item {
             // Logo drifts up to its header position (overlay stays opaque)
             NumberAnimation {
                 target: splashLogo; property: "y"
-                to: 44
+                to: 36
                 duration: 500; easing.type: Easing.InOutCubic
             }
 
@@ -1626,7 +1628,7 @@ Item {
         id: launchLogo
         source: "../img/logo.svg"
         fillMode: Image.PreserveAspectFit
-        width: 500; height: 150
+        width: 420; height: 126
         sourceSize.width: 1000; sourceSize.height: 300
         smooth: true; mipmap: true
         z: 201
