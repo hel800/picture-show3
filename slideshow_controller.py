@@ -104,6 +104,7 @@ class SlideshowController(QObject):
         self._recursive           : bool         = False
         self._scan_generation     : int          = 0
         self._scanning            : bool         = False
+        self._scan_phase          : str          = ""   # "scan", "sort", "filter"
         self._scan_progress       : int          = 0   # files processed (metadata phase only)
         self._cancel_event        : threading.Event = threading.Event()
 
@@ -151,6 +152,7 @@ class SlideshowController(QObject):
             # first frame, but defer the actual thread start so the window can
             # render before any network I/O begins.
             self._scanning = True
+            self._scan_phase = "scan"
             QTimer.singleShot(0, self._scan_images)
 
     def _save_settings(self) -> None:
@@ -238,6 +240,9 @@ class SlideshowController(QObject):
 
     @Property(bool, notify=scanningChanged)
     def scanning(self) -> bool: return self._scanning
+
+    @Property(str, notify=scanningChanged)
+    def scanPhase(self) -> str: return self._scan_phase
 
     @Property(int, notify=scanProgressChanged)
     def scanProgress(self) -> int: return self._scan_progress
@@ -337,6 +342,7 @@ class SlideshowController(QObject):
         """Start a background scan.  Discovery → sort → ratings pipeline."""
         cancel = self._cancel_and_new_event()
         self._scanning = True
+        self._scan_phase = "scan"
         self.scanningChanged.emit()
         self._scan_generation += 1
         threading.Thread(
@@ -438,7 +444,8 @@ class SlideshowController(QObject):
         cancel = self._cancel_and_new_event()
         if not self._scanning:
             self._scanning = True
-            self.scanningChanged.emit()
+        self._scan_phase = "sort"
+        self.scanningChanged.emit()
         # Reset progress — only shown during metadata phases (date sort / ratings)
         if self._scan_progress != 0:
             self._scan_progress = 0
@@ -491,7 +498,8 @@ class SlideshowController(QObject):
         cancel = self._cancel_and_new_event()
         if not self._scanning:
             self._scanning = True
-            self.scanningChanged.emit()
+        self._scan_phase = "filter"
+        self.scanningChanged.emit()
         self._scan_progress = 0
         self.scanProgressChanged.emit()
         self._scan_generation += 1
