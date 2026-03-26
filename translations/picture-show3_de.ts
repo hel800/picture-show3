@@ -759,7 +759,7 @@
     </message>
     <message>
         <location filename="../qml/SlideshowPage.qml" line="781"/>
-        <location filename="../qml/SlideshowPage.qml" line="921"/>
+        <location filename="../qml/SlideshowPage.qml" line="925"/>
         <source>cancel</source>
         <translation>Abbrechen</translation>
     </message>
@@ -779,12 +779,12 @@
         <translation>%1 Stern(e)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="918"/>
+        <location filename="../qml/SlideshowPage.qml" line="922"/>
         <source>confirm</source>
         <translation>Bestätigen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="923"/>
+        <location filename="../qml/SlideshowPage.qml" line="927"/>
         <source>0–5 change</source>
         <translation>0–5 ändern</translation>
     </message>
