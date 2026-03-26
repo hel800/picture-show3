@@ -115,7 +115,7 @@ Item {
     Popup {
         id: quitDialog
         anchors.centerIn: parent
-        width: 340
+        width: 390
         height: dialogContent.implicitHeight + 48
         modal: true
         focus: true
