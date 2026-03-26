@@ -314,6 +314,7 @@ Rectangle {
             controller.prevImage()
             break
         case Qt.Key_Space:
+            _closeExifIfOpen()
             controller.togglePlay()
             playPauseAnim.restart()
             break
@@ -345,7 +346,22 @@ Rectangle {
             } else {
                 // Set data first so the panel pre-renders at full height,
                 // then open() defers the animation by one layout tick.
-                exifPanel.exifData = controller.imageExifInfo(controller.currentIndex)
+                let rows = controller.imageExifInfo(controller.currentIndex)
+                // When the HUD is hidden, append HUD-only fields to the panel
+                if (!root.hudVisible) {
+                    const rating = controller.imageRating(controller.currentIndex)
+                    if (rating > 0) {
+                        const stars = "★".repeat(rating) + "☆".repeat(5 - rating)
+                        rows = rows.concat([{ label: qsTr("Rating"), value: stars }])
+                    }
+                    const dateTaken = controller.imageDateTaken(controller.currentIndex)
+                    if (dateTaken.length > 0)
+                        rows = rows.concat([{ label: qsTr("Date taken"), value: dateTaken }])
+                    const caption = controller.imageCaption(controller.currentIndex)
+                    if (caption.length > 0)
+                        rows = rows.concat([{ label: qsTr("Caption"), value: caption, scroll: true }])
+                }
+                exifPanel.exifData = rows
                 root._exifVisible = true
                 exifPanel.open()
             }
@@ -361,7 +377,15 @@ Rectangle {
 
     property bool _jumpWasPlaying: false
 
+    function _closeExifIfOpen() {
+        if (root._exifVisible) {
+            root._exifVisible = false
+            exifPanel.close()
+        }
+    }
+
     function openJump() {
+        _closeExifIfOpen()
         _jumpWasPlaying = controller.isPlaying
         if (controller.isPlaying) controller.togglePlay()
         jumpInput.text = (controller.currentIndex + 1).toString()
