@@ -903,9 +903,13 @@ Rectangle {
                             required property int index
                             text: index < root._pendingRating ? "★" : "☆"
                             font.pixelSize: 32
-                            color: index < root._pendingRating ? Theme.accentLight : Theme.textSubtle
+                            color: index < root._pendingRating ? Theme.accentLight : Theme.starInactive
                             opacity: index < root._starsRevealedCount ? 1.0 : 0.0
-                            Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutQuad } }
+                            transform: Translate {
+                                y: index < root._starsRevealedCount ? 0 : 14
+                                Behavior on y { NumberAnimation { duration: 300; easing.type: Easing.OutBack } }
+                            }
+                            Behavior on opacity { NumberAnimation { duration: 220; easing.type: Easing.OutCubic } }
                             Behavior on color   { ColorAnimation  { duration: 120 } }
                         }
                     }
