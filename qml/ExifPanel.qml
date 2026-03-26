@@ -118,7 +118,7 @@ Rectangle {
                 }
                 Text {
                     text: modelData.value
-                    color: "white"
+                    color: Theme.textPrimary
                     font.pixelSize: 12
                     font.weight: Font.Medium
                     Layout.fillWidth: true

@@ -46,7 +46,7 @@ Rectangle {
         // index counter
         Text {
             text: (controller.currentIndex + 1) + " / " + controller.imageCount
-            color: "white"; font.pixelSize: Math.round(16 * hudScale); font.weight: Font.Bold
+            color: Theme.textPrimary; font.pixelSize: Math.round(16 * hudScale); font.weight: Font.Bold
         }
 
         // filename

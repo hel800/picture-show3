@@ -98,6 +98,7 @@ class SlideshowController(QObject):
         self._all_images      : list[str]        = []
         self._min_rating      : int              = 0
         self._rating_cache    : dict[str, int]   = {}
+        self._exif_cache      : tuple[int, list] = (-1, [])  # (index, rows)
         self._language        : str              = "auto"
         self._update_check_enabled: bool         = True
         self._recursive           : bool         = False
@@ -282,6 +283,7 @@ class SlideshowController(QObject):
             self._images = []
             self._current_index = 0
             self._rating_cache = {}
+            self._exif_cache = (-1, [])
             self.imagesChanged.emit()
             self.currentIndexChanged.emit()
             self.settingsChanged.emit()
@@ -293,6 +295,7 @@ class SlideshowController(QObject):
         self._images = []
         self._current_index = 0
         self._rating_cache = {}
+        self._exif_cache = (-1, [])
         self.imagesChanged.emit()
         self.currentIndexChanged.emit()
         self._scan_images()
@@ -420,6 +423,7 @@ class SlideshowController(QObject):
             self._all_images = []
             self._images = []
             self._rating_cache = {}
+            self._exif_cache = (-1, [])
             self._scanning = False
             self.scanningChanged.emit()
             self._apply_filter()
@@ -814,6 +818,8 @@ class SlideshowController(QObject):
     @Slot(int, result='QVariantList')
     def imageExifInfo(self, index: int) -> list:
         """Return a list of {label, value} dicts with EXIF metadata for QML display."""
+        if self._exif_cache[0] == index:
+            return self._exif_cache[1]
         path = self.imagePath(index)
         if not path:
             return []
@@ -897,6 +903,7 @@ class SlideshowController(QObject):
         except Exception:
             rows.append({"label": self.tr("Dimensions"), "value": f"{pil_w} × {pil_h}"})
 
+        self._exif_cache = (index, rows)
         return rows
 
     @Slot(int, result=int)

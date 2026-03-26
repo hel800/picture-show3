@@ -552,6 +552,22 @@ class TestImageExifInfo:
         load_folder(ctrl, str(d))
         assert self._row(ctrl.imageExifInfo(0), "Dimensions") == "100 × 80"
 
+    def test_dimensions_fallback_to_pil_size(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_plain_jpeg(d / "img.jpg", size=(320, 240))
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Dimensions") == "320 × 240"
+
+    def test_cache_avoids_reread(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", make="Canon", model="EOS R5")
+        load_folder(ctrl, str(d))
+        first = ctrl.imageExifInfo(0)
+        second = ctrl.imageExifInfo(0)
+        assert first is second  # same list object from cache
+
 
 # ── Settings setters ──────────────────────────────────────────────────────────
 
