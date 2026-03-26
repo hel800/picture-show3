@@ -16,6 +16,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken |
 | **EXIF panel** | Press `,` during the show for a detailed EXIF overlay: camera, aperture, shutter, ISO, focal length, exposure program, flash, dimensions |
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
+| **Star rating editor** | Press `0`–`5` during the show to set the XMP star rating of the current image; `0` removes it. A confirmation popup with animated stars appears — `↵` to save, `Esc` to cancel |
 | **Recursive folders** | Optional: include subfolders in the scan (toggle in settings) |
 | **Background scanning** | Folder scanning and sorting run in background threads — UI stays responsive; Start button enables when ready |
 | **Jump to image** | Instantly jump to any image by number with a live preview |
@@ -69,7 +70,7 @@ python -m pytest
 python -m pytest -v
 ```
 
-178 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+211 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
 
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 
@@ -104,6 +105,7 @@ Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\pict
 | `I` | Toggle HUD info bar |
 | `,` | Show / hide extended EXIF info panel |
 | `J` | Jump to image by number |
+| `0`–`5` | Set star rating (0 = remove); ↵ to confirm, Esc to cancel |
 | `P` | Panorama mode (wide images only) |
 | `?` | Help overlay |
 | `Esc` | Return to settings |
@@ -143,6 +145,7 @@ Use `R` on the settings screen to set a minimum rating; only images at or above 
 Rating `0` = no filter (all images).
 
 The current image's rating is also shown in the HUD info bar during the show.
+Ratings can also be set or changed directly during the show with keys `0`–`5`.
 
 ---
 
