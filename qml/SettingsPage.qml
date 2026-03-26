@@ -718,9 +718,18 @@ Item {
                                 }
                                 Text {
                                     anchors.verticalCenter: parent.verticalCenter
-                                    text: controller.scanProgress > 0
-                                          ? qsTr("Scanning… %1 / %2").arg(controller.scanProgress).arg(controller.totalImageCount)
-                                          : qsTr("Scanning…")
+                                    text: {
+                                        var phase = controller.scanPhase
+                                        var prog  = controller.scanProgress
+                                        var total = controller.totalImageCount
+                                        if (phase === "filter")
+                                            return prog > 0 ? qsTr("Filtering by star… %1 / %2").arg(prog).arg(total)
+                                                            : qsTr("Filtering by star…")
+                                        if (phase === "sort")
+                                            return prog > 0 ? qsTr("Sorting by date… %1 / %2").arg(prog).arg(total)
+                                                            : qsTr("Sorting by date…")
+                                        return qsTr("Scanning…")
+                                    }
                                     color: Theme.textMuted
                                     font.pixelSize: 12
                                 }

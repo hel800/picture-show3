@@ -389,12 +389,27 @@
         <translation>Verlauf löschen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="720"/>
-        <source>Scanning… %1 / %2</source>
-        <translation>Wird gescannt… %1 / %2</translation>
+        <location filename="../qml/SettingsPage.qml" line="727"/>
+        <source>Filtering by star… %1 / %2</source>
+        <translation>Filtern nach Sternen… %1 / %2</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="721"/>
+        <location filename="../qml/SettingsPage.qml" line="728"/>
+        <source>Filtering by star…</source>
+        <translation>Filtern nach Sternen…</translation>
+    </message>
+    <message>
+        <location filename="../qml/SettingsPage.qml" line="730"/>
+        <source>Sorting by date… %1 / %2</source>
+        <translation>Sortieren nach Datum… %1 / %2</translation>
+    </message>
+    <message>
+        <location filename="../qml/SettingsPage.qml" line="731"/>
+        <source>Sorting by date…</source>
+        <translation>Sortieren nach Datum…</translation>
+    </message>
+    <message>
+        <location filename="../qml/SettingsPage.qml" line="732"/>
         <source>Scanning…</source>
         <translation>Wird gescannt…</translation>
     </message>

@@ -389,12 +389,27 @@
         <translation>Effacer l&apos;historique</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="720"/>
-        <source>Scanning… %1 / %2</source>
-        <translation>Analyse en cours… %1 / %2</translation>
+        <location filename="../qml/SettingsPage.qml" line="727"/>
+        <source>Filtering by star… %1 / %2</source>
+        <translation>Filtrage par étoiles… %1 / %2</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="721"/>
+        <location filename="../qml/SettingsPage.qml" line="728"/>
+        <source>Filtering by star…</source>
+        <translation>Filtrage par étoiles…</translation>
+    </message>
+    <message>
+        <location filename="../qml/SettingsPage.qml" line="730"/>
+        <source>Sorting by date… %1 / %2</source>
+        <translation>Tri par date… %1 / %2</translation>
+    </message>
+    <message>
+        <location filename="../qml/SettingsPage.qml" line="731"/>
+        <source>Sorting by date…</source>
+        <translation>Tri par date…</translation>
+    </message>
+    <message>
+        <location filename="../qml/SettingsPage.qml" line="732"/>
         <source>Scanning…</source>
         <translation>Analyse en cours…</translation>
     </message>
