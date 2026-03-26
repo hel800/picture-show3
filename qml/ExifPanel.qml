@@ -22,7 +22,7 @@ Rectangle {
     // position — no runtime height measurement required.
     property real _slideOffset: 20
 
-    width:  Math.min(parent ? parent.width * 0.7 : 308, 308)
+    width:  Math.min(parent ? parent.width * 0.875 : 385, 385)
     height: panelContent.implicitHeight + 32   // 16 px top + 16 px bottom padding
 
     color: Qt.rgba(0, 0, 0, 0.82)
@@ -93,13 +93,26 @@ Rectangle {
         spacing: 2
 
         // Header
-        Text {
-            text: qsTr("EXIF INFO")
-            color: Theme.textMuted
-            font.pixelSize: 10
-            font.weight: Font.Medium
-            font.letterSpacing: 1.4
-            bottomPadding: 6
+        Column {
+            Layout.fillWidth: true
+            spacing: 5
+            bottomPadding: 8
+
+            ThemedIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                source: "../img/icon_picture.svg"
+                size: 22
+                iconColor: Theme.textMuted
+            }
+            Text {
+                width: parent.width
+                horizontalAlignment: Text.AlignHCenter
+                text: qsTr("PICTURE DETAILS")
+                color: Theme.textMuted
+                font.pixelSize: 10
+                font.weight: Font.Medium
+                font.letterSpacing: 1.4
+            }
         }
 
         // Data rows
@@ -116,13 +129,31 @@ Rectangle {
                     Layout.preferredWidth: Number(qsTr("100", "exif_label_width"))
                     elide: Text.ElideRight
                 }
-                Text {
-                    text: modelData.value
-                    color: Theme.textPrimary
-                    font.pixelSize: 12
-                    font.weight: Font.Medium
+                Item {
                     Layout.fillWidth: true
-                    elide: Text.ElideRight
+                    implicitHeight: _val.implicitHeight
+                    clip: true
+
+                    Text {
+                        id: _val
+                        text: modelData.value
+                        color: Theme.textPrimary
+                        font.pixelSize: 12
+                        font.weight: Font.Medium
+                        width: !!modelData.scroll ? implicitWidth : parent.width
+                        elide: !!modelData.scroll ? Text.ElideNone : Text.ElideRight
+
+                        readonly property real _overflow: implicitWidth - parent.width
+
+                        SequentialAnimation on x {
+                            running: !!modelData.scroll && _val._overflow > 0
+                            loops: Animation.Infinite
+                            PauseAnimation  { duration: 1500 }
+                            NumberAnimation { from: 0; to: -_val._overflow; duration: Math.max(1500, _val._overflow * 25); easing.type: Easing.InOutSine }
+                            PauseAnimation  { duration: 1000 }
+                            NumberAnimation { to: 0;              duration: Math.max(1500, _val._overflow * 25); easing.type: Easing.InOutSine }
+                        }
+                    }
                 }
             }
         }
