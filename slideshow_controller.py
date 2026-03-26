@@ -9,8 +9,11 @@ Requires Python >= 3.14
 from __future__ import annotations
 
 import os
+import re
 import random
+import struct
 import sys
+import tempfile
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
@@ -71,6 +74,7 @@ class SlideshowController(QObject):
     errorOccurred       = Signal(str)
     scanningChanged     = Signal()
     scanProgressChanged = Signal()
+    ratingWritten       = Signal(int)    # emitted with image index after a successful write
     # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
     _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
@@ -956,3 +960,206 @@ class SlideshowController(QObject):
         except Exception:
             pass
         return ""
+
+    # ── Star rating write ──────────────────────────────────────────────────────
+
+    @Slot(int, int, result=bool)
+    def writeImageRating(self, index: int, rating: int) -> bool:
+        """
+        Write the XMP star rating to the image file at *index*.
+        rating 0 removes the rating; 1–5 sets it.
+        Returns True on success, False on error (also emits errorOccurred).
+        Updates the in-memory rating cache on success and emits ratingWritten(index).
+        """
+        path = self.imagePath(index)
+        if not path:
+            return False
+        clamped = max(0, min(5, rating))
+        try:
+            SlideshowController._write_xmp_rating(path, clamped)
+        except Exception as exc:
+            self.errorOccurred.emit(self.tr("Could not save rating: %1").replace("%1", str(exc)))
+            return False
+        # Update cache so subsequent reads are consistent without re-reading the file
+        self._rating_cache[path] = clamped
+        # Invalidate EXIF panel cache for this index (panel may show Rating row)
+        if self._exif_cache[0] == index:
+            self._exif_cache = (-1, [])
+        self.ratingWritten.emit(index)
+        return True
+
+    @staticmethod
+    def _write_xmp_rating(path: str, rating: int) -> None:
+        """
+        Atomically write (or remove) the xmp:Rating in a JPEG file.
+
+        Algorithm
+        ---------
+        1. Read the file as raw bytes.
+        2. Walk JPEG APP markers to locate the XMP APP1 segment
+           (identified by the ``http://ns.adobe.com/xap/1.0/\\x00`` namespace prefix).
+        3. Modify only the XMP XML text — pixel data is never touched.
+        4. Write the result to a sibling temp file.
+        5. Open the temp file with Pillow to verify structural integrity.
+        6. Atomically rename the temp file over the original.
+
+        Raises
+        ------
+        ValueError  – file is not a JPEG or unsupported format.
+        OSError     – I/O failure.
+        """
+        suffix = Path(path).suffix.lower()
+        if suffix not in (".jpg", ".jpeg"):
+            raise ValueError(
+                f"Star rating writing is only supported for JPEG files (got {suffix!r})"
+            )
+
+        _XMP_NS = b"http://ns.adobe.com/xap/1.0/\x00"
+
+        raw = Path(path).read_bytes()
+        if not raw.startswith(b"\xff\xd8"):
+            raise ValueError(f"Not a valid JPEG file: {path!r}")
+
+        # ── Locate XMP APP1 segment ───────────────────────────────────────────
+        xmp_start: int | None = None
+        xmp_end:   int | None = None
+        i = 2  # skip SOI (FF D8)
+        while i + 3 < len(raw):
+            if raw[i] != 0xFF:
+                break                                    # lost marker sync
+            marker_byte = raw[i + 1]
+            # Markers without a length word
+            if marker_byte == 0xD9:                      # EOI
+                break
+            if marker_byte == 0xD8 or 0xD0 <= marker_byte <= 0xD7:
+                i += 2
+                continue
+            # All other markers carry a 2-byte big-endian length (includes itself)
+            length = struct.unpack(">H", raw[i + 2: i + 4])[0]
+            seg_end = i + 2 + length
+            if marker_byte == 0xDA:                      # SOS — compressed data follows
+                break
+            if marker_byte == 0xE1:                      # APP1
+                payload_start = i + 4
+                if raw[payload_start: payload_start + len(_XMP_NS)] == _XMP_NS:
+                    xmp_start = i
+                    xmp_end   = seg_end
+                    break
+            i = seg_end
+
+        # ── Extract current XMP text ──────────────────────────────────────────
+        if xmp_start is not None:
+            xmp_offset = xmp_start + 4 + len(_XMP_NS)
+            xmp_bytes  = raw[xmp_offset: xmp_end]
+            try:
+                xmp_str = xmp_bytes.decode("utf-8")
+            except UnicodeDecodeError:
+                xmp_str = xmp_bytes.decode("latin-1")
+        else:
+            xmp_str = ""
+
+        # ── Modify XMP text ───────────────────────────────────────────────────
+        new_xmp_str   = SlideshowController._modify_xmp_rating_str(xmp_str, rating)
+        new_xmp_bytes = new_xmp_str.encode("utf-8")
+
+        # ── Reconstruct JPEG ──────────────────────────────────────────────────
+        new_payload = _XMP_NS + new_xmp_bytes
+        # APP1 segment: FF E1 + 2-byte length (which counts itself) + payload
+        new_seg = b"\xff\xe1" + struct.pack(">H", len(new_payload) + 2) + new_payload
+
+        if xmp_start is not None:
+            result = raw[:xmp_start] + new_seg + raw[xmp_end:]
+        else:
+            # No XMP yet — insert immediately after SOI
+            result = raw[:2] + new_seg + raw[2:]
+
+        # ── Write atomically ──────────────────────────────────────────────────
+        dir_path = Path(path).parent
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix=".tmp", dir=str(dir_path))
+        try:
+            os.write(tmp_fd, result)
+            os.close(tmp_fd)
+            tmp_fd = -1
+            # Structural check — open and immediately close; verify() on a
+            # re-opened file (Pillow closes after verify())
+            with Image.open(tmp_path) as img:
+                img.verify()
+            os.replace(tmp_path, path)
+        except Exception:
+            if tmp_fd >= 0:
+                try:
+                    os.close(tmp_fd)
+                except OSError:
+                    pass
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+            raise
+
+    @staticmethod
+    def _modify_xmp_rating_str(xmp_str: str, rating: int) -> str:
+        """
+        Return a modified copy of *xmp_str* with ``xmp:Rating`` set to *rating*,
+        or removed when *rating* == 0.
+
+        Strategy: strip any existing Rating (both attribute and element forms),
+        then — if rating > 0 — inject ``xmp:Rating="N"`` as an attribute on the
+        first ``rdf:Description`` element.  This avoids duplicate-entry bugs and
+        normalises the serialisation form without affecting non-Rating content.
+
+        When no XMP is present at all and rating > 0, a minimal XMP wrapper is
+        created from scratch.
+        """
+        # Attribute form: xmp:Rating="N" (any namespace prefix before "Rating")
+        attr_re = re.compile(r'\b(?:\w+:)?Rating="[^"]*"')
+        # Element form: <xmp:Rating ...>N</xmp:Rating> — [^>]* allows inline
+        # namespace declarations such as xmlns:xmp="..." on the element itself.
+        elem_re = re.compile(r'<(?:\w+:)?Rating[^>]*>[^<]*</(?:\w+:)?Rating>')
+
+        # Step 1 — remove all existing rating occurrences in either form
+        xmp_str = attr_re.sub("", xmp_str)
+        xmp_str = elem_re.sub("", xmp_str)
+
+        if rating == 0:
+            return xmp_str
+
+        r = str(rating)
+
+        # Step 2 — inject as attribute on the first rdf:Description.
+        # Lazy [^>]*? so the trailing ` />` or `>` lands in group 2 rather than
+        # being swallowed by group 1 (greedy [^>]* eats the `/` in `/>` and
+        # produces malformed XML like `/ xmp:Rating="5">`).
+        # \s*/?>  covers: `>`, `/>`, ` />` — all valid XML element endings.
+        desc_re = re.compile(r'(<rdf:Description\b[^>]*?)(\s*/?>)')
+        if desc_re.search(xmp_str):
+            # Only add xmlns:xmp if the namespace is no longer declared after
+            # the rating strip above (e.g. element-form XMP had xmlns:xmp on
+            # the child <xmp:Rating> element that was just removed).
+            _XMP_NS_DECL = 'xmlns:xmp="http://ns.adobe.com/xap/1.0/"'
+            ns_inject = '' if _XMP_NS_DECL in xmp_str else f' {_XMP_NS_DECL}'
+            xmp_str = desc_re.sub(rf'\1{ns_inject} xmp:Rating="{r}"\2', xmp_str, count=1)
+        elif xmp_str:
+            # XMP exists but no rdf:Description — insert one before </rdf:RDF>
+            insert = (
+                f'<rdf:Description rdf:about="" '
+                f'xmlns:xmp="http://ns.adobe.com/xap/1.0/" '
+                f'xmp:Rating="{r}"/>'
+            )
+            if "</rdf:RDF>" in xmp_str:
+                xmp_str = xmp_str.replace("</rdf:RDF>", insert + "</rdf:RDF>", 1)
+            else:
+                xmp_str += insert
+        else:
+            # No XMP at all — create a minimal wrapper
+            xmp_str = (
+                '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+                '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+                f'<rdf:Description rdf:about="" '
+                f'xmlns:xmp="http://ns.adobe.com/xap/1.0/" '
+                f'xmp:Rating="{r}"/>'
+                '</rdf:RDF>'
+                '</x:xmpmeta>'
+            )
+
+        return xmp_str
