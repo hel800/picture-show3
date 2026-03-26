@@ -217,6 +217,29 @@ Item {
                     spacing: 10
 
                     Rectangle {
+                        id: yesBtn
+                        Layout.fillWidth: true
+                        height: 42
+                        radius: 10
+                        color: activeFocus ? Theme.accentPress : Theme.accent
+                        border.color: activeFocus ? Theme.accentLight : "transparent"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("Yes")
+                            color: "white"
+                            font.pixelSize: 14
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Qt.quit()
+                        }
+                    }
+
+                    Rectangle {
                         id: noBtn
                         Layout.fillWidth: true
                         height: 42
@@ -239,28 +262,7 @@ Item {
                         }
                     }
 
-                    Rectangle {
-                        id: yesBtn
-                        Layout.fillWidth: true
-                        height: 42
-                        radius: 10
-                        color: activeFocus ? Theme.accentPress : Theme.accent
-                        border.color: activeFocus ? Theme.accentLight : "transparent"
-                        border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
 
-                        Text {
-                            anchors.centerIn: parent
-                            text: qsTr("Yes")
-                            color: "white"
-                            font.pixelSize: 14
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Qt.quit()
-                        }
-                    }
                 }
             }
         }
