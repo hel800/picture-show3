@@ -711,7 +711,7 @@ Item {
                                 visible: controller.scanning
                                 spacing: 5
                                 ThemedIcon {
-                                    anchors.verticalCenter: parent.verticalCenter
+                                    y: parent.height / 2 - height / 2 + 1
                                     source: "../img/icon_scan.svg"
                                     size: 13
                                     iconColor: Theme.textMuted
