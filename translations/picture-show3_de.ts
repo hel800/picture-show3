@@ -144,12 +144,12 @@
         <translation>120</translation>
     </message>
     <message>
-        <location filename="../qml/ExifPanel.qml" line="132"/>
+        <location filename="../qml/ExifPanel.qml" line="133"/>
         <source>No EXIF data available</source>
         <translation>Keine EXIF-Daten verfügbar</translation>
     </message>
     <message>
-        <location filename="../qml/ExifPanel.qml" line="160"/>
+        <location filename="../qml/ExifPanel.qml" line="161"/>
         <source>close</source>
         <translation>schließen</translation>
     </message>
