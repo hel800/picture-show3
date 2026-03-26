@@ -562,47 +562,47 @@
 <context>
     <name>SlideshowPage</name>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="558"/>
+        <location filename="../qml/SlideshowPage.qml" line="557"/>
         <source>fullscreen</source>
         <translation>Vollbild</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="560"/>
+        <location filename="../qml/SlideshowPage.qml" line="559"/>
         <source>info</source>
         <translation>Info</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="562"/>
+        <location filename="../qml/SlideshowPage.qml" line="561"/>
         <source>exit</source>
         <translation>Beenden</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="601"/>
+        <location filename="../qml/SlideshowPage.qml" line="607"/>
         <source>AUTOPLAY</source>
         <translation>AUTOPLAY</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="609"/>
+        <location filename="../qml/SlideshowPage.qml" line="615"/>
         <source>Play (%1 s)</source>
         <translation>Play (%1 s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="610"/>
+        <location filename="../qml/SlideshowPage.qml" line="616"/>
         <source>Pause</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="672"/>
+        <location filename="../qml/SlideshowPage.qml" line="678"/>
         <source>JUMP TO IMAGE</source>
         <translation>ZU BILD SPRINGEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="737"/>
+        <location filename="../qml/SlideshowPage.qml" line="743"/>
         <source>go</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="740"/>
+        <location filename="../qml/SlideshowPage.qml" line="746"/>
         <source>cancel</source>
         <translation>Abbrechen</translation>
     </message>
