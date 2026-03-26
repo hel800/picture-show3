@@ -267,9 +267,9 @@ Rectangle {
             showImage(true)
         }
         function onRatingWritten(index) {
-            // Refresh HUD rating display without triggering image transition
+            // Restore the binding so HUD still tracks future navigations
             if (index === controller.currentIndex)
-                root.hudRating = controller.imageRating(index)
+                root.hudRating = Qt.binding(function() { return controller.imageRating(controller.currentIndex) })
         }
     }
 
