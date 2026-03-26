@@ -18,10 +18,11 @@ Rectangle {
     property bool showingA  : true   // which layer is currently the foreground
     property int  navDir    : 1      // +1 forward, -1 backward (for slide direction)
     property int  transDur  : controller.transitionDuration
-    property bool   hudVisible: controller.hudVisible  // restored from settings
-    property real   hudScale  : controller.hudSize / 100.0
-    property string hudCaption: controller.imageCaption(controller.currentIndex)
-    property int    hudRating : controller.imageRating(controller.currentIndex)
+    property bool   hudVisible  : controller.hudVisible  // restored from settings
+    property real   hudScale   : controller.hudSize / 100.0
+    property string hudCaption : controller.imageCaption(controller.currentIndex)
+    property int    hudRating  : controller.imageRating(controller.currentIndex)
+    property bool   _exifVisible: false
 
     onWidthChanged:  if (panoramaActive) _panoramaAbort()
     onHeightChanged: if (panoramaActive) _panoramaAbort()
@@ -255,6 +256,10 @@ Rectangle {
         target: controller
         function onCurrentIndexChanged() {
             if (root.panoramaActive) _panoramaAbort()
+            if (root._exifVisible) {
+                exifPanel.close()
+                root._exifVisible = false
+            }
             showImage(true)
         }
     }
@@ -309,10 +314,16 @@ Rectangle {
             controller.prevImage()
             break
         case Qt.Key_Space:
+            _closeExifIfOpen()
             controller.togglePlay()
             break
         case Qt.Key_Escape:
-            root.exitShow()
+            if (root._exifVisible) {
+                root._exifVisible = false
+                exifPanel.close()
+            } else {
+                root.exitShow()
+            }
             break
         case Qt.Key_F:
             toggleFullscreen()
@@ -327,6 +338,33 @@ Rectangle {
         case Qt.Key_P:
             startPanorama()
             break
+        case Qt.Key_Comma:
+            if (root._exifVisible) {
+                root._exifVisible = false
+                exifPanel.close()
+            } else {
+                // Set data first so the panel pre-renders at full height,
+                // then open() defers the animation by one layout tick.
+                let rows = controller.imageExifInfo(controller.currentIndex)
+                // When the HUD is hidden, append HUD-only fields to the panel
+                if (!root.hudVisible) {
+                    const rating = controller.imageRating(controller.currentIndex)
+                    if (rating > 0) {
+                        const stars = "★".repeat(rating) + "☆".repeat(5 - rating)
+                        rows = rows.concat([{ label: qsTr("Rating"), value: stars }])
+                    }
+                    const dateTaken = controller.imageDateTaken(controller.currentIndex)
+                    if (dateTaken.length > 0)
+                        rows = rows.concat([{ label: qsTr("Date taken"), value: dateTaken }])
+                    const caption = controller.imageCaption(controller.currentIndex)
+                    if (caption.length > 0)
+                        rows = rows.concat([{ label: qsTr("Caption"), value: caption, scroll: true }])
+                }
+                exifPanel.exifData = rows
+                root._exifVisible = true
+                exifPanel.open()
+            }
+            break
         case Qt.Key_Question:
             root.openHelp()
             break
@@ -338,7 +376,15 @@ Rectangle {
 
     property bool _jumpWasPlaying: false
 
+    function _closeExifIfOpen() {
+        if (root._exifVisible) {
+            root._exifVisible = false
+            exifPanel.close()
+        }
+    }
+
     function openJump() {
+        _closeExifIfOpen()
         _jumpWasPlaying = controller.isPlaying
         if (controller.isPlaying) controller.togglePlay()
         jumpInput.text = (controller.currentIndex + 1).toString()
@@ -461,105 +507,24 @@ Rectangle {
         scrollLeftAnim.start()
     }
 
-    Rectangle {
+    HudBar {
         id: hud
-        z: 10   // always on top of image layers (which use z 0–2)
-        anchors.bottom: parent.bottom
-        anchors.left: parent.left
-        anchors.right: parent.right
-        height: Math.round(52 * root.hudScale)
-        color: Qt.rgba(0, 0, 0, 0.65)
-        opacity: 0
+        hudScale      : root.hudScale
+        hudVisible    : root.hudVisible
+        hudCaption    : root.hudCaption
+        hudRating     : root.hudRating
+        exifPanelOpen : root._exifVisible
+    }
 
-        state: root.hudVisible ? "shown" : "hidden"
-        states: [
-            State { name: "shown";  PropertyChanges { target: hud; opacity: 1 } },
-            State { name: "hidden"; PropertyChanges { target: hud; opacity: 0 } }
-        ]
-        transitions: Transition {
-            NumberAnimation { property: "opacity"; duration: 300 }
-        }
-
-        // Subtle top border line
-        Rectangle {
-            anchors.top: parent.top
-            anchors.left: parent.left
-            anchors.right: parent.right
-            height: 1
-            color: Qt.rgba(1, 1, 1, 0.08)
-        }
-
-        RowLayout {
-            anchors { fill: parent; leftMargin: Math.round(20 * root.hudScale); rightMargin: Math.round(20 * root.hudScale) }
-            spacing: Math.round(6 * root.hudScale)
-
-            // index counter
-            Text {
-                text: (controller.currentIndex + 1) + " / " + controller.imageCount
-                color: "white"; font.pixelSize: Math.round(16 * root.hudScale); font.weight: Font.Bold
-            }
-
-            // filename
-            Text { text: "≡"; color: Theme.textSubtle; font.pixelSize: Math.round(14 * root.hudScale); Layout.leftMargin: Math.round(10 * root.hudScale) }
-            Text {
-                text: controller.imagePath(controller.currentIndex).split(/[/\\]/).pop()
-                color: Theme.textSecondary; font.pixelSize: Math.round(13 * root.hudScale)
-                elide: Text.ElideMiddle
-                Layout.maximumWidth: Math.round(220 * root.hudScale)
-            }
-
-            // caption — always-present filler; text shown only when available
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: root.hudCaption.length > 0 }
-            Text { text: "✎"; color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale); visible: root.hudCaption.length > 0 }
-            Item {
-                Layout.fillWidth: true
-                implicitHeight: captionText.implicitHeight
-                Text {
-                    id: captionText
-                    anchors { left: parent.left; verticalCenter: parent.verticalCenter }
-                    width: parent.width
-                    text: root.hudCaption
-                    color: Theme.textSecondary; font.pixelSize: Math.round(13 * root.hudScale)
-                    visible: root.hudCaption.length > 0
-                    elide: Text.ElideRight
-                }
-            }
-
-            // star rating (hidden when 0 / unset)
-            Row {
-                spacing: Math.round(2 * root.hudScale)
-                visible: root.hudRating > 0
-                Repeater {
-                    model: 5
-                    ThemedIcon {
-                        source: "../img/icon_star.svg"
-                        size: Math.round(12 * root.hudScale)
-                        iconColor: index < root.hudRating ? Theme.accentLight : Theme.starInactive
-                    }
-                }
-            }
-
-            // date taken (hidden when unavailable)
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: dateText.visible && captionText.truncated }
-            Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * root.hudScale); visible: root.hudRating > 0 && dateText.visible }
-            ThemedIcon { source: "../img/icon_clock.svg"; size: Math.round(13 * root.hudScale); iconColor: Theme.textSubtle; visible: dateText.visible }
-            Text {
-                id: dateText
-                text: controller.imageDateTaken(controller.currentIndex)
-                color: Theme.textSubtle; font.pixelSize: Math.round(13 * root.hudScale)
-                visible: text.length > 0
-            }
-
-
-
-            // ⌨ keyboard hints
-            KeyHint { label: "F"; uiScale: root.hudScale; Layout.leftMargin: Math.round(10 * root.hudScale) }
-            Text { text: qsTr("fullscreen"); color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
-            KeyHint { label: "I";   uiScale: root.hudScale }
-            Text { text: qsTr("info");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
-            KeyHint { label: "Esc"; uiScale: root.hudScale }
-            Text { text: qsTr("exit");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * root.hudScale) }
-        }
+    ExifPanel {
+        id: exifPanel
+        // Anchored above the HUD — QML owns the final position, no height
+        // measurement needed; the slide animation uses transform: Translate.
+        anchors.horizontalCenter: parent.horizontalCenter
+        anchors.bottom: hud.top
+        anchors.bottomMargin: 8
+        // exifData is set explicitly in the key handler before open() is called,
+        // not via a reactive binding — prevents content changing mid-animation.
     }
 
     // Show the play/pause popup whenever the playing state changes

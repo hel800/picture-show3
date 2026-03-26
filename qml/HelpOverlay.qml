@@ -221,14 +221,15 @@ Popup {
 
                     Repeater {
                         model: [
-                            { keys: ["←","→"], desc: qsTr("Navigate")          },
-                            { keys: ["Space"],  desc: qsTr("Play / pause")      },
-                            { keys: ["F"],      desc: qsTr("Toggle fullscreen") },
-                            { keys: ["I"],      desc: qsTr("Toggle info HUD")   },
-                            { keys: ["J"],      desc: qsTr("Jump to image")     },
-                            { keys: ["P"],      desc: qsTr("Panorama mode")     },
-                            { keys: ["Esc"],    desc: qsTr("Exit slideshow")         },
-                            { keys: ["?"],      desc: qsTr("Help")              }
+                            { keys: ["←","→"], desc: qsTr("Navigate")              },
+                            { keys: ["Space"],  desc: qsTr("Play / pause")          },
+                            { keys: ["F"],      desc: qsTr("Toggle fullscreen")     },
+                            { keys: ["I"],      desc: qsTr("Toggle info HUD")       },
+                            { keys: [","],      desc: qsTr("Extended EXIF details") },
+                            { keys: ["J"],      desc: qsTr("Jump to image")         },
+                            { keys: ["P"],      desc: qsTr("Panorama mode")         },
+                            { keys: ["Esc"],    desc: qsTr("Exit slideshow")        },
+                            { keys: ["?"],      desc: qsTr("Help")                  }
                         ]
                         RowLayout {
                             Layout.fillWidth: true

@@ -14,7 +14,7 @@ from pathlib import Path
 import pytest
 
 from slideshow_controller import IMAGE_EXTENSIONS, SlideshowController
-from tests.conftest import make_jpeg_with_xmp_attr, make_jpeg_with_xmp_elem, make_plain_jpeg
+from tests.conftest import make_jpeg_with_exif, make_jpeg_with_xmp_attr, make_jpeg_with_xmp_elem, make_plain_jpeg
 
 
 # ── IMAGE_EXTENSIONS ──────────────────────────────────────────────────────────
@@ -433,6 +433,140 @@ class TestImageAccess:
         r = ctrl.imageRating(0)
         # Second call must return same value (from cache)
         assert ctrl.imageRating(0) == r
+
+
+# ── imageExifInfo ─────────────────────────────────────────────────────────────
+
+class TestImageExifInfo:
+    def _row(self, rows: list, label: str) -> str | None:
+        """Return the value for a given label, or None if not present."""
+        for r in rows:
+            if r["label"] == label:
+                return r["value"]
+        return None
+
+    def test_out_of_range_returns_empty(self, ctrl_with_images):
+        assert ctrl_with_images.imageExifInfo(999) == []
+
+    def test_plain_jpeg_has_only_dimensions(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_plain_jpeg(d / "img.jpg", size=(320, 240))
+        load_folder(ctrl, str(d))
+        rows = ctrl.imageExifInfo(0)
+        labels = [r["label"] for r in rows]
+        assert labels == ["Dimensions"]
+        assert self._row(rows, "Dimensions") == "320 × 240"
+
+    def test_camera_make_and_model(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", make="Canon", model="EOS R5")
+        load_folder(ctrl, str(d))
+        rows = ctrl.imageExifInfo(0)
+        assert self._row(rows, "Camera") == "Canon EOS R5"
+
+    def test_camera_model_already_starts_with_make(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", make="Canon", model="Canon EOS R5")
+        load_folder(ctrl, str(d))
+        rows = ctrl.imageExifInfo(0)
+        # Should not produce "Canon Canon EOS R5"
+        assert self._row(rows, "Camera") == "Canon EOS R5"
+
+    def test_aperture_formatted(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", fnumber=(28, 10))
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Aperture") == "f/2.8"
+
+    def test_shutter_fraction(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", exposure_time=(1, 200))
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Shutter") == "1/200 s"
+
+    def test_shutter_long_exposure(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", exposure_time=(25, 10))
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Shutter") == "2.5 s"
+
+    def test_iso(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", iso=400)
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "ISO") == "400"
+
+    def test_focal_length_integer(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", focal_length=(50, 1))
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Focal length") == "50 mm"
+
+    def test_focal_length_fractional(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", focal_length=(352, 10))
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Focal length") == "35.2 mm"
+
+    def test_exposure_program_known(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", exposure_program=2)
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Exposure") == "Auto"
+
+    def test_exposure_program_unknown(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", exposure_program=99)
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Exposure") == "99"
+
+    def test_flash_did_not_fire(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", flash=0x00)
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Flash") == "Did not fire"
+
+    def test_flash_fired(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", flash=0x01)
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Flash") == "Fired"
+
+    def test_dimensions_from_exif_tags(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", size=(100, 80))
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Dimensions") == "100 × 80"
+
+    def test_dimensions_fallback_to_pil_size(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_plain_jpeg(d / "img.jpg", size=(320, 240))
+        load_folder(ctrl, str(d))
+        assert self._row(ctrl.imageExifInfo(0), "Dimensions") == "320 × 240"
+
+    def test_cache_avoids_reread(self, ctrl, tmp_path, load_folder):
+        d = tmp_path / "p"
+        d.mkdir()
+        make_jpeg_with_exif(d / "img.jpg", make="Canon", model="EOS R5")
+        load_folder(ctrl, str(d))
+        first = ctrl.imageExifInfo(0)
+        second = ctrl.imageExifInfo(0)
+        assert first is second  # same list object from cache
 
 
 # ── Settings setters ──────────────────────────────────────────────────────────

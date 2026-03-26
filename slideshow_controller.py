@@ -24,8 +24,19 @@ from PIL import Image, IptcImagePlugin, UnidentifiedImageError
 Image.MAX_IMAGE_PIXELS = 500_000_000
 from PySide6.QtCore import Property, QLocale, QObject, QSettings, QTimer, Signal, Slot
 
-# EXIF tag id for DateTimeOriginal (when the shutter was pressed)
-_EXIF_DATE_TAKEN = 36867
+# EXIF tag ids
+_EXIF_DATE_TAKEN       = 36867   # DateTimeOriginal
+_EXIF_MAKE             = 271
+_EXIF_MODEL            = 272
+_EXIF_EXPOSURE_TIME    = 33434
+_EXIF_FNUMBER          = 33437
+_EXIF_EXPOSURE_PROGRAM = 34850
+_EXIF_ISO              = 34855
+_EXIF_FLASH            = 37385
+_EXIF_FOCAL_LENGTH     = 37386
+_EXIF_PIXEL_X          = 40962
+_EXIF_PIXEL_Y          = 40963
+
 
 # Maximum number of recent folders to remember
 _MAX_HISTORY = 100
@@ -87,6 +98,7 @@ class SlideshowController(QObject):
         self._all_images      : list[str]        = []
         self._min_rating      : int              = 0
         self._rating_cache    : dict[str, int]   = {}
+        self._exif_cache      : tuple[int, list] = (-1, [])  # (index, rows)
         self._language        : str              = "auto"
         self._update_check_enabled: bool         = True
         self._recursive           : bool         = False
@@ -271,6 +283,7 @@ class SlideshowController(QObject):
             self._images = []
             self._current_index = 0
             self._rating_cache = {}
+            self._exif_cache = (-1, [])
             self.imagesChanged.emit()
             self.currentIndexChanged.emit()
             self.settingsChanged.emit()
@@ -282,6 +295,7 @@ class SlideshowController(QObject):
         self._images = []
         self._current_index = 0
         self._rating_cache = {}
+        self._exif_cache = (-1, [])
         self.imagesChanged.emit()
         self.currentIndexChanged.emit()
         self._scan_images()
@@ -409,6 +423,7 @@ class SlideshowController(QObject):
             self._all_images = []
             self._images = []
             self._rating_cache = {}
+            self._exif_cache = (-1, [])
             self._scanning = False
             self.scanningChanged.emit()
             self._apply_filter()
@@ -785,6 +800,111 @@ class SlideshowController(QObject):
         except Exception:
             pass
         return ""
+
+    def _exposure_program_str(self, code: int) -> str:
+        programs = {
+            0: self.tr("Not defined"),
+            1: self.tr("Manual"),
+            2: self.tr("Auto"),
+            3: self.tr("Aperture priority"),
+            4: self.tr("Shutter priority"),
+            5: self.tr("Creative"),
+            6: self.tr("Action"),
+            7: self.tr("Portrait"),
+            8: self.tr("Landscape"),
+        }
+        return programs.get(code, str(code))
+
+    @Slot(int, result='QVariantList')
+    def imageExifInfo(self, index: int) -> list:
+        """Return a list of {label, value} dicts with EXIF metadata for QML display."""
+        if self._exif_cache[0] == index:
+            return self._exif_cache[1]
+        path = self.imagePath(index)
+        if not path:
+            return []
+        rows: list[dict] = []
+        try:
+            with Image.open(path) as img:
+                pil_w, pil_h = img.size
+                try:
+                    exif = img._getexif() or {}
+                except Exception:
+                    exif = {}
+        except Exception:
+            return []
+
+        # Camera (Manufacturer + Model)
+        make  = str(exif.get(_EXIF_MAKE,  "") or "").strip()
+        model = str(exif.get(_EXIF_MODEL, "") or "").strip()
+        if make or model:
+            # Avoid "Canon Canon EOS R5" when model string already starts with make
+            camera = model if model.startswith(make) else f"{make} {model}".strip()
+            rows.append({"label": self.tr("Camera"), "value": camera})
+
+        # Aperture (F-number)
+        fnumber = exif.get(_EXIF_FNUMBER)
+        if fnumber is not None:
+            try:
+                f = float(fnumber)
+                rows.append({"label": self.tr("Aperture"), "value": f"f/{f:.1f}"})
+            except Exception:
+                pass
+
+        # Shutter speed (Exposure time)
+        exp_time = exif.get(_EXIF_EXPOSURE_TIME)
+        if exp_time is not None:
+            try:
+                f = float(exp_time)
+                if f > 0:
+                    if f < 1.0:
+                        rows.append({"label": self.tr("Shutter"), "value": f"1/{round(1 / f)} s"})
+                    else:
+                        rows.append({"label": self.tr("Shutter"), "value": f"{f:.1f} s"})
+            except Exception:
+                pass
+
+        # ISO
+        iso = exif.get(_EXIF_ISO)
+        if iso is not None:
+            if isinstance(iso, (list, tuple)):
+                iso = iso[0] if iso else None
+            if iso is not None:
+                rows.append({"label": self.tr("ISO"), "value": str(iso)})
+
+        # Focal length
+        fl = exif.get(_EXIF_FOCAL_LENGTH)
+        if fl is not None:
+            try:
+                f = float(fl)
+                val = f"{f:.0f}" if f == int(f) else f"{f:.1f}"
+                rows.append({"label": self.tr("Focal length"), "value": f"{val} mm"})
+            except Exception:
+                pass
+
+        # Exposure program
+        ep = exif.get(_EXIF_EXPOSURE_PROGRAM)
+        if ep is not None:
+            rows.append({"label": self.tr("Exposure"), "value": self._exposure_program_str(ep)})
+
+        # Flash
+        flash = exif.get(_EXIF_FLASH)
+        if flash is not None:
+            try:
+                rows.append({"label": self.tr("Flash"), "value": self.tr("Fired") if (int(flash) & 0x01) else self.tr("Did not fire")})
+            except Exception:
+                pass
+
+        # Dimensions — prefer EXIF compressed-image size tags, fall back to PIL
+        px = exif.get(_EXIF_PIXEL_X, pil_w)
+        py = exif.get(_EXIF_PIXEL_Y, pil_h)
+        try:
+            rows.append({"label": self.tr("Dimensions"), "value": f"{int(px)} × {int(py)}"})
+        except Exception:
+            rows.append({"label": self.tr("Dimensions"), "value": f"{pil_w} × {pil_h}"})
+
+        self._exif_cache = (index, rows)
+        return rows
 
     @Slot(int, result=int)
     def imageRating(self, index: int) -> int:
