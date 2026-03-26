@@ -260,12 +260,35 @@ Rectangle {
                 exifPanel.close()
                 root._exifVisible = false
             }
+            if (ratingOverlay.visible) {
+                ratingDimIn.stop(); ratingDimOut.start()
+                _ratingWasPlaying = false   // navigation started autoplay-resume already
+            }
             showImage(true)
+        }
+        function onRatingWritten(index) {
+            // Refresh HUD rating display without triggering image transition
+            if (index === controller.currentIndex)
+                root.hudRating = controller.imageRating(index)
         }
     }
 
     // ── Keyboard control ──────────────────────────────────────────────────────
     Keys.onPressed: function(event) {
+        // Rating popup is open — handle its keys, absorb everything else
+        if (ratingOverlay.visible) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                confirmRating()
+            else if (event.key === Qt.Key_Escape)
+                closeRating()
+            else if (event.key === Qt.Key_F)
+                toggleFullscreen()
+            else if (event.key >= Qt.Key_0 && event.key <= Qt.Key_5)
+                openRating(event.key - Qt.Key_0)   // update pending rating
+            event.accepted = true
+            return
+        }
+
         // Jump popup is open — handle Enter/Esc, absorb everything else
         if (jumpOverlay.visible) {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
@@ -316,6 +339,10 @@ Rectangle {
         case Qt.Key_Space:
             _closeExifIfOpen()
             controller.togglePlay()
+            break
+        case Qt.Key_0: case Qt.Key_1: case Qt.Key_2:
+        case Qt.Key_3: case Qt.Key_4: case Qt.Key_5:
+            openRating(event.key - Qt.Key_0)
             break
         case Qt.Key_Escape:
             if (root._exifVisible) {
@@ -376,11 +403,54 @@ Rectangle {
 
     property bool _jumpWasPlaying: false
 
+    // ── Rating popup state ────────────────────────────────────────────────────
+    property bool _ratingWasPlaying  : false
+    property int  _pendingRating     : 0
+    property int  _starsRevealedCount: 0   // 0→5, driven by starRevealTimer
+
+    Timer {
+        id: starRevealTimer
+        interval: 55
+        repeat: true
+        onTriggered: {
+            if (root._starsRevealedCount < 5)
+                root._starsRevealedCount++
+            else
+                stop()
+        }
+    }
+
     function _closeExifIfOpen() {
         if (root._exifVisible) {
             root._exifVisible = false
             exifPanel.close()
         }
+    }
+
+    function openRating(r) {
+        if (!controller.imageCount) return
+        _closeExifIfOpen()
+        if (!ratingOverlay.visible) {
+            _ratingWasPlaying = controller.isPlaying
+            if (controller.isPlaying) controller.togglePlay()
+            ratingOverlay.visible = true
+            ratingDimIn.start()
+        }
+        root._pendingRating = r
+        root._starsRevealedCount = 0
+        starRevealTimer.restart()
+    }
+
+    function closeRating() {
+        ratingDimIn.stop(); ratingDimOut.start()   // visible = false fires in onStopped
+        if (_ratingWasPlaying) controller.togglePlay()
+        _ratingWasPlaying = false
+        root.forceActiveFocus()
+    }
+
+    function confirmRating() {
+        controller.writeImageRating(controller.currentIndex, root._pendingRating)
+        closeRating()
     }
 
     function openJump() {
@@ -750,6 +820,107 @@ Rectangle {
                         repeat: false
                         onTriggered: loadPreview()
                     }
+                }
+            }
+        }
+    }
+
+    // ── Rate-image popup ──────────────────────────────────────────────────────
+    Item {
+        id: ratingOverlay
+        anchors.fill: parent
+        visible: false
+        z: 30
+
+        Rectangle {
+            id: ratingDimBg
+            anchors.fill: parent
+            color: "black"
+            opacity: 0
+            NumberAnimation { id: ratingDimIn;  target: ratingDimBg; property: "opacity"; to: 0.45; duration: 200; easing.type: Easing.OutQuad }
+            NumberAnimation { id: ratingDimOut; target: ratingDimBg; property: "opacity"; to: 0;    duration: 200; easing.type: Easing.InQuad
+                onStopped: ratingOverlay.visible = false }
+        }
+
+        Rectangle {
+            id: ratingBox
+            width: 380
+            height: ratingLayout.implicitHeight + 40
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: parent.height * 5 / 6 - height / 2
+            radius: 18
+            color: Qt.rgba(0, 0, 0, 0.82)
+            border.color: Qt.rgba(1, 1, 1, 0.4)
+            border.width: 1
+
+            ColumnLayout {
+                id: ratingLayout
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 20 }
+                spacing: 14
+
+                // Header row: star icon + label
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 14
+
+                    ThemedIcon {
+                        source: "../img/icon_star.svg"
+                        size: 44
+                        iconColor: root._pendingRating > 0 ? Theme.accentLight : Theme.textMuted
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    ColumnLayout {
+                        Layout.fillWidth: true
+                        spacing: 6
+
+                        Text {
+                            text: qsTr("RATE IMAGE")
+                            color: Theme.textMuted
+                            font.pixelSize: 10
+                            font.weight: Font.Medium
+                            font.letterSpacing: 1.4
+                        }
+
+                        Text {
+                            text: root._pendingRating === 0
+                                  ? qsTr("Remove rating")
+                                  : qsTr("%1 star(s)").arg(root._pendingRating)
+                            color: Theme.textSecondary
+                            font.pixelSize: 14
+                        }
+                    }
+                }
+
+                // Star row — 5 stars that cascade in
+                Row {
+                    Layout.alignment: Qt.AlignHCenter
+                    spacing: 8
+
+                    Repeater {
+                        model: 5
+                        Text {
+                            required property int index
+                            text: index < root._pendingRating ? "★" : "☆"
+                            font.pixelSize: 32
+                            color: index < root._pendingRating ? Theme.accentLight : Theme.textSubtle
+                            opacity: index < root._starsRevealedCount ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 160; easing.type: Easing.OutQuad } }
+                            Behavior on color   { ColorAnimation  { duration: 120 } }
+                        }
+                    }
+                }
+
+                // Key hints
+                Row {
+                    spacing: 6
+                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("confirm"); color: Theme.textDisabled; font.pixelSize: 11 }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("cancel"); color: Theme.textDisabled; font.pixelSize: 11 }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("0–5 change"); color: Theme.textDisabled; font.pixelSize: 11 }
                 }
             }
         }
