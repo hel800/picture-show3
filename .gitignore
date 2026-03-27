@@ -21,6 +21,7 @@ dist/
 img/icon.ico
 resources_rc.py
 translations/*.qm
+translations/*.orig
 
 # IDE / editor
 .idea/

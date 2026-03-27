@@ -55,7 +55,7 @@ Popup {
         repeat: true
         onTriggered: {
             root.revealStep++
-            if (root.revealStep >= 11) stop()
+            if (root.revealStep >= 12) stop()
         }
     }
 
@@ -227,6 +227,7 @@ Popup {
                             { keys: ["I"],      desc: qsTr("Toggle info HUD")       },
                             { keys: [","],      desc: qsTr("Extended EXIF details") },
                             { keys: ["J"],      desc: qsTr("Jump to image")         },
+                            { keys: ["0–5"],    desc: qsTr("Set star rating")       },
                             { keys: ["P"],      desc: qsTr("Panorama mode")         },
                             { keys: ["Esc"],    desc: qsTr("Exit slideshow")        },
                             { keys: ["?"],      desc: qsTr("Help")                  }

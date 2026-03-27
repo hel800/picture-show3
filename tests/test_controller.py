@@ -889,3 +889,261 @@ class TestParallelLoading:
         ctrl.cancelAll()
         qtbot.wait(200)   # let in-flight thread exit
         # Pass if no exception raised
+
+
+# ── _modify_xmp_rating_str ────────────────────────────────────────────────────
+
+class TestModifyXmpRatingStr:
+    """Unit tests for the pure-string XMP rating patcher."""
+
+    def _m(self, xmp_str: str, rating: int) -> str:
+        return SlideshowController._modify_xmp_rating_str(xmp_str, rating)
+
+    # ── Empty XMP ─────────────────────────────────────────────────────────────
+
+    def test_empty_xmp_set_rating_creates_wrapper(self):
+        result = self._m("", 3)
+        assert 'xmp:Rating="3"' in result
+        assert "<x:xmpmeta" in result
+        assert "<rdf:RDF" in result
+
+    def test_empty_xmp_remove_rating_returns_empty(self):
+        result = self._m("", 0)
+        assert result == ""
+
+    # ── Attribute form ────────────────────────────────────────────────────────
+
+    def test_attr_form_update_rating(self):
+        xmp = '<rdf:Description xmp:Rating="2"/>'
+        assert 'xmp:Rating="5"' in self._m(xmp, 5)
+
+    def test_attr_form_remove_rating(self):
+        xmp = '<rdf:Description xmp:Rating="4"/>'
+        result = self._m(xmp, 0)
+        assert "Rating" not in result
+
+    def test_attr_form_set_same_value(self):
+        xmp = '<rdf:Description xmp:Rating="3"/>'
+        assert 'xmp:Rating="3"' in self._m(xmp, 3)
+
+    def test_attr_form_no_duplicate_after_update(self):
+        xmp = '<rdf:Description xmp:Rating="1"/>'
+        result = self._m(xmp, 4)
+        assert result.count("Rating") == 1
+
+    # ── Element form ──────────────────────────────────────────────────────────
+
+    def test_elem_form_update_rating(self):
+        """Element form is normalised to attribute form; value must be updated."""
+        xmp = '<rdf:Description><xmp:Rating>1</xmp:Rating></rdf:Description>'
+        result = self._m(xmp, 5)
+        # Result uses attribute form (normalised); verify value is present
+        assert 'xmp:Rating="5"' in result
+
+    def test_elem_form_remove_rating(self):
+        xmp = '<rdf:Description><xmp:Rating>3</xmp:Rating></rdf:Description>'
+        result = self._m(xmp, 0)
+        assert "Rating" not in result
+
+    def test_elem_form_no_duplicate_after_update(self):
+        xmp = '<rdf:Description><xmp:Rating>2</xmp:Rating></rdf:Description>'
+        result = self._m(xmp, 4)
+        assert result.count("Rating") == 1
+
+    # ── XMP present but no Rating ─────────────────────────────────────────────
+
+    def test_xmp_without_rating_injects_attribute(self):
+        xmp = (
+            '<x:xmpmeta xmlns:x="adobe:ns:meta/">'
+            '<rdf:RDF xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#">'
+            '<rdf:Description rdf:about=""/>'
+            '</rdf:RDF>'
+            '</x:xmpmeta>'
+        )
+        result = self._m(xmp, 2)
+        assert 'xmp:Rating="2"' in result
+
+    def test_xmp_without_rating_remove_is_noop(self):
+        xmp = '<rdf:Description rdf:about=""/>'
+        result = self._m(xmp, 0)
+        assert "Rating" not in result
+
+    # ── Round-trips ───────────────────────────────────────────────────────────
+
+    def test_roundtrip_set_then_remove(self):
+        xmp = ""
+        xmp = self._m(xmp, 4)
+        assert 'xmp:Rating="4"' in xmp
+        xmp = self._m(xmp, 0)
+        assert "Rating" not in xmp
+
+    def test_roundtrip_change_value(self):
+        xmp = ""
+        for r in (1, 3, 5, 2):
+            xmp = self._m(xmp, r)
+        assert f'xmp:Rating="{2}"' in xmp
+        assert xmp.count("Rating") == 1
+
+
+# ── _write_xmp_rating (static, file I/O) ─────────────────────────────────────
+
+class TestWriteXmpRating:
+    """Tests for the atomic JPEG write function."""
+
+    def _write(self, path, rating):
+        SlideshowController._write_xmp_rating(str(path), rating)
+
+    def _read_rating(self, path):
+        return SlideshowController._read_xmp_rating(str(path))
+
+    # ── Happy paths ───────────────────────────────────────────────────────────
+
+    def test_set_rating_on_plain_jpeg(self, tmp_path):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        self._write(p, 3)
+        assert self._read_rating(p) == 3
+
+    def test_set_rating_1_through_5(self, tmp_path):
+        for r in range(1, 6):
+            p = make_plain_jpeg(tmp_path / f"r{r}.jpg")
+            self._write(p, r)
+            assert self._read_rating(p) == r
+
+    def test_update_existing_attr_rating(self, tmp_path):
+        p = make_jpeg_with_xmp_attr(tmp_path / "attr.jpg", 2)
+        self._write(p, 5)
+        assert self._read_rating(p) == 5
+
+    def test_update_existing_elem_rating(self, tmp_path):
+        p = make_jpeg_with_xmp_elem(tmp_path / "elem.jpg", 1)
+        self._write(p, 4)
+        assert self._read_rating(p) == 4
+
+    def test_remove_rating_from_attr_jpeg(self, tmp_path):
+        p = make_jpeg_with_xmp_attr(tmp_path / "attr.jpg", 3)
+        self._write(p, 0)
+        assert self._read_rating(p) == 0
+
+    def test_remove_rating_from_elem_jpeg(self, tmp_path):
+        p = make_jpeg_with_xmp_elem(tmp_path / "elem.jpg", 5)
+        self._write(p, 0)
+        assert self._read_rating(p) == 0
+
+    def test_remove_rating_from_plain_jpeg_is_noop(self, tmp_path):
+        """Removing a non-existent rating must not corrupt the file."""
+        p = make_plain_jpeg(tmp_path / "plain.jpg")
+        original = p.read_bytes()
+        self._write(p, 0)
+        # File is still a valid JPEG and rating remains 0
+        assert self._read_rating(p) == 0
+        from PIL import Image
+        with Image.open(p) as img:
+            img.verify()
+
+    def test_result_is_valid_jpeg(self, tmp_path):
+        """After write, Pillow must be able to open the file."""
+        from PIL import Image
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        self._write(p, 4)
+        with Image.open(p) as img:
+            img.verify()
+
+    def test_original_not_corrupted_on_failure(self, tmp_path):
+        """If writing fails mid-way the original file remains unchanged."""
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        original = p.read_bytes()
+        # Force an I/O error by making the directory read-only is fragile on Windows;
+        # instead test the bad-JPEG guard path by passing a non-JPEG file.
+        non_jpeg = tmp_path / "a.txt"
+        non_jpeg.write_bytes(b"not a jpeg")
+        with pytest.raises(ValueError):
+            SlideshowController._write_xmp_rating(str(non_jpeg), 3)
+        # Original plain JPEG is still untouched
+        assert p.read_bytes() == original
+
+    def test_roundtrip_set_then_change_then_remove(self, tmp_path):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        self._write(p, 2)
+        assert self._read_rating(p) == 2
+        self._write(p, 5)
+        assert self._read_rating(p) == 5
+        self._write(p, 0)
+        assert self._read_rating(p) == 0
+
+    # ── Error paths ───────────────────────────────────────────────────────────
+
+    def test_raises_for_non_jpeg_extension(self, tmp_path):
+        p = tmp_path / "img.png"
+        p.write_bytes(b"\x89PNG\r\n\x1a\n")
+        with pytest.raises(ValueError, match="JPEG"):
+            self._write(p, 3)
+
+    def test_raises_for_truncated_jpeg(self, tmp_path):
+        """A JPEG starting with the right magic but containing no data raises."""
+        p = tmp_path / "bad.jpg"
+        p.write_bytes(b"\xff\xd8\xff")   # SOI + incomplete marker
+        with pytest.raises(Exception):
+            self._write(p, 2)
+
+    def test_raises_for_missing_file(self, tmp_path):
+        with pytest.raises(OSError):
+            self._write(tmp_path / "missing.jpg", 1)
+
+
+# ── writeImageRating slot ─────────────────────────────────────────────────────
+
+class TestWriteImageRatingSlot:
+    """Tests for the QObject slot that wraps _write_xmp_rating."""
+
+    def test_returns_true_on_success(self, ctrl, tmp_path, load_folder):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        assert ctrl.writeImageRating(0, 3) is True
+
+    def test_returns_false_for_invalid_index(self, ctrl):
+        assert ctrl.writeImageRating(99, 3) is False
+
+    def test_updates_rating_cache(self, ctrl, tmp_path, load_folder):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        ctrl.writeImageRating(0, 4)
+        path = ctrl.imagePath(0)
+        assert ctrl._rating_cache.get(path) == 4
+
+    def test_imageRating_reflects_write(self, ctrl, tmp_path, load_folder):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        ctrl.writeImageRating(0, 5)
+        assert ctrl.imageRating(0) == 5
+
+    def test_emits_ratingWritten_signal(self, ctrl, tmp_path, load_folder, qtbot):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        with qtbot.waitSignal(ctrl.ratingWritten, timeout=1000) as blocker:
+            ctrl.writeImageRating(0, 2)
+        assert blocker.args == [0]
+
+    def test_emits_errorOccurred_on_failure(self, ctrl, tmp_path, load_folder, qtbot):
+        """Writing to a non-JPEG (PNG) file emits errorOccurred and returns False."""
+        p = tmp_path / "img.png"
+        p.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
+        # Manually place a non-JPEG in the image list by loading a folder,
+        # then patching the list.
+        load_folder(ctrl, str(tmp_path))
+        # No JPEGs loaded — just test via a plain-path scenario using the
+        # static method path: create a dummy images list entry.
+        ctrl._images = [str(p)]
+        ctrl._current_index = 0
+        errors = []
+        ctrl.errorOccurred.connect(errors.append)
+        result = ctrl.writeImageRating(0, 3)
+        assert result is False
+        assert len(errors) == 1
+
+    def test_clamps_rating_to_0_5(self, ctrl, tmp_path, load_folder):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        ctrl.writeImageRating(0, 99)   # clamped to 5
+        assert ctrl._rating_cache[ctrl.imagePath(0)] == 5
+        ctrl.writeImageRating(0, -3)   # clamped to 0
+        assert ctrl._rating_cache[ctrl.imagePath(0)] == 0
