@@ -264,6 +264,10 @@ Rectangle {
                 ratingDimIn.stop(); ratingDimOut.start()
                 _ratingWasPlaying = false   // navigation started autoplay-resume already
             }
+            if (captionOverlay.visible) {
+                captionDimIn.stop(); captionDimOut.start()
+                _captionWasPlaying = false  // navigation started; do not resume play
+            }
             showImage(true)
         }
         function onRatingWritten(index) {
@@ -271,10 +275,26 @@ Rectangle {
             if (index === controller.currentIndex)
                 root.hudRating = Qt.binding(function() { return controller.imageRating(controller.currentIndex) })
         }
+        function onCaptionWritten(index) {
+            if (index === controller.currentIndex)
+                root.hudCaption = Qt.binding(function() { return controller.imageCaption(controller.currentIndex) })
+        }
     }
 
     // ── Keyboard control ──────────────────────────────────────────────────────
     Keys.onPressed: function(event) {
+        // Caption popup is open — TextInput handles Enter/Esc/Tab; absorb everything else
+        if (captionOverlay.visible) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                confirmCaption()
+            else if (event.key === Qt.Key_Escape)
+                closeCaption()
+            else if (event.key === Qt.Key_F)
+                toggleFullscreen()
+            event.accepted = true
+            return
+        }
+
         // Rating popup is open — handle its keys, absorb everything else
         if (ratingOverlay.visible) {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
@@ -344,6 +364,9 @@ Rectangle {
         case Qt.Key_3: case Qt.Key_4: case Qt.Key_5:
             openRating(event.key - Qt.Key_0)
             break
+        case Qt.Key_C:
+            openCaption()
+            break
         case Qt.Key_Escape:
             if (root._exifVisible) {
                 root._exifVisible = false
@@ -403,6 +426,10 @@ Rectangle {
 
     property bool _jumpWasPlaying: false
 
+    // ── Caption popup state ───────────────────────────────────────────────────
+    property bool _captionWasPlaying : false
+    property real _lastTabMs         : 0     // timestamp of last Tab press (ms)
+
     // ── Rating popup state ────────────────────────────────────────────────────
     property bool _ratingWasPlaying  : false
     property int  _pendingRating     : 0
@@ -425,6 +452,31 @@ Rectangle {
             root._exifVisible = false
             exifPanel.close()
         }
+    }
+
+    function openCaption() {
+        if (!controller.imageCount) return
+        _closeExifIfOpen()
+        _captionWasPlaying = controller.isPlaying
+        if (controller.isPlaying) controller.togglePlay()
+        captionInput.text = controller.imageCaption(controller.currentIndex)
+        root._lastTabMs = 0
+        captionOverlay.visible = true
+        captionDimIn.start()
+        captionInput.forceActiveFocus()
+        captionInput.selectAll()
+    }
+
+    function closeCaption() {
+        captionDimIn.stop(); captionDimOut.start()   // visible = false fires in onStopped
+        if (_captionWasPlaying) controller.togglePlay()
+        _captionWasPlaying = false
+        root.forceActiveFocus()
+    }
+
+    function confirmCaption() {
+        controller.writeImageCaption(controller.currentIndex, captionInput.text)
+        closeCaption()
     }
 
     function openRating(r) {
@@ -925,6 +977,121 @@ Rectangle {
                     Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("cancel"); color: Theme.textDisabled; font.pixelSize: 11 }
                     Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
                     Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("0–5 change"); color: Theme.textDisabled; font.pixelSize: 11 }
+                }
+            }
+        }
+    }
+
+    // ── Edit-caption popup ────────────────────────────────────────────────────
+    Item {
+        id: captionOverlay
+        anchors.fill: parent
+        visible: false
+        z: 30
+
+        Rectangle {
+            id: captionDimBg
+            anchors.fill: parent
+            color: "black"
+            opacity: 0
+            NumberAnimation { id: captionDimIn;  target: captionDimBg; property: "opacity"; to: 0.45; duration: 200; easing.type: Easing.OutQuad }
+            NumberAnimation { id: captionDimOut; target: captionDimBg; property: "opacity"; to: 0;    duration: 200; easing.type: Easing.InQuad
+                onStopped: captionOverlay.visible = false }
+        }
+
+        Rectangle {
+            id: captionBox
+            width: Math.min(parent.width - 40, 480)
+            height: captionLayout.implicitHeight + 40
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: parent.height * 5 / 6 - height / 2
+            radius: 18
+            color: Qt.rgba(0, 0, 0, 0.82)
+            border.color: Qt.rgba(1, 1, 1, 0.4)
+            border.width: 1
+
+            ColumnLayout {
+                id: captionLayout
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 20 }
+                spacing: 14
+
+                // Header row: icon + label
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 14
+
+                    ThemedIcon {
+                        source: "../img/icon_picture.svg"
+                        size: 36
+                        iconColor: Theme.textMuted
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Text {
+                        text: qsTr("EDIT CAPTION")
+                        color: Theme.textMuted
+                        font.pixelSize: 10
+                        font.weight: Font.Medium
+                        font.letterSpacing: 1.4
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+                }
+
+                // Text input field
+                Rectangle {
+                    Layout.fillWidth: true
+                    height: 38
+                    radius: 8
+                    color: Qt.rgba(1, 1, 1, 0.08)
+                    border.color: Qt.rgba(1, 1, 1, 0.25)
+                    border.width: 1
+
+                    TextInput {
+                        id: captionInput
+                        anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter; margins: 10 }
+                        color: Theme.textPrimary
+                        font.pixelSize: 14
+                        selectionColor: Theme.accent
+                        selectedTextColor: "white"
+                        clip: true
+
+                        Keys.onReturnPressed: confirmCaption()
+                        Keys.onEnterPressed:  confirmCaption()
+                        Keys.onEscapePressed: closeCaption()
+                        Keys.onPressed: function(event) {
+                            if (event.key === Qt.Key_Tab) {
+                                var now = Date.now()
+                                if (now - root._lastTabMs < 600) {
+                                    // Double-tab within 600 ms: copy previous image's caption
+                                    var prevIdx = controller.currentIndex > 0
+                                                  ? controller.currentIndex - 1
+                                                  : controller.imageCount - 1
+                                    captionInput.text = controller.imageCaption(prevIdx)
+                                    captionInput.selectAll()
+                                    root._lastTabMs = 0   // reset so triple-tab doesn't trigger
+                                } else {
+                                    root._lastTabMs = now
+                                }
+                                event.accepted = true
+                            } else if (event.key === Qt.Key_F) {
+                                toggleFullscreen()
+                                event.accepted = true
+                            }
+                        }
+                    }
+                }
+
+                // Key hints
+                Row {
+                    spacing: 6
+                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("save"); color: Theme.textDisabled; font.pixelSize: 11 }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("cancel"); color: Theme.textDisabled; font.pixelSize: 11 }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+                    KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Tab Tab" }
+                    Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("copy prev caption"); color: Theme.textDisabled; font.pixelSize: 11 }
                 }
             }
         }
