@@ -23,6 +23,7 @@ Rectangle {
     property string hudCaption : controller.imageCaption(controller.currentIndex)
     property int    hudRating  : controller.imageRating(controller.currentIndex)
     property bool   _exifVisible: false
+    property bool   _exiting    : false   // set on exit to suppress the play/pause popup
 
     onWidthChanged:  if (panoramaActive) _panoramaAbort()
     onHeightChanged: if (panoramaActive) _panoramaAbort()
@@ -372,6 +373,7 @@ Rectangle {
                 root._exifVisible = false
                 exifPanel.close()
             } else {
+                root._exiting = true
                 root.exitShow()
             }
             break
@@ -651,9 +653,11 @@ Rectangle {
 
     // Show the play/pause popup whenever the playing state changes
     // (keyboard, remote control, or any other source).
+    // Guard against the stopShow() call that fires during exit — that
+    // isPlayingChanged emission must not show the popup on the settings page.
     Connections {
         target: controller
-        function onIsPlayingChanged() { playPauseAnim.restart() }
+        function onIsPlayingChanged() { if (!root._exiting) playPauseAnim.restart() }
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────
