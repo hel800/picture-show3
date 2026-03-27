@@ -226,7 +226,12 @@
         <translation>Définir la note étoile</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="232"/>
+        <location filename="../qml/HelpOverlay.qml" line="231"/>
+        <source>Edit caption</source>
+        <translation>Modifier la légende</translation>
+    </message>
+    <message>
+        <location filename="../qml/HelpOverlay.qml" line="233"/>
         <source>Exit slideshow</source>
         <translation>Quitter le diaporama</translation>
     </message>
@@ -252,7 +257,7 @@
     </message>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="173"/>
-        <location filename="../qml/HelpOverlay.qml" line="233"/>
+        <location filename="../qml/HelpOverlay.qml" line="234"/>
         <source>Help</source>
         <translation>Aide</translation>
     </message>
@@ -281,7 +286,7 @@
         <translation>Aller à l&apos;image</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="231"/>
+        <location filename="../qml/HelpOverlay.qml" line="232"/>
         <source>Panorama mode</source>
         <translation>Mode panorama</translation>
     </message>
@@ -290,17 +295,17 @@
         <translation type="vanished">Quitter le diaporama</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="275"/>
+        <location filename="../qml/HelpOverlay.qml" line="276"/>
         <source>Press</source>
         <translation>Appuyez sur</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="277"/>
+        <location filename="../qml/HelpOverlay.qml" line="278"/>
         <source>or</source>
         <translation>ou</translation>
     </message>
     <message>
-        <location filename="../qml/HelpOverlay.qml" line="279"/>
+        <location filename="../qml/HelpOverlay.qml" line="280"/>
         <source>to close</source>
         <translation>pour fermer</translation>
     </message>
@@ -630,111 +635,116 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="432"/>
+        <location filename="../slideshow_controller.py" line="433"/>
         <source>Folder not found: {}</source>
         <translation>Dossier introuvable : {}</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="818"/>
+        <location filename="../slideshow_controller.py" line="819"/>
         <source>Not defined</source>
         <translation>Non défini</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="819"/>
+        <location filename="../slideshow_controller.py" line="820"/>
         <source>Manual</source>
         <translation>Manuel</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="820"/>
+        <location filename="../slideshow_controller.py" line="821"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="821"/>
+        <location filename="../slideshow_controller.py" line="822"/>
         <source>Aperture priority</source>
         <translation>Priorité ouverture</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="822"/>
+        <location filename="../slideshow_controller.py" line="823"/>
         <source>Shutter priority</source>
         <translation>Priorité vitesse</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="823"/>
+        <location filename="../slideshow_controller.py" line="824"/>
         <source>Creative</source>
         <translation>Créatif</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="824"/>
+        <location filename="../slideshow_controller.py" line="825"/>
         <source>Action</source>
         <translation>Action</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="825"/>
+        <location filename="../slideshow_controller.py" line="826"/>
         <source>Portrait</source>
         <translation>Portrait</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="826"/>
+        <location filename="../slideshow_controller.py" line="827"/>
         <source>Landscape</source>
         <translation>Paysage</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="855"/>
+        <location filename="../slideshow_controller.py" line="856"/>
         <source>Camera</source>
         <translation>Appareil</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="862"/>
+        <location filename="../slideshow_controller.py" line="863"/>
         <source>Aperture</source>
         <translation>Ouverture</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="873"/>
-        <location filename="../slideshow_controller.py" line="875"/>
+        <location filename="../slideshow_controller.py" line="874"/>
+        <location filename="../slideshow_controller.py" line="876"/>
         <source>Shutter</source>
         <translation>Vitesse</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="885"/>
+        <location filename="../slideshow_controller.py" line="886"/>
         <source>ISO</source>
         <translation>ISO</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="893"/>
+        <location filename="../slideshow_controller.py" line="894"/>
         <source>Focal length</source>
         <translation>Focale</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="900"/>
+        <location filename="../slideshow_controller.py" line="901"/>
         <source>Exposure</source>
         <translation>Programme</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="906"/>
+        <location filename="../slideshow_controller.py" line="907"/>
         <source>Flash</source>
         <translation>Flash</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="906"/>
+        <location filename="../slideshow_controller.py" line="907"/>
         <source>Fired</source>
         <translation>Déclenché</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="906"/>
+        <location filename="../slideshow_controller.py" line="907"/>
         <source>Did not fire</source>
         <translation>Non déclenché</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="914"/>
-        <location filename="../slideshow_controller.py" line="916"/>
+        <location filename="../slideshow_controller.py" line="915"/>
+        <location filename="../slideshow_controller.py" line="917"/>
         <source>Dimensions</source>
         <translation>Dimensions</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="989"/>
+        <location filename="../slideshow_controller.py" line="990"/>
         <source>Could not save rating: %1</source>
         <translation>Impossible d&apos;enregistrer la note : %1</translation>
+    </message>
+    <message>
+        <location filename="../slideshow_controller.py" line="1192"/>
+        <source>Could not save caption: %1</source>
+        <translation>Impossible d&apos;enregistrer la légende : %1</translation>
     </message>
 </context>
 <context>
@@ -752,73 +762,89 @@
         <translation type="vanished">quitter</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="642"/>
+        <location filename="../qml/SlideshowPage.qml" line="694"/>
         <source>AUTOPLAY</source>
         <translation>LECTURE AUTO</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="650"/>
+        <location filename="../qml/SlideshowPage.qml" line="702"/>
         <source>Play (%1 s)</source>
         <translation>Lecture (%1 s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="651"/>
+        <location filename="../qml/SlideshowPage.qml" line="703"/>
         <source>Pause</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="713"/>
+        <location filename="../qml/SlideshowPage.qml" line="765"/>
         <source>JUMP TO IMAGE</source>
         <translation>ALLER À L&apos;IMAGE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="778"/>
+        <location filename="../qml/SlideshowPage.qml" line="830"/>
         <source>go</source>
         <translation>aller</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="781"/>
-        <location filename="../qml/SlideshowPage.qml" line="925"/>
+        <location filename="../qml/SlideshowPage.qml" line="833"/>
+        <location filename="../qml/SlideshowPage.qml" line="977"/>
+        <location filename="../qml/SlideshowPage.qml" line="1091"/>
         <source>cancel</source>
         <translation>annuler</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="878"/>
+        <location filename="../qml/SlideshowPage.qml" line="930"/>
         <source>RATE IMAGE</source>
         <translation>NOTER L&apos;IMAGE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="887"/>
+        <location filename="../qml/SlideshowPage.qml" line="939"/>
         <source>Remove rating</source>
         <translation>Supprimer la note</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="888"/>
+        <location filename="../qml/SlideshowPage.qml" line="940"/>
         <source>%1 star(s)</source>
         <translation>%1 étoile(s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="922"/>
+        <location filename="../qml/SlideshowPage.qml" line="974"/>
         <source>confirm</source>
         <translation>confirmer</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="927"/>
+        <location filename="../qml/SlideshowPage.qml" line="979"/>
         <source>0–5 change</source>
         <translation>0–5 modifier</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="381"/>
+        <location filename="../qml/SlideshowPage.qml" line="1031"/>
+        <source>EDIT CAPTION</source>
+        <translation>MODIFIER LA LÉGENDE</translation>
+    </message>
+    <message>
+        <location filename="../qml/SlideshowPage.qml" line="1088"/>
+        <source>save</source>
+        <translation>enregistrer</translation>
+    </message>
+    <message>
+        <location filename="../qml/SlideshowPage.qml" line="1094"/>
+        <source>copy prev caption</source>
+        <translation>Copier légende préc.</translation>
+    </message>
+    <message>
+        <location filename="../qml/SlideshowPage.qml" line="404"/>
         <source>Rating</source>
         <translation>Évaluation</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="385"/>
+        <location filename="../qml/SlideshowPage.qml" line="408"/>
         <source>Date taken</source>
         <translation>Date de prise de vue</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="388"/>
+        <location filename="../qml/SlideshowPage.qml" line="411"/>
         <source>Caption</source>
         <translation>Légende</translation>
     </message>
