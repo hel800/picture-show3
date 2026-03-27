@@ -37,6 +37,33 @@ def make_plain_jpeg(path: Path, size: tuple[int, int] = (16, 16)) -> Path:
     return path
 
 
+def _inject_app13(jpeg_bytes: bytes, payload: bytes) -> bytes:
+    """Insert an APP13 block immediately after the JPEG SOI marker (FF D8)."""
+    seg_len = len(payload) + 2          # length field includes itself
+    marker = b"\xff\xed" + struct.pack(">H", seg_len) + payload
+    return jpeg_bytes[:2] + marker + jpeg_bytes[2:]
+
+
+def _build_iptc_caption_payload(caption: str) -> bytes:
+    """Build a Photoshop 3.0 APP13 payload containing a single IPTC (2,120) record."""
+    caption_bytes = caption.encode("utf-8")
+    # IPTC record: 0x1c + record(2) + dataset(120=0x78) + 2-byte big-endian length + data
+    iptc_record = b"\x1c\x02\x78" + struct.pack(">H", len(caption_bytes)) + caption_bytes
+    # 8BIM block: "8BIM" + type 0x0404 + empty pascal name (b"\x00\x00")
+    #             + 4-byte data length + IPTC data (padded to even)
+    iptc_padded = iptc_record + (b"\x00" if len(iptc_record) % 2 else b"")
+    bim_block = b"8BIM\x04\x04\x00\x00" + struct.pack(">I", len(iptc_record)) + iptc_padded
+    return b"Photoshop 3.0\x00" + bim_block
+
+
+def make_jpeg_with_iptc_caption(path: Path, caption: str) -> Path:
+    """JPEG with an IPTC Caption/Abstract (2:120) in an APP13 Photoshop 3.0 segment."""
+    buf = io.BytesIO()
+    Image.new("RGB", (4, 4)).save(buf, format="JPEG")
+    path.write_bytes(_inject_app13(buf.getvalue(), _build_iptc_caption_payload(caption)))
+    return path
+
+
 def _inject_app1(jpeg_bytes: bytes, payload: bytes) -> bytes:
     """Insert an APP1 block immediately after the JPEG SOI marker (FF D8)."""
     app1_len = len(payload) + 2          # length field includes itself

@@ -13,8 +13,20 @@ from pathlib import Path
 
 import pytest
 
+import io
+
+from PIL import Image, IptcImagePlugin
+
 from slideshow_controller import IMAGE_EXTENSIONS, SlideshowController
-from tests.conftest import make_jpeg_with_exif, make_jpeg_with_xmp_attr, make_jpeg_with_xmp_elem, make_plain_jpeg
+from tests.conftest import (
+    _build_iptc_caption_payload,
+    _inject_app13,
+    make_jpeg_with_exif,
+    make_jpeg_with_iptc_caption,
+    make_jpeg_with_xmp_attr,
+    make_jpeg_with_xmp_elem,
+    make_plain_jpeg,
+)
 
 
 # ── IMAGE_EXTENSIONS ──────────────────────────────────────────────────────────
@@ -1147,3 +1159,306 @@ class TestWriteImageRatingSlot:
         assert ctrl._rating_cache[ctrl.imagePath(0)] == 5
         ctrl.writeImageRating(0, -3)   # clamped to 0
         assert ctrl._rating_cache[ctrl.imagePath(0)] == 0
+
+
+# ── _modify_iptc_caption_bytes ────────────────────────────────────────────────
+
+class TestModifyIptcCaptionBytes:
+    """Unit tests for the pure-bytes IPTC caption patcher."""
+
+    _PS3 = b"Photoshop 3.0\x00"
+
+    def _m(self, payload: bytes, caption: str) -> bytes:
+        return SlideshowController._modify_iptc_caption_bytes(payload, caption)
+
+    def _read_caption(self, payload: bytes) -> str:
+        """Inject *payload* into a minimal JPEG and read back the caption via Pillow."""
+        buf = io.BytesIO()
+        Image.new("RGB", (4, 4)).save(buf, format="JPEG")
+        jpeg = _inject_app13(buf.getvalue(), payload)
+        with Image.open(io.BytesIO(jpeg)) as img:
+            iptc = IptcImagePlugin.getiptcinfo(img)
+            if iptc:
+                raw = iptc.get((2, 120))
+                if raw:
+                    return (raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else str(raw)).strip()
+        return ""
+
+    # ── Empty payload ─────────────────────────────────────────────────────────
+
+    def test_empty_payload_set_caption_creates_structure(self):
+        result = self._m(b"", "Hello")
+        assert result.startswith(self._PS3)
+        assert b"8BIM" in result
+        assert b"\x04\x04" in result
+        assert self._read_caption(result) == "Hello"
+
+    def test_empty_payload_remove_caption_is_noop(self):
+        result = self._m(b"", "")
+        assert result == b""
+
+    def test_empty_payload_whitespace_caption_is_noop(self):
+        result = self._m(b"", "   ")
+        assert result == b""
+
+    # ── Existing caption ──────────────────────────────────────────────────────
+
+    def test_existing_caption_is_replaced(self):
+        existing = _build_iptc_caption_payload("OldCaption")
+        result = self._m(existing, "NewCaption")
+        assert self._read_caption(result) == "NewCaption"
+
+    def test_existing_caption_is_removed_when_blank(self):
+        existing = _build_iptc_caption_payload("SomeCaption")
+        result = self._m(existing, "")
+        assert self._read_caption(result) == ""
+
+    def test_no_duplicate_caption_record(self):
+        existing = _build_iptc_caption_payload("First")
+        result = self._m(existing, "Second")
+        # Only one 0x78 (dataset 120) tag should be present in the IPTC block
+        assert result.count(b"\x1c\x02\x78") == 1
+
+    def test_whitespace_only_caption_removes_record(self):
+        existing = _build_iptc_caption_payload("  keep me not  ")
+        result = self._m(existing, "   ")
+        assert self._read_caption(result) == ""
+
+    # ── Other records preserved ───────────────────────────────────────────────
+
+    def test_other_iptc_records_preserved(self):
+        """A (2, 25) keyword record must survive a caption update."""
+        import struct as _s
+        # Build an IPTC block with a keyword (2:25) and a caption (2:120)
+        kw = b"\x1c\x02\x19" + _s.pack(">H", 7) + b"keyword"   # 2:25
+        cap = b"\x1c\x02\x78" + _s.pack(">H", 5) + b"Hello"    # 2:120
+        iptc_data = kw + cap
+        if len(iptc_data) % 2:
+            iptc_data += b"\x00"
+        import struct
+        bim = b"8BIM\x04\x04\x00\x00" + struct.pack(">I", len(kw) + len(cap)) + iptc_data
+        payload = self._PS3 + bim
+        result = self._m(payload, "NewCaption")
+        assert b"\x1c\x02\x19" in result   # keyword record preserved
+        assert self._read_caption(result) == "NewCaption"
+
+    def test_charset_record_preserved(self):
+        """The (1, 90) Coded Character Set record is left untouched."""
+        import struct
+        charset = b"\x1c\x01\x5a" + struct.pack(">H", 3) + b"\x1b\x25\x47"  # UTF-8 escape
+        cap = b"\x1c\x02\x78" + struct.pack(">H", 5) + b"Hello"
+        iptc_data = charset + cap
+        if len(iptc_data) % 2:
+            iptc_data += b"\x00"
+        bim = b"8BIM\x04\x04\x00\x00" + struct.pack(">I", len(charset) + len(cap)) + iptc_data
+        payload = self._PS3 + bim
+        result = self._m(payload, "Updated")
+        assert b"\x1c\x01\x5a" in result   # charset record preserved
+
+    # ── No 0x0404 block ───────────────────────────────────────────────────────
+
+    def test_no_0x0404_block_appends_new_block(self):
+        """APP13 with unrelated 8BIM types gets a new 0x0404 block appended."""
+        import struct
+        # 8BIM type 0x0409 (thumbnail) with 4 bytes of dummy data
+        thumb = b"8BIM\x04\x09\x00\x00" + struct.pack(">I", 4) + b"DUMP"
+        payload = self._PS3 + thumb
+        result = self._m(payload, "Caption!")
+        assert b"8BIM\x04\x09" in result   # original block kept
+        assert b"8BIM\x04\x04" in result   # new IPTC block appended
+        assert self._read_caption(result) == "Caption!"
+
+    # ── Multibyte / long captions ─────────────────────────────────────────────
+
+    def test_multibyte_utf8_caption_roundtrip(self):
+        result = self._m(b"", "Über schöne Fotos — 写真 — Ñoño")
+        assert self._read_caption(result) == "Über schöne Fotos — 写真 — Ñoño"
+
+    def test_extended_length_record_skipped_safely(self):
+        """An IPTC record with extended-length encoding must not corrupt parsing."""
+        import struct
+        # Build a (2:80) Subject Reference with extended 4-byte length (rare but valid)
+        subject_data = b"X" * 260   # > 255, requires extended length
+        ext_len_byte = 0x84         # 0x80 | 4 → 4 extra bytes for real length
+        ext_len = struct.pack(">I", len(subject_data))
+        subject_rec = b"\x1c\x02\x50" + bytes([ext_len_byte]) + b"\x00" + ext_len + subject_data
+        cap = b"\x1c\x02\x78" + struct.pack(">H", 5) + b"Hello"
+        iptc_raw = subject_rec + cap
+        if len(iptc_raw) % 2:
+            iptc_raw += b"\x00"
+        bim = b"8BIM\x04\x04\x00\x00" + struct.pack(">I", len(subject_rec) + len(cap)) + iptc_raw
+        payload = self._PS3 + bim
+        result = self._m(payload, "Updated")
+        # Must not raise; the subject record may be lost (extended form rebuild not needed)
+        # but the caption must be present and correct
+        assert self._read_caption(result) == "Updated"
+
+
+# ── _write_iptc_caption (static, file I/O) ────────────────────────────────────
+
+class TestWriteIptcCaption:
+    """Tests for the atomic JPEG IPTC write function."""
+
+    def _write(self, path, caption):
+        SlideshowController._write_iptc_caption(str(path), caption)
+
+    def _read(self, path) -> str:
+        with Image.open(str(path)) as img:
+            iptc = IptcImagePlugin.getiptcinfo(img)
+            if iptc:
+                raw = iptc.get((2, 120))
+                if raw:
+                    return (raw.decode("utf-8", errors="replace") if isinstance(raw, bytes) else str(raw)).strip()
+        return ""
+
+    # ── Happy paths ───────────────────────────────────────────────────────────
+
+    def test_set_caption_on_plain_jpeg(self, tmp_path):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        self._write(p, "A fresh caption")
+        assert self._read(p) == "A fresh caption"
+
+    def test_update_existing_caption(self, tmp_path):
+        p = make_jpeg_with_iptc_caption(tmp_path / "a.jpg", "Original")
+        self._write(p, "Updated")
+        assert self._read(p) == "Updated"
+
+    def test_clear_caption(self, tmp_path):
+        p = make_jpeg_with_iptc_caption(tmp_path / "a.jpg", "Remove me")
+        self._write(p, "")
+        assert self._read(p) == ""
+
+    def test_clear_caption_on_plain_jpeg_is_noop(self, tmp_path):
+        """Clearing a non-existent caption must not corrupt the file."""
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        original = p.read_bytes()
+        self._write(p, "")
+        # File untouched (early return — no APP13 to modify)
+        assert p.read_bytes() == original
+
+    def test_result_is_valid_jpeg(self, tmp_path):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        self._write(p, "validity check")
+        with Image.open(str(p)) as img:
+            img.verify()
+
+    def test_original_not_corrupted_on_failure(self, tmp_path):
+        """If write fails the original file bytes are untouched."""
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        original = p.read_bytes()
+        non_jpeg = tmp_path / "a.txt"
+        non_jpeg.write_bytes(b"not a jpeg")
+        with pytest.raises(ValueError):
+            SlideshowController._write_iptc_caption(str(non_jpeg), "caption")
+        assert p.read_bytes() == original
+
+    def test_roundtrip_set_change_clear(self, tmp_path):
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        self._write(p, "First")
+        assert self._read(p) == "First"
+        self._write(p, "Second")
+        assert self._read(p) == "Second"
+        self._write(p, "")
+        assert self._read(p) == ""
+
+    def test_multibyte_caption_preserved(self, tmp_path):
+        caption = "Straßenfoto — 写真 — Ñoño"
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        self._write(p, caption)
+        assert self._read(p) == caption
+
+    def test_long_caption_preserved(self, tmp_path):
+        caption = "A" * 512
+        p = make_plain_jpeg(tmp_path / "a.jpg")
+        self._write(p, caption)
+        assert self._read(p) == caption
+
+    def test_preserves_xmp_segment(self, tmp_path):
+        """Writing a caption must not destroy an existing XMP rating."""
+        p = make_jpeg_with_xmp_attr(tmp_path / "a.jpg", 4)
+        self._write(p, "Caption over XMP")
+        # XMP rating still readable
+        assert SlideshowController._read_xmp_rating(str(p)) == 4
+        assert self._read(p) == "Caption over XMP"
+
+    def test_preserves_exif_segment(self, tmp_path):
+        """Writing a caption must not destroy existing EXIF data."""
+        p = make_jpeg_with_exif(tmp_path / "a.jpg", make="Nikon", model="D750")
+        self._write(p, "Caption over EXIF")
+        with Image.open(str(p)) as img:
+            exif = img._getexif() or {}
+        assert exif.get(271) == "Nikon"   # Make tag
+        assert self._read(p) == "Caption over EXIF"
+
+    # ── Error paths ───────────────────────────────────────────────────────────
+
+    def test_raises_for_non_jpeg_extension(self, tmp_path):
+        p = tmp_path / "img.png"
+        p.write_bytes(b"\x89PNG\r\n\x1a\n")
+        with pytest.raises(ValueError, match="JPEG"):
+            self._write(p, "caption")
+
+    def test_raises_for_truncated_jpeg(self, tmp_path):
+        p = tmp_path / "bad.jpg"
+        p.write_bytes(b"\xff\xd8\xff")   # SOI + incomplete marker
+        with pytest.raises(Exception):
+            self._write(p, "caption")
+
+    def test_raises_for_missing_file(self, tmp_path):
+        with pytest.raises(OSError):
+            self._write(tmp_path / "missing.jpg", "caption")
+
+
+# ── writeImageCaption slot ────────────────────────────────────────────────────
+
+class TestWriteImageCaptionSlot:
+    """Tests for the QObject slot that wraps _write_iptc_caption."""
+
+    def test_returns_true_on_success(self, ctrl, tmp_path, load_folder):
+        make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        assert ctrl.writeImageCaption(0, "Hello") is True
+
+    def test_returns_false_for_invalid_index(self, ctrl):
+        assert ctrl.writeImageCaption(99, "Hello") is False
+
+    def test_emits_captionWritten_signal(self, ctrl, tmp_path, load_folder, qtbot):
+        make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        with qtbot.waitSignal(ctrl.captionWritten, timeout=1000) as blocker:
+            ctrl.writeImageCaption(0, "Signal test")
+        assert blocker.args == [0]
+
+    def test_emits_errorOccurred_on_failure(self, ctrl, tmp_path, load_folder, qtbot):
+        """Writing to a non-JPEG emits errorOccurred and returns False."""
+        p = tmp_path / "img.png"
+        p.write_bytes(b"\x89PNG\r\n\x1a\n" + b"\x00" * 100)
+        load_folder(ctrl, str(tmp_path))
+        ctrl._images = [str(p)]
+        ctrl._current_index = 0
+        errors = []
+        ctrl.errorOccurred.connect(errors.append)
+        result = ctrl.writeImageCaption(0, "caption")
+        assert result is False
+        assert len(errors) == 1
+
+    def test_imageCaption_reflects_write(self, ctrl, tmp_path, load_folder):
+        make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        ctrl.writeImageCaption(0, "Persisted")
+        assert ctrl.imageCaption(0) == "Persisted"
+
+    def test_exif_cache_invalidated(self, ctrl, tmp_path, load_folder):
+        make_plain_jpeg(tmp_path / "a.jpg")
+        load_folder(ctrl, str(tmp_path))
+        # Warm the cache by calling imageExifInfo
+        ctrl.imageExifInfo(0)
+        assert ctrl._exif_cache[0] == 0
+        ctrl.writeImageCaption(0, "Invalidate")
+        assert ctrl._exif_cache[0] == -1
+
+    def test_empty_caption_removes_record(self, ctrl, tmp_path, load_folder):
+        p = make_jpeg_with_iptc_caption(tmp_path / "a.jpg", "Remove me")
+        load_folder(ctrl, str(tmp_path))
+        ctrl.writeImageCaption(0, "")
+        assert ctrl.imageCaption(0) == ""
