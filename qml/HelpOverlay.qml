@@ -65,7 +65,7 @@ Popup {
         implicitHeight: contentCol.implicitHeight
 
         Keys.onPressed: function(event) {
-            if (event.key === Qt.Key_Question) {
+            if (event.key === Qt.Key_F1) {
                 root.close()
                 event.accepted = true
             } else if (event.key === Qt.Key_F) {
@@ -170,7 +170,7 @@ Popup {
                             { keys: ["V"],   desc: qsTr("Advanced settings")   },
                             { keys: ["F"],   desc: qsTr("Toggle fullscreen")   },
                             { keys: ["Esc"], desc: qsTr("Quit dialog")         },
-                            { keys: ["?"],   desc: qsTr("Help")                }
+                            { keys: ["F1"],  desc: qsTr("Help")                }
                         ]
                         RowLayout {
                             Layout.fillWidth: true
@@ -231,7 +231,7 @@ Popup {
                             { keys: ["C"],      desc: qsTr("Edit caption")          },
                             { keys: ["P"],      desc: qsTr("Panorama mode")         },
                             { keys: ["Esc"],    desc: qsTr("Exit slideshow")        },
-                            { keys: ["?"],      desc: qsTr("Help")                  }
+                            { keys: ["F1"],     desc: qsTr("Help")                  }
                         ]
                         RowLayout {
                             Layout.fillWidth: true
@@ -274,7 +274,7 @@ Popup {
                 Layout.alignment: Qt.AlignHCenter
                 spacing: 6
                 Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("Press"); color: Theme.textGhost; font.pixelSize: 11 }
-                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "?" }
+                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "F1" }
                 Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("or"); color: Theme.textGhost; font.pixelSize: 11 }
                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
                 Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("to close"); color: Theme.textGhost; font.pixelSize: 11 }

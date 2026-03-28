@@ -102,7 +102,7 @@ Item {
         case Qt.Key_V:
             advancedDialog.open()
             break
-        case Qt.Key_Question:
+        case Qt.Key_F1:
             root.openHelp()
             break
         default:
