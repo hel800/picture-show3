@@ -964,9 +964,11 @@ Rectangle {
 
     // ── Initialise first image ────────────────────────────────────────────────
     Component.onCompleted: {
-        // Correct cursor state: onStartShow always hides it, but on desktop in
-        // windowed mode the cursor should remain visible.
-        windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
+        // Always hide the cursor — the slideshow never wants it visible.
+        // (main.qml already called setCursorHidden(true) before the push, but
+        // on eglfs/RPi Window.visibility may still report Windowed even though
+        // the screen is fullscreen, so we must not make this conditional.)
+        windowHelper.setCursorHidden(true)
         showImage(false)
         // Setting visible = true after setCursorHidden creates a structural
         // scene-graph change that forces Qt to flush the cursor override
