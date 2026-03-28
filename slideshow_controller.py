@@ -105,6 +105,7 @@ class SlideshowController(QObject):
         self._all_images      : list[str]        = []
         self._min_rating      : int              = 0
         self._rating_cache    : dict[str, int]   = {}
+        self._date_cache      : dict[str, datetime] = {}
         self._exif_cache      : tuple[int, list] = (-1, [])  # (index, rows)
         self._language        : str              = "auto"
         self._update_check_enabled: bool         = True
@@ -298,6 +299,7 @@ class SlideshowController(QObject):
             self._images = []
             self._current_index = 0
             self._rating_cache = {}
+            self._date_cache = {}
             self._exif_cache = (-1, [])
             self.imagesChanged.emit()
             self.currentIndexChanged.emit()
@@ -310,6 +312,7 @@ class SlideshowController(QObject):
         self._images = []
         self._current_index = 0
         self._rating_cache = {}
+        self._date_cache = {}
         self._exif_cache = (-1, [])
         self.imagesChanged.emit()
         self.currentIndexChanged.emit()
@@ -404,29 +407,36 @@ class SlideshowController(QObject):
     def _parallel_date_sort(self, images: list[str], cancel: threading.Event,
                             max_workers: int = 8,
                             report_progress: bool = False) -> list[str] | None:
-        """Sort images by EXIF date using parallel reads.  Returns None if cancelled."""
+        """Sort images by EXIF date using parallel reads.  Returns None if cancelled.
+        Results are cached in self._date_cache so repeated sort switches are instant."""
         keyed: list[tuple[datetime, str]] = []
-        done = 0
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            futures = {pool.submit(SlideshowController._date_key, p): p for p in images}
-            for future in futures:
-                # Poll with short timeout so cancel checks happen frequently
-                while True:
-                    if cancel.is_set():
-                        pool.shutdown(wait=False, cancel_futures=True)
-                        return None
-                    try:
-                        dt = future.result(timeout=0.1)
-                        break
-                    except TimeoutError:
-                        continue
-                    except Exception:
-                        dt = datetime.min
-                        break
-                keyed.append((dt, futures[future]))
-                if report_progress:
+        to_read = [p for p in images if p not in self._date_cache]
+        done = len(images) - len(to_read)  # cached files count as already done
+
+        if to_read:
+            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                futures = {pool.submit(SlideshowController._date_key, p): p for p in to_read}
+                for future in futures:
+                    # Poll with short timeout so cancel checks happen frequently
+                    while True:
+                        if cancel.is_set():
+                            pool.shutdown(wait=False, cancel_futures=True)
+                            return None
+                        try:
+                            dt = future.result(timeout=0.1)
+                            break
+                        except TimeoutError:
+                            continue
+                        except Exception:
+                            dt = datetime.min
+                            break
+                    path = futures[future]
+                    self._date_cache[path] = dt
                     done += 1
-                    self._progressUpdate.emit(done)
+                    if report_progress:
+                        self._progressUpdate.emit(done)
+
+        keyed = [(self._date_cache[p], p) for p in images]
         keyed.sort()
         return [p for _, p in keyed]
 
@@ -439,6 +449,7 @@ class SlideshowController(QObject):
             self._all_images = []
             self._images = []
             self._rating_cache = {}
+            self._date_cache = {}
             self._exif_cache = (-1, [])
             self._scanning = False
             self.scanningChanged.emit()
