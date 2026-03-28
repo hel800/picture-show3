@@ -39,10 +39,6 @@ Rectangle {
     // Linux/RPi the cursor stays visible at (0,0) until the first mouse move.
     // windowHelper.setCursorHidden() uses QGuiApplication.setOverrideCursor,
     // which takes effect immediately and works on all platforms.
-    Component.onCompleted: {
-        if (Window.window && Window.window.visibility === Window.FullScreen)
-            windowHelper.setCursorHidden(true)
-    }
     Component.onDestruction: windowHelper.setCursorHidden(false)
 
     Connections {
@@ -966,6 +962,8 @@ Rectangle {
 
     // ── Initialise first image ────────────────────────────────────────────────
     Component.onCompleted: {
+        if (Window.window && Window.window.visibility === Window.FullScreen)
+            windowHelper.setCursorHidden(true)
         showImage(false)
         introFadeOut.start()
         root.forceActiveFocus()
