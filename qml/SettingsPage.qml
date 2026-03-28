@@ -1629,6 +1629,9 @@ Item {
             GradientStop { position: 0.0; color: Theme.bgDeep }
             GradientStop { position: 1.0; color: Theme.bgGradEnd }
         }
+
+        // Hide the cursor as soon as the overlay appears (start of launch animation)
+        MouseArea { anchors.fill: parent; cursorShape: Qt.BlankCursor; hoverEnabled: true }
     }
 
     // Logo is a sibling of the overlay (z: 201) so it is never affected

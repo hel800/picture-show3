@@ -8,8 +8,8 @@ import sys
 import ctypes
 from pathlib import Path
 
-from PySide6.QtCore import QLocale, QObject, QSettings, QTimer, QTranslator, QUrl, Slot
-from PySide6.QtGui import QGuiApplication, QIcon, QWindow
+from PySide6.QtCore import QLocale, QObject, QSettings, QTimer, QTranslator, QUrl, Qt, Slot
+from PySide6.QtGui import QCursor, QGuiApplication, QIcon, QWindow
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
@@ -85,6 +85,7 @@ class WindowHelper(QObject):
         self._win = None
         self._is_fullscreen = False   # our own authoritative tracking
         self._quitting = False        # set on quit to freeze state
+        self._cursor_hidden = False   # tracks whether we pushed a BlankCursor override
 
     # ── setup ──────────────────────────────────────────────────────────────
 
@@ -92,7 +93,24 @@ class WindowHelper(QObject):
         self._win = win
         win.visibilityChanged.connect(self._on_vis_changed)
 
-    # ── QML-callable slot ──────────────────────────────────────────────────
+    # ── QML-callable slots ─────────────────────────────────────────────────
+
+    @Slot(bool)
+    def setCursorHidden(self, hidden: bool) -> None:
+        """
+        Hide or show the mouse cursor at the application level.
+        Uses QGuiApplication.setOverrideCursor so the cursor is suppressed
+        regardless of hover state — MouseArea.cursorShape only fires lazily
+        on the first pointer move, which leaves the cursor visible at (0,0)
+        on Linux/RPi until the user moves the mouse.
+        """
+        if hidden == self._cursor_hidden:
+            return
+        if hidden:
+            QGuiApplication.setOverrideCursor(QCursor(Qt.CursorShape.BlankCursor))
+        else:
+            QGuiApplication.restoreOverrideCursor()
+        self._cursor_hidden = hidden
 
     @Slot()
     def saveWindowed(self) -> None:
