@@ -172,6 +172,20 @@ class WindowHelper(QObject):
 
 # ── main ───────────────────────────────────────────────────────────────────
 
+def _parse_kiosk_arg() -> tuple[str | None, list[str]]:
+    """
+    Extract --kiosk <path> from sys.argv before Qt sees it.
+    Returns (kiosk_folder_or_None, cleaned_argv).
+    """
+    argv = list(sys.argv)
+    for i, arg in enumerate(argv):
+        if arg == "--kiosk" and i + 1 < len(argv):
+            folder = argv[i + 1]
+            del argv[i:i + 2]
+            return folder, argv
+    return None, argv
+
+
 def main() -> None:
     # Use INI file for settings so they're human-readable
     # Location: %APPDATA%\picture-show3\picture-show3.ini  (Windows)
@@ -180,7 +194,8 @@ def main() -> None:
     # Force a non-native style so custom Slider background/handle work on all platforms
     QQuickStyle.setStyle("Basic")
 
-    app = QGuiApplication(sys.argv)
+    kiosk_folder, argv = _parse_kiosk_arg()
+    app = QGuiApplication(argv)
     app.setApplicationName("picture-show3")
     app.setOrganizationName("picture-show3")
     app.translator = _install_translator(app)   # None if no matching .qm found
@@ -194,7 +209,7 @@ def main() -> None:
     engine = QQmlApplicationEngine()
 
     # Store on app so Python's GC never collects them while QML holds references
-    app.controller     = SlideshowController()
+    app.controller     = SlideshowController(kiosk_mode=kiosk_folder is not None)
     app.provider       = SlideshowImageProvider(app.controller)
     app.qr_provider    = QrImageProvider()
     app.remote         = RemoteServer(app.controller, port=app.controller.remotePort, version=APP_VERSION)
@@ -209,6 +224,9 @@ def main() -> None:
     ctx.setContextProperty("windowHelper",  app.window_helper)
     ctx.setContextProperty("updateChecker", app.update_checker)
     ctx.setContextProperty("appVersion",    APP_VERSION)
+
+    if kiosk_folder:
+        app.controller.loadFolder(kiosk_folder)
 
     engine.load(_QML_ROOT)
 

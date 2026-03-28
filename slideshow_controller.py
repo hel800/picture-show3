@@ -76,6 +76,7 @@ class SlideshowController(QObject):
     scanProgressChanged = Signal()
     ratingWritten       = Signal(int)    # emitted with image index after a successful rating write
     captionWritten      = Signal(int)    # emitted with image index after a successful caption write
+    kioskModeChanged    = Signal()
     # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
     _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
@@ -83,8 +84,9 @@ class SlideshowController(QObject):
     _progressUpdate     = Signal(int)           # files processed so far
 
     # ── Init ──────────────────────────────────────────────────────────────────
-    def __init__(self, parent: QObject | None = None) -> None:
+    def __init__(self, kiosk_mode: bool = False, parent: QObject | None = None) -> None:
         super().__init__(parent)
+        self._kiosk_mode      : bool             = kiosk_mode
         self._folder          : str              = ""
         self._images          : list[str]        = []
         self._current_index   : int              = 0
@@ -151,7 +153,7 @@ class SlideshowController(QObject):
             case _:
                 self._folder_history = []
 
-        if self._folder_history:
+        if self._folder_history and not self._kiosk_mode:
             self._folder = self._folder_history[0]
             # Mark scanning immediately so QML shows the scanning state from the
             # first frame, but defer the actual thread start so the window can
@@ -251,6 +253,9 @@ class SlideshowController(QObject):
 
     @Property(int, notify=scanProgressChanged)
     def scanProgress(self) -> int: return self._scan_progress
+
+    @Property(bool, notify=kioskModeChanged)
+    def kioskMode(self) -> bool: return self._kiosk_mode
 
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
@@ -719,7 +724,7 @@ class SlideshowController(QObject):
     @Slot()
     def startShow(self) -> None:
         """Called when the show begins — starts the timer if autoplay is on."""
-        if self._folder and self._images:
+        if self._folder and self._images and not self._kiosk_mode:
             self._update_history(self._folder)
         if self._autoplay and self._images:
             self._timer.setInterval(self._interval)

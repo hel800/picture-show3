@@ -11,17 +11,32 @@ Item {
     focus: true
 
     // ── Inline reusable components ───────────────────────────────────────────
-    property bool   hasStarted       : false
-    property string _folderAtStart   : ""
-    property string _sortAtStart     : ""
-    property int    _minRatingAtStart: 0
-    property string _updateVersion   : ""   // set when a newer GitHub release is found
+    property bool   hasStarted        : false
+    property string _folderAtStart    : ""
+    property string _sortAtStart      : ""
+    property int    _minRatingAtStart : 0
+    property string _updateVersion    : ""   // set when a newer GitHub release is found
+    property bool   _kioskSplashDone  : false  // true once the kiosk fade-in completes
 
     readonly property bool _canStart: controller.imageCount > 0 && !controller.scanning
 
     Connections {
         target: updateChecker
         function onUpdateAvailable(version) { root._updateVersion = version }
+    }
+
+    // Kiosk mode: when scanning finishes, stop the heartbeat and launch
+    Connections {
+        target: controller
+        function onScanningChanged() {
+            if (controller.kioskMode && root._kioskSplashDone
+                    && !controller.scanning && controller.imageCount > 0
+                    && !kioskLaunchAnim.running) {
+                kioskHeartbeat.stop()
+                splashLogo.scale = 1.0   // heartbeat may have stopped mid-beat
+                kioskLaunchAnim.start()
+            }
+        }
     }
 
     // Reset to "Start" when the user picks a different folder, sort order, or filter after a show
@@ -53,6 +68,7 @@ Item {
 
     Keys.onPressed: function(event) {
         if (launchAnim.running || splashAnim.running) { event.accepted = true; return }
+        if (controller.kioskMode) { event.accepted = true; return }
         switch (event.key) {
         case Qt.Key_F:
             var win = Window.window
@@ -1586,20 +1602,29 @@ Item {
                 }
             }
 
-            // Logo drifts up to its header position (overlay stays opaque)
+            // Normal mode: logo drifts to header. Kiosk mode: instant (stays centred).
             NumberAnimation {
                 target: splashLogo; property: "y"
-                to: 36
-                duration: 500; easing.type: Easing.InOutCubic
+                to: controller.kioskMode ? (root.height / 2 - splashLogo.height / 2) : 36
+                duration: controller.kioskMode ? 1 : 500
+                easing.type: Easing.InOutCubic
             }
 
-            // Swap: reveal header logo then instantly hide the overlay,
-            // then slide the content up from its offset position
+            // Branch: reveal settings (normal) or start kiosk heartbeat
             ScriptAction {
                 script: {
-                    headerLogo.opacity = 1
-                    splashOverlay.visible = false
-                    scrollSlideIn.start()
+                    if (controller.kioskMode) {
+                        root._kioskSplashDone = true
+                        // If scan finished before the splash did, skip heartbeat
+                        if (!controller.scanning && controller.imageCount > 0)
+                            kioskLaunchAnim.start()
+                        else
+                            kioskHeartbeat.start()
+                    } else {
+                        headerLogo.opacity = 1
+                        splashOverlay.visible = false
+                        scrollSlideIn.start()
+                    }
                 }
             }
         }
@@ -1615,6 +1640,28 @@ Item {
         NumberAnimation { target: sunWatermark; property: "opacity";  from: 0;   to: 0.5;  duration: 700; easing.type: Easing.OutCubic }
         NumberAnimation { target: sunWatermark; property: "scale";    from: 0.9; to: 1.0;  duration: 700; easing.type: Easing.OutCubic }
         NumberAnimation { target: sunWatermark; property: "rotation"; from: 0;   to: 25;   duration: 700; easing.type: Easing.OutCubic }
+    }
+
+    // ── Kiosk heartbeat (lub-dub pulse while images load) ─────────────────────
+    SequentialAnimation {
+        id: kioskHeartbeat
+        loops: Animation.Infinite
+        NumberAnimation { target: splashLogo; property: "scale"; to: 1.07; duration: 120; easing.type: Easing.InCubic }
+        NumberAnimation { target: splashLogo; property: "scale"; to: 1.0;  duration: 200; easing.type: Easing.OutCubic }
+        PauseAnimation  { duration: 80 }
+        NumberAnimation { target: splashLogo; property: "scale"; to: 1.04; duration: 120; easing.type: Easing.InCubic }
+        NumberAnimation { target: splashLogo; property: "scale"; to: 1.0;  duration: 200; easing.type: Easing.OutCubic }
+        PauseAnimation  { duration: 700 }
+    }
+
+    // ── Kiosk launch: zoom logo out, then hand off to slideshow ───────────────
+    SequentialAnimation {
+        id: kioskLaunchAnim
+        ParallelAnimation {
+            NumberAnimation { target: splashLogo; property: "scale";   to: 4.5; duration: 300; easing.type: Easing.InQuart }
+            NumberAnimation { target: splashLogo; property: "opacity"; to: 0;   duration: 300; easing.type: Easing.InQuart }
+        }
+        ScriptAction { script: root.startShow() }
     }
 
     // ── Launch transition overlay (background only) ────────────────────────

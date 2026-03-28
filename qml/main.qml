@@ -90,7 +90,7 @@ ApplicationWindow {
                 windowHelper.setCursorHidden(true)
                 stack.push(slideshowComp)
             }
-            onOpenHelp: helpOverlay.open()
+            onOpenHelp: if (!controller.kioskMode) helpOverlay.open()
         }
     }
 
@@ -98,6 +98,7 @@ ApplicationWindow {
         id: slideshowComp
         SlideshowPage {
             onExitShow: {
+                if (controller.kioskMode) return
                 controller.stopShow()
                 remoteServer.setShowActive(false)
                 var sp = stack.get(0)
@@ -108,7 +109,7 @@ ApplicationWindow {
                 stack.pop()
                 sp.triggerSlideIn()
             }
-            onOpenHelp: helpOverlay.open()
+            onOpenHelp: if (!controller.kioskMode) helpOverlay.open()
         }
     }
 }
