@@ -41,12 +41,10 @@ Rectangle {
     // which takes effect immediately and works on all platforms.
     Component.onDestruction: windowHelper.setCursorHidden(false)
 
-    Connections {
-        target: Window.window
-        function onVisibilityChanged(visibility) {
-            windowHelper.setCursorHidden(visibility === Window.FullScreen)
-        }
-    }
+    // Window.window is a QQuickWindow (not an Item) so it cannot be used as a
+    // Connections target in QML. Use onVisibilityChanged directly on the Window
+    // attached property instead.
+    Window.onVisibilityChanged: windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
 
     // Delays mouse-nav actions so a double-click can cancel them and only
     // trigger fullscreen toggle (no image change).
@@ -962,8 +960,9 @@ Rectangle {
 
     // ── Initialise first image ────────────────────────────────────────────────
     Component.onCompleted: {
-        if (Window.window && Window.window.visibility === Window.FullScreen)
-            windowHelper.setCursorHidden(true)
+        // Correct cursor state: onStartShow always hides it, but on desktop in
+        // windowed mode the cursor should remain visible.
+        windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
         showImage(false)
         introFadeOut.start()
         root.forceActiveFocus()
