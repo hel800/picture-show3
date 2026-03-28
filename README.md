@@ -29,6 +29,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Cursor** | Hidden in fullscreen; visible in windowed mode |
 | **Multilingual** | UI language selectable in Advanced settings; `Auto` follows system locale |
 | **Update check** | Checks GitHub Releases for a newer version on startup — opt-out in Advanced settings |
+| **Kiosk mode** | `python main.py --kiosk <folder>` — launches directly into the slideshow with no settings UI; Esc shows a quit confirmation dialog |
 
 ---
 
@@ -54,6 +55,9 @@ pip install -r requirements.txt
 
 # 3. Run
 python main.py
+
+# Or launch directly into kiosk mode (no settings UI)
+python main.py --kiosk /path/to/photos
 ```
 
 ---
