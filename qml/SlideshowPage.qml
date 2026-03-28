@@ -264,6 +264,14 @@ Rectangle {
     // ── React to controller index changes (autoplay, remote, keyboard) ────────
     Connections {
         target: controller
+        function onImagesChanged() {
+            // Covers kiosk-mode (show started before images available) and any
+            // sort/filter completing while the show is active.  _apply_filter also
+            // emits currentIndexChanged right after, so showImage may be called
+            // twice in quick succession — that is harmless (stopAll/resetLayers first).
+            if (controller.imageCount > 0)
+                showImage(true)
+        }
         function onCurrentIndexChanged() {
             if (root.panoramaActive) _panoramaAbort()
             if (root._exifVisible) {
@@ -1288,7 +1296,7 @@ Rectangle {
         // Correct cursor state: onStartShow always hides it, but on desktop in
         // windowed mode the cursor should remain visible.
         windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
-        showImage(false)
+        showImage(true)
         introFadeOut.start()
         root.forceActiveFocus()
     }

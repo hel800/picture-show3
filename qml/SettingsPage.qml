@@ -25,7 +25,11 @@ Item {
         function onUpdateAvailable(version) { root._updateVersion = version }
     }
 
-    // Kiosk mode: when scanning finishes, stop the heartbeat and launch
+    // Kiosk mode: auto-launch when both scanning=false and imageCount>0 are satisfied.
+    // These two conditions are set by separate signals in the pipeline
+    // (_scanning=false is emitted by scanningChanged, then _apply_filter emits
+    // imagesChanged which makes imageCount>0).  Both handlers run the same guard
+    // so whichever fires last triggers the launch exactly once.
     Connections {
         target: controller
         function onScanningChanged() {
@@ -34,6 +38,15 @@ Item {
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
                 splashLogo.scale = 1.0   // heartbeat may have stopped mid-beat
+                kioskLaunchAnim.start()
+            }
+        }
+        function onImagesChanged() {
+            if (controller.kioskMode && root._kioskSplashDone
+                    && !controller.scanning && controller.imageCount > 0
+                    && !kioskLaunchAnim.running) {
+                kioskHeartbeat.stop()
+                splashLogo.scale = 1.0
                 kioskLaunchAnim.start()
             }
         }
