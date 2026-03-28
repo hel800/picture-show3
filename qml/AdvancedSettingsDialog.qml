@@ -37,8 +37,8 @@ Popup {
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: General=[duration,language,updateCheck] Controls=[mouseNav] HUD=[size] Remote=[enable,port]
-    readonly property var _optionCounts: [3, 1, 1, 2]
+    // Options per section: General=[duration,imageScale,language,updateCheck] Controls=[mouseNav] HUD=[size] Remote=[enable,port]
+    readonly property var _optionCounts: [4, 1, 1, 2]
 
     // Returns false for options that are currently inactive and should be skipped
     function _optionEnabled(section, option) {
@@ -164,15 +164,18 @@ Popup {
                         controller.setTransitionDuration(
                             Math.max(100, Math.min(3000, controller.transitionDuration + d * 100)))
 
-                    } else if (root._isOptionFocused(0, 2)) {
-                        controller.setUpdateCheckEnabled(d > 0)
-
                     } else if (root._isOptionFocused(0, 1)) {
+                        controller.setImageFill(d > 0)
+
+                    } else if (root._isOptionFocused(0, 2)) {
                         var langs = controller.availableLanguages
                         var idx = 0
                         for (var i = 0; i < langs.length; i++)
                             if (langs[i].code === controller.language) { idx = i; break }
                         controller.setLanguage(langs[(idx + d + langs.length) % langs.length].code)
+
+                    } else if (root._isOptionFocused(0, 3)) {
+                        controller.setUpdateCheckEnabled(d > 0)
 
                     } else if (root._isOptionFocused(2, 0)) {
                         controller.setHudSize(
@@ -367,7 +370,7 @@ Popup {
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
 
-                    // Option 1: Language ─────────────────────────────────────
+                    // Option 1: Image scale ───────────────────────────────────
                     Item {
                         Layout.fillWidth: true
                         implicitHeight: gen1Inner.implicitHeight + 24
@@ -391,8 +394,86 @@ Popup {
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
-                                    text: qsTr("LANGUAGE")
+                                    text: qsTr("IMAGE SCALE")
                                     color: root._isOptionFocused(0, 1)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 4; spacing: 8
+                                Repeater {
+                                    model: [
+                                        { label: qsTr("Fit"),  icon: "../img/icon_scale_fit.svg",  fill: false },
+                                        { label: qsTr("Fill"), icon: "../img/icon_scale_fill.svg", fill: true  }
+                                    ]
+                                    delegate: Rectangle {
+                                        Layout.fillWidth: true
+                                        height: 50; radius: 12
+                                        color: controller.imageFill === modelData.fill
+                                               ? Theme.accentDeep
+                                               : (scaleArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                        border.color: controller.imageFill === modelData.fill ? Theme.accent : "transparent"
+                                        border.width: 1
+                                        Behavior on color { ColorAnimation { duration: 150 } }
+                                        Column {
+                                            anchors.centerIn: parent
+                                            spacing: 3
+                                            ThemedIcon {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                source: modelData.icon
+                                                size: 20
+                                                iconColor: controller.imageFill === modelData.fill
+                                                           ? Theme.accentLight : Theme.textMuted
+                                                Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                            }
+                                            Text {
+                                                anchors.horizontalCenter: parent.horizontalCenter
+                                                text: modelData.label; font.pixelSize: 11
+                                                color: controller.imageFill === modelData.fill
+                                                       ? Theme.textPrimary : Theme.textMuted
+                                            }
+                                        }
+                                        MouseArea {
+                                            id: scaleArea; anchors.fill: parent; hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: controller.setImageFill(modelData.fill)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+
+                    // Option 2: Language ──────────────────────────────────────
+                    Item {
+                        Layout.fillWidth: true
+                        implicitHeight: gen2Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(0, 2)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: gen2Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(0, 2)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("LANGUAGE")
+                                    color: root._isOptionFocused(0, 2)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -435,18 +516,18 @@ Popup {
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
 
-                    // Option 2: Update check ──────────────────────────────────
+                    // Option 3: Update check ──────────────────────────────────
                     Item {
                         Layout.fillWidth: true
-                        implicitHeight: gen2Inner.implicitHeight + 24
+                        implicitHeight: gen3Inner.implicitHeight + 24
                         Rectangle {
                             anchors.fill: parent; radius: 8
-                            color: root._isOptionFocused(0, 2)
+                            color: root._isOptionFocused(0, 3)
                                    ? Theme.surface : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
                         ColumnLayout {
-                            id: gen2Inner
+                            id: gen3Inner
                             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
                             spacing: 0
 
@@ -454,13 +535,13 @@ Popup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: root._isOptionFocused(0, 2)
+                                    color: root._isOptionFocused(0, 3)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("UPDATES")
-                                    color: root._isOptionFocused(0, 2)
+                                    color: root._isOptionFocused(0, 3)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }

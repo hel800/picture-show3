@@ -1,0 +1,6 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Wide image extends beyond screen edges (dim, clipped) — the cropped sides -->
+  <rect x="-2" y="7" width="28" height="10" rx="1.5" fill="white" opacity="0.35"/>
+  <!-- Screen frame filled with image (bright — image fills the whole screen) -->
+  <rect x="2" y="3" width="20" height="18" rx="2" fill="white"/>
+</svg>
