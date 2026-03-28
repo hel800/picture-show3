@@ -87,6 +87,7 @@ ApplicationWindow {
             onStartShow: {
                 controller.startShow()
                 remoteServer.setShowActive(true)
+                windowHelper.setCursorHidden(true)
                 stack.push(slideshowComp)
             }
             onOpenHelp: helpOverlay.open()

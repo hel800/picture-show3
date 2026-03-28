@@ -34,7 +34,18 @@ Rectangle {
     property int  _pendingNav         : 0       // 0=none  1=next  -1=prev
     property var  _panoLayer          : null    // the layer currently being animated
 
-    // ── Cursor: hidden only in fullscreen ──────────────────────────────────────
+    // ── Cursor: hidden in fullscreen via QGuiApplication override ────────────
+    // MouseArea.cursorShape is applied lazily (only on pointer-enter), so on
+    // Linux/RPi the cursor stays visible at (0,0) until the first mouse move.
+    // windowHelper.setCursorHidden() uses QGuiApplication.setOverrideCursor,
+    // which takes effect immediately and works on all platforms.
+    Component.onDestruction: windowHelper.setCursorHidden(false)
+
+    // Window.window is a QQuickWindow (not an Item) so it cannot be used as a
+    // Connections target in QML. Use onVisibilityChanged directly on the Window
+    // attached property instead.
+    Window.onVisibilityChanged: windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
+
     // Delays mouse-nav actions so a double-click can cancel them and only
     // trigger fullscreen toggle (no image change).
     Timer {
@@ -50,8 +61,6 @@ Rectangle {
     MouseArea {
         anchors.fill: parent
         hoverEnabled: true
-        cursorShape: Window.window && Window.window.visibility === Window.FullScreen
-                     ? Qt.BlankCursor : Qt.ArrowCursor
         acceptedButtons: Qt.LeftButton | Qt.RightButton
         onPressed: root.forceActiveFocus()
         onClicked: function(mouse) {
@@ -951,6 +960,9 @@ Rectangle {
 
     // ── Initialise first image ────────────────────────────────────────────────
     Component.onCompleted: {
+        // Correct cursor state: onStartShow always hides it, but on desktop in
+        // windowed mode the cursor should remain visible.
+        windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
         showImage(false)
         introFadeOut.start()
         root.forceActiveFocus()
