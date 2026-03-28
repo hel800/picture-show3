@@ -521,7 +521,6 @@ class SlideshowController(QObject):
         with ThreadPoolExecutor(max_workers=8) as pool:
             futures = {pool.submit(SlideshowController._read_xmp_rating, p): p
                        for p in images}
-            total = len(futures)
             for future in futures:
                 # Poll with short timeout so cancel checks happen frequently
                 while True:
@@ -594,7 +593,7 @@ class SlideshowController(QObject):
                     raw = exif.get(_EXIF_DATE_TAKEN)
                     if raw:
                         return datetime.strptime(raw, "%Y:%m:%d %H:%M:%S")
-        except (UnidentifiedImageError, Exception):
+        except Exception:
             pass
         return datetime.fromtimestamp(os.path.getmtime(path))
 
