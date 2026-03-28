@@ -55,7 +55,7 @@ Popup {
         repeat: true
         onTriggered: {
             root.revealStep++
-            if (root.revealStep >= 12) stop()
+            if (root.revealStep >= 13) stop()
         }
     }
 
@@ -228,6 +228,7 @@ Popup {
                             { keys: [","],      desc: qsTr("Extended EXIF details") },
                             { keys: ["J"],      desc: qsTr("Jump to image")         },
                             { keys: ["0–5"],    desc: qsTr("Set star rating")       },
+                            { keys: ["C"],      desc: qsTr("Edit caption")          },
                             { keys: ["P"],      desc: qsTr("Panorama mode")         },
                             { keys: ["Esc"],    desc: qsTr("Exit slideshow")        },
                             { keys: ["?"],      desc: qsTr("Help")                  }

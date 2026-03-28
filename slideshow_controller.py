@@ -74,7 +74,8 @@ class SlideshowController(QObject):
     errorOccurred       = Signal(str)
     scanningChanged     = Signal()
     scanProgressChanged = Signal()
-    ratingWritten       = Signal(int)    # emitted with image index after a successful write
+    ratingWritten       = Signal(int)    # emitted with image index after a successful rating write
+    captionWritten      = Signal(int)    # emitted with image index after a successful caption write
     # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
     _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
@@ -1171,3 +1172,243 @@ class SlideshowController(QObject):
             )
 
         return xmp_str
+
+    # ── IPTC caption write ─────────────────────────────────────────────────────
+
+    @Slot(int, str, result=bool)
+    def writeImageCaption(self, index: int, caption: str) -> bool:
+        """
+        Write (or remove) the IPTC Caption/Abstract for the image at *index*.
+        An empty/whitespace-only caption removes the caption record.
+        Returns True on success, False on error (also emits errorOccurred).
+        Invalidates the EXIF panel cache and emits captionWritten(index) on success.
+        """
+        path = self.imagePath(index)
+        if not path:
+            return False
+        try:
+            SlideshowController._write_iptc_caption(path, caption)
+        except Exception as exc:
+            self.errorOccurred.emit(self.tr("Could not save caption: %1").replace("%1", str(exc)))
+            return False
+        # Invalidate EXIF cache (panel shows caption when HUD is hidden)
+        if self._exif_cache[0] == index:
+            self._exif_cache = (-1, [])
+        self.captionWritten.emit(index)
+        return True
+
+    @staticmethod
+    def _write_iptc_caption(path: str, caption: str) -> None:
+        """
+        Atomically write (or remove) the IPTC Caption/Abstract (2:120) in a JPEG.
+
+        Algorithm
+        ---------
+        1. Read the file as raw bytes.
+        2. Walk JPEG APP markers to locate the first Photoshop 3.0 APP13 segment.
+        3. Rebuild the IPTC content via ``_modify_iptc_caption_bytes``.
+        4. Write result to a sibling temp file, verify with Pillow, then os.replace.
+
+        Raises
+        ------
+        ValueError  – file is not a JPEG or unsupported format.
+        OSError     – I/O failure.
+        """
+        suffix = Path(path).suffix.lower()
+        if suffix not in (".jpg", ".jpeg"):
+            raise ValueError(
+                f"Caption writing is only supported for JPEG files (got {suffix!r})"
+            )
+
+        _PS3_SIG = b"Photoshop 3.0\x00"
+
+        raw = Path(path).read_bytes()
+        if not raw.startswith(b"\xff\xd8"):
+            raise ValueError(f"Not a valid JPEG file: {path!r}")
+
+        # ── Locate first Photoshop 3.0 APP13 segment ─────────────────────────
+        app13_start: int | None = None
+        app13_end:   int | None = None
+        i = 2   # skip SOI
+        while i + 3 < len(raw):
+            if raw[i] != 0xFF:
+                break
+            marker_byte = raw[i + 1]
+            if marker_byte == 0xD9:                      # EOI
+                break
+            if marker_byte == 0xD8 or 0xD0 <= marker_byte <= 0xD7:
+                i += 2
+                continue
+            if i + 4 > len(raw):
+                break
+            length = struct.unpack(">H", raw[i + 2: i + 4])[0]
+            seg_end = i + 2 + length
+            if marker_byte == 0xDA:                      # SOS
+                break
+            if marker_byte == 0xED:                      # APP13
+                payload_start = i + 4
+                if raw[payload_start: payload_start + len(_PS3_SIG)] == _PS3_SIG:
+                    app13_start = i
+                    app13_end   = seg_end
+                    break
+            i = seg_end
+
+        # ── Build new segment ─────────────────────────────────────────────────
+        if app13_start is None:
+            if not caption.strip():
+                return   # no APP13 and nothing to write
+            existing_payload = b""
+        else:
+            existing_payload = raw[app13_start + 4: app13_end]
+
+        new_payload = SlideshowController._modify_iptc_caption_bytes(existing_payload, caption)
+        new_seg = b"\xff\xed" + struct.pack(">H", len(new_payload) + 2) + new_payload
+
+        if app13_start is not None:
+            result = raw[:app13_start] + new_seg + raw[app13_end:]
+        else:
+            result = raw[:2] + new_seg + raw[2:]
+
+        # ── Write atomically ──────────────────────────────────────────────────
+        dir_path = Path(path).parent
+        tmp_fd, tmp_path = tempfile.mkstemp(suffix=".tmp", dir=str(dir_path))
+        try:
+            os.write(tmp_fd, result)
+            os.close(tmp_fd)
+            tmp_fd = -1
+            with Image.open(tmp_path) as img:
+                img.verify()
+            os.replace(tmp_path, path)
+        except Exception:
+            if tmp_fd >= 0:
+                try:
+                    os.close(tmp_fd)
+                except OSError:
+                    pass
+            try:
+                os.remove(tmp_path)
+            except OSError:
+                pass
+            raise
+
+    @staticmethod
+    def _modify_iptc_caption_bytes(app13_payload: bytes, caption: str) -> bytes:
+        """
+        Return a modified APP13 payload with the IPTC (2, 120) Caption/Abstract
+        set to *caption*, or removed when *caption* is empty/whitespace-only.
+
+        *app13_payload* is the entire content of an APP13 segment (after the
+        0xFF 0xED marker and its 2-byte length field).  Pass b"" when no
+        APP13 segment exists; a minimal valid payload is built from scratch.
+
+        Byte format reference
+        ---------------------
+        APP13 payload  = ``"Photoshop 3.0\\x00"`` + one or more 8BIM blocks
+        8BIM block     = ``"8BIM"`` + 2-byte type + pascal-string name
+                         + 4-byte data length + data (padded to even)
+        IPTC block     = 8BIM type ``0x0404``; data = series of IPTC records
+        IPTC record    = ``0x1C`` + record# + dataset# + 2-byte length + data
+                         (or extended 4-byte length when first length byte >= 0x80)
+        Caption/Abstract = record 2, dataset 120 (0x78)
+        """
+        _PS3_SIG = b"Photoshop 3.0\x00"
+        caption_data = caption.strip().encode("utf-8") if caption.strip() else b""
+
+        # ── Helpers ────────────────────────────────────────────────────────────
+
+        def parse_8bim_blocks(data: bytes) -> list[tuple[int, bytes, bytes]]:
+            """Walk 8BIM resource blocks → [(rtype, name_chars, raw_data), ...]."""
+            out = []
+            i = 0
+            while i + 4 <= len(data):
+                if data[i:i+4] != b"8BIM":
+                    break
+                if i + 7 > len(data):
+                    break
+                rtype = struct.unpack(">H", data[i+4: i+6])[0]
+                # Pascal string: 1-byte length N, then N chars, padded to even total
+                n = data[i+6]
+                pascal_total = 1 + n + ((1 + n) % 2)   # always even
+                name_chars = data[i+7: i+7+n]
+                dl_off = i + 6 + pascal_total
+                if dl_off + 4 > len(data):
+                    break
+                data_len = struct.unpack(">I", data[dl_off: dl_off+4])[0]
+                ds = dl_off + 4
+                de = ds + data_len
+                if de > len(data):
+                    break
+                out.append((rtype, name_chars, data[ds:de]))
+                i = de + (data_len % 2)   # advance past even-padding when data_len is odd
+            return out
+
+        def build_8bim_block(rtype: int, name_chars: bytes, data: bytes) -> bytes:
+            n = len(name_chars)
+            pascal = bytes([n]) + name_chars
+            if len(pascal) % 2 != 0:
+                pascal += b"\x00"
+            padded = data + (b"\x00" if len(data) % 2 != 0 else b"")
+            return b"8BIM" + struct.pack(">H", rtype) + pascal + struct.pack(">I", len(data)) + padded
+
+        def parse_iptc_records(iptc: bytes) -> list[tuple[int, int, bytes]]:
+            """Walk IPTC tag records → [(record, dataset, data), ...]."""
+            out = []
+            i = 0
+            while i < len(iptc):
+                if iptc[i] != 0x1c:
+                    break
+                if i + 5 > len(iptc):
+                    break
+                record  = iptc[i+1]
+                dataset = iptc[i+2]
+                len1    = iptc[i+3]
+                if len1 & 0x80:
+                    # Extended-length form: lower 7 bits = count of following size bytes
+                    n_ext = len1 & 0x7f
+                    if i + 5 + n_ext > len(iptc):
+                        break
+                    actual_len = int.from_bytes(iptc[i+5: i+5+n_ext], "big")
+                    ds = i + 5 + n_ext
+                else:
+                    actual_len = (len1 << 8) | iptc[i+4]
+                    ds = i + 5
+                if ds + actual_len > len(iptc):
+                    break
+                out.append((record, dataset, iptc[ds: ds+actual_len]))
+                i = ds + actual_len
+            return out
+
+        def build_iptc_record(record: int, dataset: int, data: bytes) -> bytes:
+            return b"\x1c" + bytes([record, dataset]) + struct.pack(">H", len(data)) + data
+
+        # ── Main logic ────────────────────────────────────────────────────────
+
+        if not app13_payload or not app13_payload.startswith(_PS3_SIG):
+            if not caption_data:
+                return app13_payload if app13_payload else b""
+            # Build a complete APP13 payload from scratch
+            iptc_bytes = build_iptc_record(2, 120, caption_data)
+            return _PS3_SIG + build_8bim_block(0x0404, b"", iptc_bytes)
+
+        bim_data = app13_payload[len(_PS3_SIG):]
+        blocks = parse_8bim_blocks(bim_data)
+
+        new_blocks: list[bytes] = []
+        found_0404 = False
+        for rtype, name_chars, raw_data in blocks:
+            if rtype == 0x0404:
+                found_0404 = True
+                records = parse_iptc_records(raw_data)
+                records = [(r, d, v) for r, d, v in records if (r, d) != (2, 120)]
+                if caption_data:
+                    records.append((2, 120, caption_data))
+                new_iptc = b"".join(build_iptc_record(r, d, v) for r, d, v in records)
+                new_blocks.append(build_8bim_block(0x0404, name_chars, new_iptc))
+            else:
+                new_blocks.append(build_8bim_block(rtype, name_chars, raw_data))
+
+        if not found_0404 and caption_data:
+            iptc_bytes = build_iptc_record(2, 120, caption_data)
+            new_blocks.append(build_8bim_block(0x0404, b"", iptc_bytes))
+
+        return _PS3_SIG + b"".join(new_blocks)
