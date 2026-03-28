@@ -1462,3 +1462,86 @@ class TestWriteImageCaptionSlot:
         load_folder(ctrl, str(tmp_path))
         ctrl.writeImageCaption(0, "")
         assert ctrl.imageCaption(0) == ""
+
+
+# ── Date cache ────────────────────────────────────────────────────────────────
+
+class TestDateCache:
+    def test_date_cache_populated_after_date_sort(self, ctrl, image_folder, load_folder):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert len(ctrl._date_cache) == 5
+
+    def test_date_cache_reused_on_second_sort(self, ctrl, image_folder, load_folder, qtbot):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert len(ctrl._date_cache) == 5
+
+        # Record cache state after first sort
+        cache_snapshot = dict(ctrl._date_cache)
+
+        # Switch away then back to date — cache must be identical (no re-reads)
+        ctrl.setSortOrder("name")
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+        ctrl.setSortOrder("date")
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+        assert ctrl._date_cache == cache_snapshot
+
+    def test_date_cache_cleared_on_new_folder(self, ctrl, image_folder, tmp_path, load_folder):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert len(ctrl._date_cache) > 0
+
+        other = tmp_path / "other"
+        other.mkdir()
+        make_plain_jpeg(other / "x.jpg")
+        load_folder(ctrl, str(other))
+        # Cache should only contain files from the new folder
+        assert all(str(image_folder) not in p for p in ctrl._date_cache)
+
+    def test_date_cache_cleared_on_invalid_folder(self, ctrl, image_folder, load_folder):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert len(ctrl._date_cache) > 0
+        ctrl.loadFolder("/nonexistent/path/xyz")
+        assert ctrl._date_cache == {}
+
+
+# ── Kiosk mode ────────────────────────────────────────────────────────────────
+
+class TestKioskMode:
+    def test_kiosk_mode_false_by_default(self, ctrl):
+        assert ctrl.kioskMode is False
+
+    def test_kiosk_mode_true_when_set(self, qapp, _isolate_settings):
+        from slideshow_controller import SlideshowController
+        ctrl = SlideshowController(kiosk_mode=True)
+        assert ctrl.kioskMode is True
+
+    def test_kiosk_start_show_does_not_update_history(
+        self, qapp, _isolate_settings, image_folder, load_folder
+    ):
+        from slideshow_controller import SlideshowController
+        ctrl = SlideshowController(kiosk_mode=True)
+        ctrl.loadFolder(str(image_folder))
+        load_folder(ctrl, str(image_folder))
+        ctrl.startShow()
+        assert ctrl.folderHistory == []
+
+    def test_non_kiosk_start_show_updates_history(self, ctrl, image_folder, load_folder):
+        load_folder(ctrl, str(image_folder))
+        ctrl.startShow()
+        assert str(image_folder) in ctrl.folderHistory
+
+    def test_kiosk_does_not_load_history_folder_on_init(
+        self, qapp, _isolate_settings, image_folder
+    ):
+        from slideshow_controller import SlideshowController
+        # Populate history via a normal controller first
+        ctrl_normal = SlideshowController()
+        ctrl_normal._update_history(str(image_folder))
+
+        # Kiosk controller should not auto-load from history
+        ctrl_kiosk = SlideshowController(kiosk_mode=True)
+        assert ctrl_kiosk.imageCount == 0
+        assert ctrl_kiosk.folder == ""
