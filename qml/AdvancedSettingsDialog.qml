@@ -50,6 +50,37 @@ Popup {
     // Port editing is entered explicitly with Enter (see keyHandler below).
     function _updateOptionFocus() {
         keyHandler.forceActiveFocus()
+        Qt.callLater(root._ensureFocusedVisible)
+    }
+
+    // Scroll the active tab's ScrollView so the focused option is fully visible.
+    function _ensureFocusedVisible() {
+        var flick = null
+        var item  = null
+        if (root._section === 0) {
+            flick = genScroll.contentItem
+            var g = [gen0Item, gen1Item, gen2Item, gen3Item]
+            item = g[root._focusedOption]
+        } else if (root._section === 1) {
+            flick = ctrlScroll.contentItem
+            item  = ctrl0Item
+        } else if (root._section === 2) {
+            flick = hudScroll.contentItem
+            item  = hud0Item
+        } else if (root._section === 3) {
+            flick = remScroll.contentItem
+            var r = [rem0Item, rem1Item]
+            item = r[root._focusedOption]
+        }
+        if (!flick || !item) return
+        // item.mapToItem(flick, 0, 0).y gives visual y inside the Flickable;
+        // adding contentY converts it back to content-space y.
+        var top    = item.mapToItem(flick, 0, 0).y + flick.contentY
+        var bottom = top + item.height
+        if (top < flick.contentY)
+            flick.contentY = Math.max(0, top)
+        else if (bottom > flick.contentY + flick.height)
+            flick.contentY = Math.min(flick.contentHeight - flick.height, bottom - flick.height)
     }
 
     // Returns true only when the given option is keyboard-highlighted.
@@ -306,6 +337,7 @@ Popup {
 
                     // Option 0: Transition Duration ──────────────────────────
                     Item {
+                        id: gen0Item
                         Layout.fillWidth: true
                         Layout.bottomMargin: 4
                         implicitHeight: gen0Inner.implicitHeight + 24
@@ -378,6 +410,7 @@ Popup {
 
                     // Option 1: Image scale ───────────────────────────────────
                     Item {
+                        id: gen1Item
                         Layout.fillWidth: true
                         implicitHeight: gen1Inner.implicitHeight + 24
                         Rectangle {
@@ -464,6 +497,7 @@ Popup {
 
                     // Option 2: Language ──────────────────────────────────────
                     Item {
+                        id: gen2Item
                         Layout.fillWidth: true
                         implicitHeight: gen2Inner.implicitHeight + 24
                         Rectangle {
@@ -532,6 +566,7 @@ Popup {
 
                     // Option 3: Update check ──────────────────────────────────
                     Item {
+                        id: gen3Item
                         Layout.fillWidth: true
                         implicitHeight: gen3Inner.implicitHeight + 24
                         Rectangle {
@@ -607,6 +642,7 @@ Popup {
 
                     // Option 0: Mouse navigation ──────────────────────────────
                     Item {
+                        id: ctrl0Item
                         Layout.fillWidth: true
                         implicitHeight: ctrl0Inner.implicitHeight + 24
                         Rectangle {
@@ -682,6 +718,7 @@ Popup {
 
                     // Option 0: HUD Size ──────────────────────────────────────
                     Item {
+                        id: hud0Item
                         Layout.fillWidth: true
                         implicitHeight: hud0Inner.implicitHeight + 24
                         Rectangle {
@@ -766,6 +803,7 @@ Popup {
 
                     // Option 0: Enable ────────────────────────────────────────
                     Item {
+                        id: rem0Item
                         Layout.fillWidth: true
                         Layout.bottomMargin: 4
                         implicitHeight: rem0Inner.implicitHeight + 24
@@ -825,6 +863,7 @@ Popup {
 
                     // Option 1: Port ──────────────────────────────────────────
                     Item {
+                        id: rem1Item
                         Layout.fillWidth: true
                         implicitHeight: rem1Inner.implicitHeight + 24
                         opacity: controller.remoteEnabled ? 1.0 : 0.35
