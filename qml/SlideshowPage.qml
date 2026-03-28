@@ -940,12 +940,16 @@ Rectangle {
     }
 
     // ── Intro fade-in (black overlay that fades away to reveal first image) ──
+    // visible starts false — Component.onCompleted sets it true after
+    // setCursorHidden(), which forces Qt to flush the cursor override in the
+    // same scene-graph sync pass (same mechanism as onStopped sets it false).
     Rectangle {
         id: introOverlay
         anchors.fill: parent
         color: "black"
         z: 50
         opacity: 1
+        visible: false
 
         NumberAnimation {
             id: introFadeOut
@@ -964,6 +968,11 @@ Rectangle {
         // windowed mode the cursor should remain visible.
         windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
         showImage(false)
+        // Setting visible = true after setCursorHidden creates a structural
+        // scene-graph change that forces Qt to flush the cursor override
+        // immediately — without this, the override is only dispatched on the
+        // next structural change (e.g. introOverlay.visible = false at 700 ms).
+        introOverlay.visible = true
         introFadeOut.start()
         root.forceActiveFocus()
     }
