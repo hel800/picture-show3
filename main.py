@@ -195,6 +195,9 @@ def main() -> None:
     QQuickStyle.setStyle("Basic")
 
     kiosk_folder, argv = _parse_kiosk_arg()
+    if kiosk_folder is not None and not Path(kiosk_folder).is_dir():
+        print(f"Error: kiosk folder does not exist: {kiosk_folder}", file=sys.stderr)
+        sys.exit(1)
     app = QGuiApplication(argv)
     app.setApplicationName("picture-show3")
     app.setOrganizationName("picture-show3")
@@ -227,6 +230,13 @@ def main() -> None:
 
     if kiosk_folder:
         app.controller.loadFolder(kiosk_folder)
+        # Connect AFTER loadFolder so the initial image-clear signal is not seen.
+        # When the background scan finishes with no usable images, quit with an error.
+        def _kiosk_no_images():
+            if not app.controller.scanning and app.controller.imageCount == 0:
+                print(f"Error: no supported images found in: {kiosk_folder}", file=sys.stderr)
+                app.quit()
+        app.controller.imagesChanged.connect(_kiosk_no_images)
 
     engine.load(_QML_ROOT)
 
