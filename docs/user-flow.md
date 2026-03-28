@@ -20,10 +20,10 @@ stateDiagram-v2
     Settings --> QrDialog : QR icon button
     QrDialog --> Settings : Esc / click outside
 
-    Settings --> HelpOverlay : ?
-    Slideshow --> HelpOverlay : ?
-    HelpOverlay --> Settings : ? / Esc (from settings)
-    HelpOverlay --> Slideshow : ? / Esc (from slideshow)
+    Settings --> HelpOverlay : F1
+    Slideshow --> HelpOverlay : F1
+    HelpOverlay --> Settings : F1 / Esc (from settings)
+    HelpOverlay --> Slideshow : F1 / Esc (from slideshow)
 ```
 
 ## Settings page keyboard map
@@ -40,7 +40,7 @@ stateDiagram-v2
 | `R` | Cycle star rating filter |
 | `V` | Open Advanced settings |
 | `F` | Toggle fullscreen |
-| `?` | Help overlay |
+| `F1` | Help overlay |
 | `Esc` | Quit confirmation dialog |
 
 ## Slideshow page keyboard map
@@ -55,7 +55,7 @@ stateDiagram-v2
 | `J` | Jump-to-image dialog |
 | `0`–`5` | Rating overlay (↵ confirm · Esc cancel) |
 | `C` | Caption editor overlay (↵ save · Esc cancel · Tab Tab copy prev) |
-| `?` | Help overlay |
+| `F1` | Help overlay |
 | `Esc` | Close open overlay → exit to settings |
 | Double-click | Toggle fullscreen |
 

@@ -25,7 +25,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Mouse navigation** | Optional left/right click to advance or go back (toggle in Advanced settings) |
 | **Phone remote** | Scan the QR code or open the URL on any phone on the same Wi-Fi |
 | **Keyboard** | Full keyboard control on both the settings screen and during the show |
-| **Help overlay** | Press `?` at any time to see all keyboard shortcuts |
+| **Help overlay** | Press `F1` at any time to see all keyboard shortcuts |
 | **Cursor** | Hidden in fullscreen; visible in windowed mode |
 | **Multilingual** | UI language selectable in Advanced settings; `Auto` follows system locale |
 | **Update check** | Checks GitHub Releases for a newer version on startup — opt-out in Advanced settings |

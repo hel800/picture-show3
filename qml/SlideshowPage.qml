@@ -343,7 +343,7 @@ Rectangle {
             return
         }
 
-        // Panorama mode — limited key set; F/Space/J/? are absorbed
+        // Panorama mode — limited key set; F/Space/J/F1 are absorbed
         if (root.panoramaActive) {
             switch (event.key) {
             case Qt.Key_P:
@@ -436,7 +436,7 @@ Rectangle {
                 exifPanel.open()
             }
             break
-        case Qt.Key_Question:
+        case Qt.Key_F1:
             root.openHelp()
             break
         default:
