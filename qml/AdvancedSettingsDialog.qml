@@ -294,8 +294,14 @@ Popup {
 
             // ── General ───────────────────────────────────────────────────────
             Item {
+                ScrollView {
+                    id: genScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
-                    width: parent.width
+                    width: genScroll.availableWidth
                     spacing: 0
 
                     // Option 0: Transition Duration ──────────────────────────
@@ -402,43 +408,51 @@ Popup {
                                 }
                             }
                             RowLayout {
-                                Layout.fillWidth: true; Layout.bottomMargin: 4; spacing: 8
-                                Repeater {
-                                    model: [
-                                        { label: qsTr("Fit"),  icon: "../img/icon_scale_fit.svg",  fill: false },
-                                        { label: qsTr("Fill"), icon: "../img/icon_scale_fill.svg", fill: true  }
-                                    ]
-                                    delegate: Rectangle {
-                                        Layout.fillWidth: true
-                                        height: 50; radius: 12
-                                        color: controller.imageFill === modelData.fill
-                                               ? Theme.accentDeep
-                                               : (scaleArea.containsMouse ? Theme.surfaceHover : Theme.surface)
-                                        border.color: controller.imageFill === modelData.fill ? Theme.accent : "transparent"
-                                        border.width: 1
-                                        Behavior on color { ColorAnimation { duration: 150 } }
-                                        Column {
-                                            anchors.centerIn: parent
-                                            spacing: 3
-                                            ThemedIcon {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                source: modelData.icon
-                                                size: 20
-                                                iconColor: controller.imageFill === modelData.fill
-                                                           ? Theme.accentLight : Theme.textMuted
-                                                Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                Layout.fillWidth: true; Layout.bottomMargin: 4; spacing: 12
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("Image scale"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("How images are scaled to fit the window"); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
+                                Item { Layout.fillWidth: true }
+                                Row {
+                                    spacing: 8
+                                    Repeater {
+                                        model: [
+                                            { label: qsTr("Fit"),  icon: "../img/icon_scale_fit.svg",  fill: false },
+                                            { label: qsTr("Fill"), icon: "../img/icon_scale_fill.svg", fill: true  }
+                                        ]
+                                        delegate: Rectangle {
+                                            width: 66; height: 50; radius: 12
+                                            color: controller.imageFill === modelData.fill
+                                                   ? Theme.accentDeep
+                                                   : (scaleArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                            border.color: controller.imageFill === modelData.fill ? Theme.accent : "transparent"
+                                            border.width: 1
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Column {
+                                                anchors.centerIn: parent
+                                                spacing: 3
+                                                ThemedIcon {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    source: modelData.icon
+                                                    size: 20
+                                                    iconColor: controller.imageFill === modelData.fill
+                                                               ? Theme.accentLight : Theme.textMuted
+                                                    Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                                }
+                                                Text {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: modelData.label; font.pixelSize: 11
+                                                    color: controller.imageFill === modelData.fill
+                                                           ? Theme.textPrimary : Theme.textMuted
+                                                }
                                             }
-                                            Text {
-                                                anchors.horizontalCenter: parent.horizontalCenter
-                                                text: modelData.label; font.pixelSize: 11
-                                                color: controller.imageFill === modelData.fill
-                                                       ? Theme.textPrimary : Theme.textMuted
+                                            MouseArea {
+                                                id: scaleArea; anchors.fill: parent; hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: controller.setImageFill(modelData.fill)
                                             }
-                                        }
-                                        MouseArea {
-                                            id: scaleArea; anchors.fill: parent; hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: controller.setImageFill(modelData.fill)
                                         }
                                     }
                                 }
@@ -576,12 +590,19 @@ Popup {
                         }
                     }
                 }
+                } // ScrollView
             }
 
             // ── Controls ──────────────────────────────────────────────────────
             Item {
+                ScrollView {
+                    id: ctrlScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
-                    width: parent.width
+                    width: ctrlScroll.availableWidth
                     spacing: 0
 
                     // Option 0: Mouse navigation ──────────────────────────────
@@ -644,12 +665,19 @@ Popup {
                         }
                     }
                 }
+                } // ScrollView
             }
 
             // ── HUD ───────────────────────────────────────────────────────────
             Item {
+                ScrollView {
+                    id: hudScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
-                    width: parent.width
+                    width: hudScroll.availableWidth
                     spacing: 0
 
                     // Option 0: HUD Size ──────────────────────────────────────
@@ -721,12 +749,19 @@ Popup {
                         }
                     }
                 }
+                } // ScrollView
             }
 
             // ── Remote ────────────────────────────────────────────────────────
             Item {
+                ScrollView {
+                    id: remScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
-                    width: parent.width
+                    width: remScroll.availableWidth
                     spacing: 0
 
                     // Option 0: Enable ────────────────────────────────────────
@@ -890,6 +925,7 @@ Popup {
                         }
                     }
                 }
+                } // ScrollView
             }
         }
 

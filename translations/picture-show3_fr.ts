@@ -75,6 +75,10 @@
         <translation>MISE À L&apos;ÉCHELLE</translation>
     </message>
     <message>
+        <source>Image scale</source>
+        <translation>Mise à l&apos;échelle</translation>
+    </message>
+    <message>
         <location filename="../qml/AdvancedSettingsDialog.qml" line="536"/>
         <source>How images are scaled to fit the window</source>
         <translation>Mise à l&apos;échelle de l&apos;image dans la fenêtre</translation>

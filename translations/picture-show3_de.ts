@@ -75,6 +75,10 @@
         <translation>BILDSKALIERUNG</translation>
     </message>
     <message>
+        <source>Image scale</source>
+        <translation>Bildskalierung</translation>
+    </message>
+    <message>
         <location filename="../qml/AdvancedSettingsDialog.qml" line="536"/>
         <source>How images are scaled to fit the window</source>
         <translation>Skalierung des Bilds im Fenster</translation>
