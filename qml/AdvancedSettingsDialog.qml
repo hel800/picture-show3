@@ -37,8 +37,8 @@ Popup {
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: General=[duration,language,updateCheck] Controls=[mouseNav] HUD=[size] Remote=[enable,port]
-    readonly property var _optionCounts: [3, 1, 1, 2]
+    // Options per section: General=[duration,imageScale,language,updateCheck] Controls=[mouseNav] HUD=[size] Remote=[enable,port]
+    readonly property var _optionCounts: [4, 1, 1, 2]
 
     // Returns false for options that are currently inactive and should be skipped
     function _optionEnabled(section, option) {
@@ -50,6 +50,37 @@ Popup {
     // Port editing is entered explicitly with Enter (see keyHandler below).
     function _updateOptionFocus() {
         keyHandler.forceActiveFocus()
+        Qt.callLater(root._ensureFocusedVisible)
+    }
+
+    // Scroll the active tab's ScrollView so the focused option is fully visible.
+    function _ensureFocusedVisible() {
+        var flick = null
+        var item  = null
+        if (root._section === 0) {
+            flick = genScroll.contentItem
+            var g = [gen0Item, gen1Item, gen2Item, gen3Item]
+            item = g[root._focusedOption]
+        } else if (root._section === 1) {
+            flick = ctrlScroll.contentItem
+            item  = ctrl0Item
+        } else if (root._section === 2) {
+            flick = hudScroll.contentItem
+            item  = hud0Item
+        } else if (root._section === 3) {
+            flick = remScroll.contentItem
+            var r = [rem0Item, rem1Item]
+            item = r[root._focusedOption]
+        }
+        if (!flick || !item) return
+        // item.mapToItem(flick, 0, 0).y gives visual y inside the Flickable;
+        // adding contentY converts it back to content-space y.
+        var top    = item.mapToItem(flick, 0, 0).y + flick.contentY
+        var bottom = top + item.height
+        if (top < flick.contentY)
+            flick.contentY = Math.max(0, top)
+        else if (bottom > flick.contentY + flick.height)
+            flick.contentY = Math.min(flick.contentHeight - flick.height, bottom - flick.height)
     }
 
     // Returns true only when the given option is keyboard-highlighted.
@@ -164,15 +195,18 @@ Popup {
                         controller.setTransitionDuration(
                             Math.max(100, Math.min(3000, controller.transitionDuration + d * 100)))
 
-                    } else if (root._isOptionFocused(0, 2)) {
-                        controller.setUpdateCheckEnabled(d > 0)
-
                     } else if (root._isOptionFocused(0, 1)) {
+                        controller.setImageFill(d > 0)
+
+                    } else if (root._isOptionFocused(0, 2)) {
                         var langs = controller.availableLanguages
                         var idx = 0
                         for (var i = 0; i < langs.length; i++)
                             if (langs[i].code === controller.language) { idx = i; break }
                         controller.setLanguage(langs[(idx + d + langs.length) % langs.length].code)
+
+                    } else if (root._isOptionFocused(0, 3)) {
+                        controller.setUpdateCheckEnabled(d > 0)
 
                     } else if (root._isOptionFocused(2, 0)) {
                         controller.setHudSize(
@@ -291,12 +325,19 @@ Popup {
 
             // ── General ───────────────────────────────────────────────────────
             Item {
+                ScrollView {
+                    id: genScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
-                    width: parent.width
+                    width: genScroll.availableWidth
                     spacing: 0
 
                     // Option 0: Transition Duration ──────────────────────────
                     Item {
+                        id: gen0Item
                         Layout.fillWidth: true
                         Layout.bottomMargin: 4
                         implicitHeight: gen0Inner.implicitHeight + 24
@@ -367,8 +408,9 @@ Popup {
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
 
-                    // Option 1: Language ─────────────────────────────────────
+                    // Option 1: Image scale ───────────────────────────────────
                     Item {
+                        id: gen1Item
                         Layout.fillWidth: true
                         implicitHeight: gen1Inner.implicitHeight + 24
                         Rectangle {
@@ -391,8 +433,95 @@ Popup {
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
-                                    text: qsTr("LANGUAGE")
+                                    text: qsTr("IMAGE SCALE")
                                     color: root._isOptionFocused(0, 1)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 4; spacing: 12
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("Image scale"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("How images are scaled to fit the window"); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
+                                Item { Layout.fillWidth: true }
+                                Row {
+                                    spacing: 8
+                                    Repeater {
+                                        model: [
+                                            { label: qsTr("Fit"),  icon: "../img/icon_scale_fit.svg",  fill: false },
+                                            { label: qsTr("Fill"), icon: "../img/icon_scale_fill.svg", fill: true  }
+                                        ]
+                                        delegate: Rectangle {
+                                            width: 66; height: 50; radius: 12
+                                            color: controller.imageFill === modelData.fill
+                                                   ? Theme.accentDeep
+                                                   : (scaleArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                            border.color: controller.imageFill === modelData.fill ? Theme.accent : "transparent"
+                                            border.width: 1
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Column {
+                                                anchors.centerIn: parent
+                                                spacing: 3
+                                                ThemedIcon {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    source: modelData.icon
+                                                    size: 20
+                                                    iconColor: controller.imageFill === modelData.fill
+                                                               ? Theme.accentLight : Theme.textMuted
+                                                    Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                                }
+                                                Text {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: modelData.label; font.pixelSize: 11
+                                                    color: controller.imageFill === modelData.fill
+                                                           ? Theme.textPrimary : Theme.textMuted
+                                                }
+                                            }
+                                            MouseArea {
+                                                id: scaleArea; anchors.fill: parent; hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: controller.setImageFill(modelData.fill)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+
+                    // Option 2: Language ──────────────────────────────────────
+                    Item {
+                        id: gen2Item
+                        Layout.fillWidth: true
+                        implicitHeight: gen2Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(0, 2)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: gen2Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(0, 2)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("LANGUAGE")
+                                    color: root._isOptionFocused(0, 2)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -435,18 +564,19 @@ Popup {
 
                     Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
 
-                    // Option 2: Update check ──────────────────────────────────
+                    // Option 3: Update check ──────────────────────────────────
                     Item {
+                        id: gen3Item
                         Layout.fillWidth: true
-                        implicitHeight: gen2Inner.implicitHeight + 24
+                        implicitHeight: gen3Inner.implicitHeight + 24
                         Rectangle {
                             anchors.fill: parent; radius: 8
-                            color: root._isOptionFocused(0, 2)
+                            color: root._isOptionFocused(0, 3)
                                    ? Theme.surface : "transparent"
                             Behavior on color { ColorAnimation { duration: 100 } }
                         }
                         ColumnLayout {
-                            id: gen2Inner
+                            id: gen3Inner
                             anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
                             spacing: 0
 
@@ -454,13 +584,13 @@ Popup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: root._isOptionFocused(0, 2)
+                                    color: root._isOptionFocused(0, 3)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("UPDATES")
-                                    color: root._isOptionFocused(0, 2)
+                                    color: root._isOptionFocused(0, 3)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -495,16 +625,24 @@ Popup {
                         }
                     }
                 }
+                } // ScrollView
             }
 
             // ── Controls ──────────────────────────────────────────────────────
             Item {
+                ScrollView {
+                    id: ctrlScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
-                    width: parent.width
+                    width: ctrlScroll.availableWidth
                     spacing: 0
 
                     // Option 0: Mouse navigation ──────────────────────────────
                     Item {
+                        id: ctrl0Item
                         Layout.fillWidth: true
                         implicitHeight: ctrl0Inner.implicitHeight + 24
                         Rectangle {
@@ -563,16 +701,24 @@ Popup {
                         }
                     }
                 }
+                } // ScrollView
             }
 
             // ── HUD ───────────────────────────────────────────────────────────
             Item {
+                ScrollView {
+                    id: hudScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
-                    width: parent.width
+                    width: hudScroll.availableWidth
                     spacing: 0
 
                     // Option 0: HUD Size ──────────────────────────────────────
                     Item {
+                        id: hud0Item
                         Layout.fillWidth: true
                         implicitHeight: hud0Inner.implicitHeight + 24
                         Rectangle {
@@ -640,16 +786,24 @@ Popup {
                         }
                     }
                 }
+                } // ScrollView
             }
 
             // ── Remote ────────────────────────────────────────────────────────
             Item {
+                ScrollView {
+                    id: remScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
                 ColumnLayout {
-                    width: parent.width
+                    width: remScroll.availableWidth
                     spacing: 0
 
                     // Option 0: Enable ────────────────────────────────────────
                     Item {
+                        id: rem0Item
                         Layout.fillWidth: true
                         Layout.bottomMargin: 4
                         implicitHeight: rem0Inner.implicitHeight + 24
@@ -709,6 +863,7 @@ Popup {
 
                     // Option 1: Port ──────────────────────────────────────────
                     Item {
+                        id: rem1Item
                         Layout.fillWidth: true
                         implicitHeight: rem1Inner.implicitHeight + 24
                         opacity: controller.remoteEnabled ? 1.0 : 0.35
@@ -809,6 +964,7 @@ Popup {
                         }
                     }
                 }
+                } // ScrollView
             }
         }
 

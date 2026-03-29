@@ -1,0 +1,6 @@
+<svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+  <!-- Screen frame (dim background — represents the letterbox bars) -->
+  <rect x="2" y="3" width="20" height="18" rx="2" fill="white" opacity="0.25"/>
+  <!-- Image (bright, landscape ratio, centred — shows image fits inside with bars) -->
+  <rect x="2" y="8" width="20" height="8" rx="1.5" fill="white"/>
+</svg>

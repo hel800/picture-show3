@@ -106,6 +106,7 @@ class SlideshowController(QObject):
         self._exif_cache      : tuple[int, list] = (-1, [])  # (index, rows)
         self._language        : str              = "auto"
         self._update_check_enabled: bool         = True
+        self._image_fill          : bool         = False
         self._recursive           : bool         = False
         self._scan_generation     : int          = 0
         self._scanning            : bool         = False
@@ -139,6 +140,7 @@ class SlideshowController(QObject):
         self._min_rating           = s.value("minRating",         0,     type=int)
         self._language             = s.value("language",          "auto")
         self._update_check_enabled = s.value("updateCheckEnabled", True,  type=bool)
+        self._image_fill           = s.value("imageFill",          False, type=bool)
         self._recursive            = s.value("recursive",          False, type=bool)
 
         # QSettings returns a str for single-item lists, list for multiple
@@ -176,6 +178,7 @@ class SlideshowController(QObject):
         s.setValue("minRating",          self._min_rating)
         s.setValue("language",           self._language)
         s.setValue("updateCheckEnabled", self._update_check_enabled)
+        s.setValue("imageFill",          self._image_fill)
         s.setValue("recursive",          self._recursive)
         s.setValue("folderHistory",      self._folder_history)
 
@@ -239,6 +242,9 @@ class SlideshowController(QObject):
 
     @Property(bool, notify=settingsChanged)
     def updateCheckEnabled(self) -> bool: return self._update_check_enabled
+
+    @Property(bool, notify=settingsChanged)
+    def imageFill(self) -> bool: return self._image_fill
 
     @Property(bool, notify=settingsChanged)
     def recursiveSearch(self) -> bool: return self._recursive
@@ -702,6 +708,12 @@ class SlideshowController(QObject):
     @Slot(bool)
     def setUpdateCheckEnabled(self, enabled: bool) -> None:
         self._update_check_enabled = enabled
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(bool)
+    def setImageFill(self, fill: bool) -> None:
+        self._image_fill = fill
         self._save_settings()
         self.settingsChanged.emit()
 
