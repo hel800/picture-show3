@@ -4,152 +4,153 @@
 <context>
     <name>AdvancedSettingsDialog</name>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="209"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="240"/>
         <source>ADVANCED SETTINGS</source>
         <translation>ERWEITERTE EINSTELLUNGEN</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="326"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="364"/>
         <source>TRANSITION</source>
         <translation>ÜBERGANG</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="335"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="373"/>
         <source>Duration</source>
         <translation>Dauer</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="242"/>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="670"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="744"/>
         <source>HUD</source>
         <translation>HUD</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="242"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
         <source>General</source>
         <translation>Allgemein</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="242"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
         <source>Controls</source>
         <translation>Steuerung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="242"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
         <source>Remote</source>
         <translation>Fernbedienung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="277"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="308"/>
         <source>sections</source>
         <translation>Abschnitte</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="281"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="312"/>
         <source>option</source>
         <translation>Option</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="285"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="316"/>
         <source>change</source>
         <translation>Ändern</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="465"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="592"/>
         <source>UPDATES</source>
         <translation>UPDATES</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="476"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="603"/>
         <source>Check for updates on startup</source>
         <translation>Beim Start nach Updates suchen</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="477"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="604"/>
         <source>Checks GitHub Releases for a newer version</source>
         <translation>Prüft GitHub Releases auf eine neuere Version</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="527"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="436"/>
         <source>IMAGE SCALE</source>
         <translation>BILDSKALIERUNG</translation>
     </message>
     <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="447"/>
         <source>Image scale</source>
         <translation>Bildskalierung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="536"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="448"/>
         <source>How images are scaled to fit the window</source>
         <translation>Skalierung des Bilds im Fenster</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="542"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="455"/>
         <source>Fit</source>
         <translation>Einpassen</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="543"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="456"/>
         <source>Fill</source>
         <translation>Füllen</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="602"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="668"/>
         <source>MOUSE</source>
         <translation>MAUS</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="613"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="679"/>
         <source>Mouse button navigation</source>
         <translation>Maussteuerung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="614"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="680"/>
         <source>Left click → next  ·  Right click → previous</source>
         <translation>Linksklick → weiter  ·  Rechtsklick → zurück</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="679"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="753"/>
         <source>Size</source>
         <translation>Größe</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="748"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="830"/>
         <source>SMARTPHONE REMOTE</source>
         <translation>SMARTPHONE REMOTE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="757"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="839"/>
         <source>Enable remote control</source>
         <translation>Fernbedienung aktivieren</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="807"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="890"/>
         <source>PORT</source>
         <translation>PORT</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="816"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="899"/>
         <source>Port</source>
         <translation>Port</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="397"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="523"/>
         <source>LANGUAGE</source>
         <translation>SPRACHE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="418"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="544"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="432"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="558"/>
         <source>⚠  Restart the app to apply the language change.</source>
         <translation>⚠  App neu starten, um die Sprachänderung zu übernehmen.</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="898"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="982"/>
         <source>Done</source>
         <translation>Fertig</translation>
     </message>
@@ -802,74 +803,74 @@
         <translation type="vanished">Beenden</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="756"/>
+        <location filename="../qml/SlideshowPage.qml" line="762"/>
         <source>AUTOPLAY</source>
         <translation>AUTOPLAY</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="764"/>
+        <location filename="../qml/SlideshowPage.qml" line="770"/>
         <source>Play (%1 s)</source>
         <translation>Play (%1 s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="765"/>
+        <location filename="../qml/SlideshowPage.qml" line="771"/>
         <source>Pause</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="827"/>
+        <location filename="../qml/SlideshowPage.qml" line="833"/>
         <source>JUMP TO IMAGE</source>
         <translation>ZU BILD SPRINGEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="892"/>
+        <location filename="../qml/SlideshowPage.qml" line="898"/>
         <source>go</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="895"/>
-        <location filename="../qml/SlideshowPage.qml" line="1039"/>
-        <location filename="../qml/SlideshowPage.qml" line="1153"/>
+        <location filename="../qml/SlideshowPage.qml" line="901"/>
+        <location filename="../qml/SlideshowPage.qml" line="1045"/>
+        <location filename="../qml/SlideshowPage.qml" line="1159"/>
         <source>cancel</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="992"/>
+        <location filename="../qml/SlideshowPage.qml" line="998"/>
         <source>RATE IMAGE</source>
         <translation>BILD BEWERTEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1001"/>
+        <location filename="../qml/SlideshowPage.qml" line="1007"/>
         <source>Remove rating</source>
         <translation>Bewertung entfernen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1002"/>
+        <location filename="../qml/SlideshowPage.qml" line="1008"/>
         <source>%1 star(s)</source>
         <translation>%1 Stern(e)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1036"/>
+        <location filename="../qml/SlideshowPage.qml" line="1042"/>
         <source>confirm</source>
         <translation>Bestätigen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1041"/>
+        <location filename="../qml/SlideshowPage.qml" line="1047"/>
         <source>0–5 change</source>
         <translation>0–5 ändern</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1093"/>
+        <location filename="../qml/SlideshowPage.qml" line="1099"/>
         <source>EDIT CAPTION</source>
         <translation>BESCHRIFTUNG BEARBEITEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1150"/>
+        <location filename="../qml/SlideshowPage.qml" line="1156"/>
         <source>save</source>
         <translation>Speichern</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1156"/>
+        <location filename="../qml/SlideshowPage.qml" line="1162"/>
         <source>copy prev caption</source>
         <translation>Vorh. Beschriftung kopieren</translation>
     </message>
@@ -878,17 +879,17 @@
         <translation type="vanished">Beschriftung konnte nicht gespeichert werden: %1</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="430"/>
+        <location filename="../qml/SlideshowPage.qml" line="442"/>
         <source>Rating</source>
         <translation>Bewertung</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="434"/>
+        <location filename="../qml/SlideshowPage.qml" line="446"/>
         <source>Date taken</source>
         <translation>Aufnahmedatum</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="437"/>
+        <location filename="../qml/SlideshowPage.qml" line="449"/>
         <source>Caption</source>
         <translation>Beschreibung</translation>
     </message>
