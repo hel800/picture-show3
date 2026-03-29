@@ -86,7 +86,7 @@ Item {
 
     Keys.onPressed: function(event) {
         if (launchAnim.running || splashAnim.running) { event.accepted = true; return }
-        if (controller.kioskMode) { event.accepted = true; return }
+        if (root._autoLaunch && splashOverlay.visible) { event.accepted = true; return }
         switch (event.key) {
         case Qt.Key_F:
             var win = Window.window
@@ -1577,6 +1577,10 @@ Item {
         anchors.fill: parent
         z: 100
         visible: true
+
+        // Block all mouse interaction with the settings page beneath while the
+        // splash (or kiosk/jump-start heartbeat) is visible.
+        MouseArea { anchors.fill: parent; hoverEnabled: true }
 
         gradient: Gradient {
             GradientStop { position: 0.0; color: Theme.bgDeep }
