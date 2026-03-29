@@ -83,6 +83,7 @@ ApplicationWindow {
                 forceActiveFocus()
                 if (controller.remoteEnabled)
                     remoteServer.start()
+                windowHelper.setCursorHidden(Window.visibility === Window.FullScreen)
             }
             onStartShow: {
                 controller.startShow()

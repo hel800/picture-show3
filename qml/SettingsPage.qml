@@ -80,8 +80,16 @@ Item {
     function triggerSlideIn() {
         splashOverlay.visible = false   // ensure overlay is gone when returning from the show
         headerLogo.opacity = 1          // may still be 0 if launched via jump-start
+        windowHelper.setCursorHidden(false)
         scrollTranslate.y = 20
         scrollSlideIn.start()
+    }
+
+    // Keep the cursor hidden in fullscreen, visible in windowed — across all modes.
+    // The window reaches its final visibility after Component.onCompleted (deferred),
+    // so we react here rather than relying solely on the onCompleted check.
+    Window.onVisibilityChanged: {
+        windowHelper.setCursorHidden(Window.visibility === Window.FullScreen)
     }
 
     Keys.onPressed: function(event) {
@@ -1646,6 +1654,7 @@ Item {
                     } else {
                         headerLogo.opacity = 1
                         splashOverlay.visible = false
+                        windowHelper.setCursorHidden(false)
                         scrollSlideIn.start()
                     }
                 }
