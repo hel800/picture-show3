@@ -1,7 +1,7 @@
 # Copyright (c) 2026 Sebastian Schäfer
-# Licensed under MIT License with Commons Clause — see LICENSE for details.
+# Licensed under MIT License with Commons Clause - see LICENSE for details.
 """
-picture-show3 — main entry point
+picture-show3 - main entry point
 Requires: Python >= 3.14  |  PySide6 >= 6.7
 """
 import sys
@@ -23,14 +23,14 @@ APP_VERSION = "3.1 dev"
 
 _FROZEN = getattr(sys, "frozen", False)
 
-# Tell Windows this is its own app, not a Python script — gives it a distinct
+# Tell Windows this is its own app, not a Python script - gives it a distinct
 # taskbar button with the correct icon instead of grouping under python.exe.
 if sys.platform == "win32":
     ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID("picture-show3")
 
 
 def _base_dir() -> Path:
-    """Return the resource root — works from source and when frozen by PyInstaller."""
+    """Return the resource root - works from source and when frozen by PyInstaller."""
     if _FROZEN:
         return Path(sys._MEIPASS)          # type: ignore[attr-defined]
     return Path(__file__).parent
@@ -39,7 +39,7 @@ def _base_dir() -> Path:
 # Deployed (frozen): load QML from the compiled Qt resource bundle (qrc:/).
 # Dev (source):      load QML from the filesystem for instant edit→run.
 if _FROZEN:
-    import resources_rc  # noqa: F401  — registers qrc:/ paths with Qt
+    import resources_rc  # noqa: F401  - registers qrc:/ paths with Qt
     _QML_ROOT = QUrl("qrc:/qml/main.qml")
 else:
     _QML_ROOT = QUrl.fromLocalFile(str(_base_dir() / "qml" / "main.qml"))
@@ -77,7 +77,7 @@ class WindowHelper(QObject):
 
     QML contract:
       • Call windowHelper.saveWindowed() immediately before win.showFullScreen()
-        (not needed before showNormal() — that is handled automatically).
+        (not needed before showNormal() - that is handled automatically).
     """
 
     def __init__(self, parent: QObject | None = None) -> None:
@@ -100,7 +100,7 @@ class WindowHelper(QObject):
         """
         Hide or show the mouse cursor at the application level.
         Uses QGuiApplication.setOverrideCursor so the cursor is suppressed
-        regardless of hover state — MouseArea.cursorShape only fires lazily
+        regardless of hover state - MouseArea.cursorShape only fires lazily
         on the first pointer move, which leaves the cursor visible at (0,0)
         on Linux/RPi until the user moves the mouse.
         """
@@ -172,11 +172,52 @@ class WindowHelper(QObject):
 
 # ── main ───────────────────────────────────────────────────────────────────
 
+_HELP = f"""\
+picture-show3 {APP_VERSION} - full-screen photo slideshow
+
+Usage:
+  python main.py                        Open the settings page (normal mode)
+  python main.py <picture_dir>          Jump-start: launch the show directly
+  python main.py --kiosk <picture_dir>  Kiosk mode: unattended display
+
+Arguments:
+  <picture_dir>   Path to a folder containing images to display.
+                  Supported formats: jpg jpeg png gif bmp webp tiff tif heic avif
+
+Options:
+  --kiosk         Kiosk mode - the settings page is never shown.
+                  Esc opens a quit confirmation dialog instead of going to settings.
+                  Exits with an error if the folder contains no supported images.
+  --help, -h      Show this help message and exit.
+
+Modes:
+  Normal          Starts with the settings page. The last used folder is
+                  restored from history.
+
+  Jump-start      Loads <picture_dir> and launches the slideshow immediately.
+                  Esc during the show returns to the settings page.
+                  Folder history is updated normally.
+
+  Kiosk           Designed for unattended display installations.
+                  Loads <picture_dir> and launches the slideshow immediately.
+                  Esc opens a quit dialog - the settings page is not accessible.
+                  Folder history is not updated.
+
+Examples:
+  python main.py
+  python main.py "C:\\Users\\me\\Pictures\\Vacation"
+  python main.py --kiosk /mnt/photos
+
+Full CLI reference: docs/cli.md
+"""
+
+
 def _parse_args() -> tuple[str | None, str | None, list[str]]:
     """
     Parse optional flags and an optional positional <picture_dir> from sys.argv.
 
     Supported flags:
+      --help / -h      Print help and exit.
       --kiosk <path>   Start in kiosk mode with the given folder (path required).
 
     Positional argument (last non-flag arg after the script name):
@@ -185,6 +226,10 @@ def _parse_args() -> tuple[str | None, str | None, list[str]]:
     Returns (kiosk_folder, start_folder, cleaned_argv).
     Exactly one of kiosk_folder / start_folder is non-None when a folder is given.
     """
+    if "--help" in sys.argv or "-h" in sys.argv:
+        print(_HELP, end="")
+        sys.exit(0)
+
     argv = list(sys.argv)
     kiosk_folder: str | None = None
 
@@ -287,9 +332,9 @@ def _find_target_screen(s: QSettings):
     Return the QScreen the window should be restored to, or None.
 
     Strategy (in order):
-    1. Match by saved screen name  ('window/screen' key) — exact identity.
+    1. Match by saved screen name  ('window/screen' key) - exact identity.
     2. Match by geometry: find the screen whose geometry contains the saved
-       windowed x/y — handles renames or missing name key.
+       windowed x/y - handles renames or missing name key.
     """
     screens = QGuiApplication.screens()
     screen_name = s.value("window/screen", "")
@@ -319,14 +364,14 @@ def _restore_window(win) -> None:
         win.setX(int(s.value("window/x")))
         win.setY(int(s.value("window/y")))
     if s.value("window/fullscreen", False, type=bool):
-        # Do NOT call saveWindowed() here — the windowed geometry in settings
+        # Do NOT call saveWindowed() here - the windowed geometry in settings
         # is already correct and must not be overwritten with fullscreen dims.
         if sys.platform == "linux":
             # On X11/Wayland the WM is a separate process.  visibilityChanged
             # fires before the X server sends MapNotify and before the WM has
             # actually managed the window, so showFullScreen() still arrives too
             # early via that signal.  activeChanged fires only after the WM
-            # grants focus — the window is fully mapped at that point.
+            # grants focus - the window is fully mapped at that point.
             #
             # Additionally, setX/setY before show() are only position *hints* on
             # X11 and are ignored entirely on Wayland.  We must use setScreen()
@@ -341,13 +386,13 @@ def _restore_window(win) -> None:
             win.activeChanged.connect(_on_active)
             QTimer.singleShot(0, win.show)
         else:
-            # On Windows the kernel manages windows directly — showFullScreen()
+            # On Windows the kernel manages windows directly - showFullScreen()
             # is honored immediately even before the window is visible.
             QTimer.singleShot(0, win.showFullScreen)
     else:
         # Defer show() to the first event loop iteration (same pattern as above).
         # Calling win.show() before app.exec() starts leaves the native window surface
-        # visible for several frames before Qt Quick's render loop fires — causing a white flash.
+        # visible for several frames before Qt Quick's render loop fires - causing a white flash.
         if sys.platform == "linux":
             # Call setScreen() *before* show() so the native surface is created
             # on the correct output from the start.  On Wayland the compositor

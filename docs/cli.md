@@ -12,6 +12,7 @@ python main.py [--kiosk] [<picture_dir>]
 |---|---|---|
 | `<picture_dir>` | No | Path to a folder of images to load on startup |
 | `--kiosk` | No | Enable kiosk mode (requires `<picture_dir>`) |
+| `--help`, `-h` | No | Print a usage summary and exit |
 
 ## Modes
 
