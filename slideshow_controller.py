@@ -84,9 +84,10 @@ class SlideshowController(QObject):
     _progressUpdate     = Signal(int)           # files processed so far
 
     # ── Init ──────────────────────────────────────────────────────────────────
-    def __init__(self, kiosk_mode: bool = False, parent: QObject | None = None) -> None:
+    def __init__(self, kiosk_mode: bool = False, jump_start: bool = False, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._kiosk_mode      : bool             = kiosk_mode
+        self._jump_start      : bool             = jump_start
         self._folder          : str              = ""
         self._images          : list[str]        = []
         self._current_index   : int              = 0
@@ -154,7 +155,7 @@ class SlideshowController(QObject):
             case _:
                 self._folder_history = []
 
-        if self._folder_history and not self._kiosk_mode:
+        if self._folder_history and not self._kiosk_mode and not self._jump_start:
             self._folder = self._folder_history[0]
             # Mark scanning immediately so QML shows the scanning state from the
             # first frame, but defer the actual thread start so the window can
@@ -257,6 +258,9 @@ class SlideshowController(QObject):
 
     @Property(bool, notify=kioskModeChanged)
     def kioskMode(self) -> bool: return self._kiosk_mode
+
+    @Property(bool, constant=True)
+    def jumpStart(self) -> bool: return self._jump_start
 
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:

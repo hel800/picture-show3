@@ -16,16 +16,19 @@ Item {
     property string _sortAtStart      : ""
     property int    _minRatingAtStart : 0
     property string _updateVersion    : ""   // set when a newer GitHub release is found
-    property bool   _kioskSplashDone  : false  // true once the kiosk fade-in completes
+    property bool   _kioskSplashDone  : false  // true once the kiosk/jump-start fade-in completes
 
     readonly property bool _canStart: controller.imageCount > 0 && !controller.scanning
+
+    // Shorthand: true when the app was started with either --kiosk or a bare <dir> argument.
+    readonly property bool _autoLaunch: controller.kioskMode || controller.jumpStart
 
     Connections {
         target: updateChecker
         function onUpdateAvailable(version) { root._updateVersion = version }
     }
 
-    // Kiosk mode: auto-launch when both scanning=false and imageCount>0 are satisfied.
+    // Kiosk / jump-start: auto-launch when both scanning=false and imageCount>0 are satisfied.
     // These two conditions are set by separate signals in the pipeline
     // (_scanning=false is emitted by scanningChanged, then _apply_filter emits
     // imagesChanged which makes imageCount>0).  Both handlers run the same guard
@@ -33,7 +36,7 @@ Item {
     Connections {
         target: controller
         function onScanningChanged() {
-            if (controller.kioskMode && root._kioskSplashDone
+            if (root._autoLaunch && root._kioskSplashDone
                     && !controller.scanning && controller.imageCount > 0
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
@@ -42,7 +45,7 @@ Item {
             }
         }
         function onImagesChanged() {
-            if (controller.kioskMode && root._kioskSplashDone
+            if (root._autoLaunch && root._kioskSplashDone
                     && !controller.scanning && controller.imageCount > 0
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
@@ -75,6 +78,8 @@ Item {
     }
 
     function triggerSlideIn() {
+        splashOverlay.visible = false   // ensure overlay is gone when returning from the show
+        headerLogo.opacity = 1          // may still be 0 if launched via jump-start
         scrollTranslate.y = 20
         scrollSlideIn.start()
     }
@@ -1615,18 +1620,19 @@ Item {
                 }
             }
 
-            // Normal mode: logo drifts to header. Kiosk mode: instant (stays centred).
+            // Auto-launch modes (kiosk / jump-start): logo stays centred (instant).
+            // Normal mode: logo drifts to header position.
             NumberAnimation {
                 target: splashLogo; property: "y"
-                to: controller.kioskMode ? (root.height / 2 - splashLogo.height / 2) : 36
-                duration: controller.kioskMode ? 1 : 500
+                to: root._autoLaunch ? (root.height / 2 - splashLogo.height / 2) : 36
+                duration: root._autoLaunch ? 1 : 500
                 easing.type: Easing.InOutCubic
             }
 
-            // Branch: reveal settings (normal) or start kiosk heartbeat
+            // Branch: start auto-launch heartbeat, or reveal settings page
             ScriptAction {
                 script: {
-                    if (controller.kioskMode) {
+                    if (root._autoLaunch) {
                         root._kioskSplashDone = true
                         // If scan finished before the splash did, skip heartbeat
                         if (!controller.scanning && controller.imageCount > 0)

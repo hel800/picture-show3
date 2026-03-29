@@ -172,18 +172,37 @@ class WindowHelper(QObject):
 
 # ── main ───────────────────────────────────────────────────────────────────
 
-def _parse_kiosk_arg() -> tuple[str | None, list[str]]:
+def _parse_args() -> tuple[str | None, str | None, list[str]]:
     """
-    Extract --kiosk <path> from sys.argv before Qt sees it.
-    Returns (kiosk_folder_or_None, cleaned_argv).
+    Parse optional flags and an optional positional <picture_dir> from sys.argv.
+
+    Supported flags:
+      --kiosk <path>   Start in kiosk mode with the given folder (path required).
+
+    Positional argument (last non-flag arg after the script name):
+      <path>           Start the show directly with the given folder (normal mode).
+
+    Returns (kiosk_folder, start_folder, cleaned_argv).
+    Exactly one of kiosk_folder / start_folder is non-None when a folder is given.
     """
     argv = list(sys.argv)
+    kiosk_folder: str | None = None
+
     for i, arg in enumerate(argv):
         if arg == "--kiosk" and i + 1 < len(argv):
-            folder = argv[i + 1]
+            kiosk_folder = argv[i + 1]
             del argv[i:i + 2]
-            return folder, argv
-    return None, argv
+            break
+
+    start_folder: str | None = None
+    if kiosk_folder is None and len(argv) > 1:
+        # Accept the last argument as the picture directory if it doesn't look like a flag.
+        last = argv[-1]
+        if not last.startswith("-") and last != argv[0]:
+            start_folder = last
+            argv = argv[:-1]
+
+    return kiosk_folder, start_folder, argv
 
 
 def main() -> None:
@@ -194,9 +213,12 @@ def main() -> None:
     # Force a non-native style so custom Slider background/handle work on all platforms
     QQuickStyle.setStyle("Basic")
 
-    kiosk_folder, argv = _parse_kiosk_arg()
+    kiosk_folder, start_folder, argv = _parse_args()
     if kiosk_folder is not None and not Path(kiosk_folder).is_dir():
         print(f"Error: kiosk folder does not exist: {kiosk_folder}", file=sys.stderr)
+        sys.exit(1)
+    if start_folder is not None and not Path(start_folder).is_dir():
+        print(f"Error: folder does not exist: {start_folder}", file=sys.stderr)
         sys.exit(1)
     app = QGuiApplication(argv)
     app.setApplicationName("picture-show3")
@@ -212,7 +234,10 @@ def main() -> None:
     engine = QQmlApplicationEngine()
 
     # Store on app so Python's GC never collects them while QML holds references
-    app.controller     = SlideshowController(kiosk_mode=kiosk_folder is not None)
+    app.controller     = SlideshowController(
+                             kiosk_mode=kiosk_folder is not None,
+                             jump_start=start_folder is not None,
+                         )
     app.provider       = SlideshowImageProvider(app.controller)
     app.qr_provider    = QrImageProvider()
     app.remote         = RemoteServer(app.controller, port=app.controller.remotePort, version=APP_VERSION)
@@ -237,6 +262,8 @@ def main() -> None:
                 print(f"Error: no supported images found in: {kiosk_folder}", file=sys.stderr)
                 app.quit()
         app.controller.imagesChanged.connect(_kiosk_no_images)
+    elif start_folder:
+        app.controller.loadFolder(start_folder)
 
     engine.load(_QML_ROOT)
 
