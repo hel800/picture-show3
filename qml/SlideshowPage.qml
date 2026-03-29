@@ -13,6 +13,7 @@ Rectangle {
 
     signal exitShow()
     signal openHelp()
+    signal openQuitDialog()
 
     // ── State ─────────────────────────────────────────────────────────────────
     property bool showingA  : true   // which layer is currently the foreground
@@ -22,8 +23,9 @@ Rectangle {
     property real   hudScale   : controller.hudSize / 100.0
     property string hudCaption : controller.imageCaption(controller.currentIndex)
     property int    hudRating  : controller.imageRating(controller.currentIndex)
-    property bool   _exifVisible: false
-    property bool   _exiting    : false   // set on exit to suppress the play/pause popup
+    property bool   _exifVisible     : false
+    property bool   _exiting         : false   // set on exit to suppress the play/pause popup
+    property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
 
     onWidthChanged:  if (panoramaActive) _panoramaAbort()
     onHeightChanged: if (panoramaActive) _panoramaAbort()
@@ -401,6 +403,9 @@ Rectangle {
         case Qt.Key_C:
             openCaption()
             break
+        case Qt.Key_Q:
+            root.openQuitDialog()
+            break
         case Qt.Key_Escape:
             if (root._exifVisible) {
                 root._exifVisible = false
@@ -721,7 +726,7 @@ Rectangle {
     // isPlayingChanged emission must not show the popup on the settings page.
     Connections {
         target: controller
-        function onIsPlayingChanged() { if (!root._exiting) playPauseAnim.restart() }
+        function onIsPlayingChanged() { if (!root._exiting && !root._suppressPlayAnim) playPauseAnim.restart() }
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────
