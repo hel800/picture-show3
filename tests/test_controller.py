@@ -860,6 +860,31 @@ class TestParallelLoading:
         qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert len(ctrl._rating_cache) == 6
 
+    def test_partial_cache_from_rating_write_triggers_async_scan(self, rated_folder,
+                                                                   load_folder, qtbot,
+                                                                   qapp, _isolate_settings):
+        """Writing one rating during a show leaves a partial cache.
+        setMinRating must still trigger a background read, not fall through to
+        synchronous _apply_filter which would block the main thread."""
+        from slideshow_controller import SlideshowController
+        ctrl = SlideshowController(jump_start=True)
+        load_folder(ctrl, str(rated_folder))        # minRating=0 → cache stays empty
+        assert ctrl._rating_cache == {}
+
+        # Simulate user writing one rating during the show
+        ctrl.writeImageRating(0, 4)
+        assert len(ctrl._rating_cache) == 1         # partial: one entry out of 6
+
+        # Now user changes filter — must NOT go synchronous
+        scanning_states: list[bool] = []
+        ctrl.scanningChanged.connect(lambda: scanning_states.append(ctrl.scanning))
+
+        ctrl.setMinRating(3)
+        assert ctrl.scanning is True, "background scan must start immediately"
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+        assert len(ctrl._rating_cache) == 6         # all images now in cache
+        assert any(s is True for s in scanning_states), "scanningChanged(True) must fire"
+
     # ── sort change mid-scan ──────────────────────────────────────────────────
 
     def test_sort_change_during_scan_is_applied(self, tmp_path, ctrl, qtbot):

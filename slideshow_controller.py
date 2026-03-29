@@ -511,8 +511,8 @@ class SlideshowController(QObject):
         if result["order"] != self._sort_order:
             self._sort_in_background()
             return
-        # Chain into ratings read if star filter is active and cache is empty
-        if self._min_rating > 0 and not self._rating_cache:
+        # Chain into ratings read if filter is active and cache is incomplete
+        if self._min_rating > 0 and len(self._rating_cache) < len(self._all_images):
             self._read_ratings_in_background()
         else:
             self._scanning = False
@@ -670,7 +670,7 @@ class SlideshowController(QObject):
             # Cancel any running sort/ratings and re-apply.
             # During scan phase _all_images is empty, so we just save and
             # the pipeline will use the current _min_rating after discovery.
-            if clamped > 0 and not self._rating_cache:
+            if clamped > 0 and len(self._rating_cache) < len(self._all_images):
                 self._read_ratings_in_background()
             else:
                 # If a sort/ratings worker was running, cancel it
