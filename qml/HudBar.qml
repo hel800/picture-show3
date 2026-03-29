@@ -102,12 +102,12 @@ Rectangle {
 
         // ⌨ keyboard hints
         KeyHint { label: "F";   uiScale: hudScale; Layout.leftMargin: Math.round(10 * hudScale) }
-        Text { text: qsTr("fullscreen"); color: Theme.textDisabled; font.pixelSize: Math.round(12 * hudScale) }
+        Text { text: qsTr("Fullscreen"); color: Theme.textDisabled; font.pixelSize: Math.round(12 * hudScale) }
         KeyHint { label: "I";   uiScale: hudScale }
-        Text { text: qsTr("info");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * hudScale) }
+        Text { text: qsTr("Info");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * hudScale) }
         KeyHint { label: ",";   uiScale: hudScale }
-        Text { text: qsTr("details");    color: exifPanelOpen ? Theme.accentLight : Theme.textDisabled; font.pixelSize: Math.round(12 * hudScale) }
+        Text { text: qsTr("Details");    color: exifPanelOpen ? Theme.accentLight : Theme.textDisabled; font.pixelSize: Math.round(12 * hudScale) }
         KeyHint { label: "Esc"; uiScale: hudScale }
-        Text { text: qsTr("exit");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * hudScale) }
+        Text { text: qsTr("Exit");       color: Theme.textDisabled; font.pixelSize: Math.round(12 * hudScale) }
     }
 }

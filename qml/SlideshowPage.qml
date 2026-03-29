@@ -13,6 +13,7 @@ Rectangle {
 
     signal exitShow()
     signal openHelp()
+    signal openQuitDialog()
 
     // ── State ─────────────────────────────────────────────────────────────────
     property bool showingA  : true   // which layer is currently the foreground
@@ -22,8 +23,9 @@ Rectangle {
     property real   hudScale   : controller.hudSize / 100.0
     property string hudCaption : controller.imageCaption(controller.currentIndex)
     property int    hudRating  : controller.imageRating(controller.currentIndex)
-    property bool   _exifVisible: false
-    property bool   _exiting    : false   // set on exit to suppress the play/pause popup
+    property bool   _exifVisible     : false
+    property bool   _exiting         : false   // set on exit to suppress the play/pause popup
+    property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
 
     onWidthChanged:  if (panoramaActive) _panoramaAbort()
     onHeightChanged: if (panoramaActive) _panoramaAbort()
@@ -34,6 +36,13 @@ Rectangle {
     property bool _panoCleanupPending : false
     property int  _pendingNav         : 0       // 0=none  1=next  -1=prev
     property var  _panoLayer          : null    // the layer currently being animated
+    property real _panoScrollRange     : 0       // pre-computed at panorama start, stable even if image reloads
+    property bool _pendingPanorama     : false   // P pressed during a transition — start panorama when transition finishes
+    // When true, forces both images to PreserveAspectFit regardless of the
+    // imageFill setting.  Used by fill-mode panorama so the full image width
+    // is available for scrolling.  Avoids Qt.binding() closures whose
+    // create/destroy cycle can cause stack overflows on repeated panoramas.
+    property bool _forceFit           : false
 
     // ── Cursor: hidden in fullscreen via QGuiApplication override ────────────
     // MouseArea.cursorShape is applied lazily (only on pointer-enter), so on
@@ -86,7 +95,7 @@ Rectangle {
         Image {
             id: imgA
             anchors.fill: parent
-            fillMode: Image.PreserveAspectFit
+            fillMode: (controller.imageFill && !root._forceFit) ? Image.PreserveAspectCrop : Image.PreserveAspectFit
             asynchronous: true
             smooth: true
             mipmap: true
@@ -104,7 +113,7 @@ Rectangle {
         Image {
             id: imgB
             anchors.fill: parent
-            fillMode: Image.PreserveAspectFit
+            fillMode: (controller.imageFill && !root._forceFit) ? Image.PreserveAspectCrop : Image.PreserveAspectFit
             asynchronous: true
             smooth: true
             mipmap: true
@@ -114,11 +123,16 @@ Rectangle {
 
     // ── Animations ────────────────────────────────────────────────────────────
 
+    function _checkPendingPanorama() {
+        if (root._pendingPanorama) { root._pendingPanorama = false; startPanorama() }
+    }
+
     // Fade
     ParallelAnimation {
         id: fadeAnim
         NumberAnimation { id: fadeInAnim;  property: "opacity"; to: 1; duration: root.transDur; easing.type: Easing.InOutQuad }
         NumberAnimation { id: fadeOutAnim; property: "opacity"; to: 0; duration: root.transDur; easing.type: Easing.InOutQuad }
+        onStopped: root._checkPendingPanorama()
     }
 
     // Slide
@@ -126,6 +140,7 @@ Rectangle {
         id: slideAnim
         NumberAnimation { id: slideInAnim;  property: "x"; duration: root.transDur; easing.type: Easing.InOutCubic }
         NumberAnimation { id: slideOutAnim; property: "x"; duration: root.transDur; easing.type: Easing.InOutCubic }
+        onStopped: root._checkPendingPanorama()
     }
 
     // Zoom
@@ -134,6 +149,7 @@ Rectangle {
         NumberAnimation { id: zoomFadeIn;  property: "opacity"; to: 1;   duration: root.transDur; easing.type: Easing.OutCubic }
         NumberAnimation { id: zoomFadeOut; property: "opacity"; to: 0;   duration: root.transDur; easing.type: Easing.OutCubic }
         NumberAnimation { id: zoomScaleIn; property: "scale";   to: 1.0; duration: root.transDur; easing.type: Easing.OutCubic }
+        onStopped: root._checkPendingPanorama()
     }
 
     // Fade to black — sequential: old image fades out, new image fades in
@@ -141,6 +157,7 @@ Rectangle {
         id: fadeBlackAnim
         NumberAnimation { id: fbOutAnim; property: "opacity"; to: 0; duration: root.transDur / 2; easing.type: Easing.InQuad }
         NumberAnimation { id: fbInAnim;  property: "opacity"; to: 1; duration: root.transDur / 2; easing.type: Easing.OutQuad }
+        onStopped: root._checkPendingPanorama()
     }
 
     // ── Panorama animations ───────────────────────────────────────────────────
@@ -169,9 +186,16 @@ Rectangle {
         onStopped: {
             if (!root._panoCleanupPending) return
             root._panoCleanupPending = false
+            // In fill mode the exit animation keeps scale=s; reset it together with the
+            // other properties in one synchronous block so no intermediate frame is shown.
             root.panoramaActive = false
-            if (root._panoLayer) root._panoLayer.layer.enabled = false
+            if (root._panoLayer) {
+                root._panoLayer.layer.enabled = false
+                root._panoLayer.scale = 1
+                root._panoLayer.x = 0
+            }
             root._panoLayer = null
+            root._panoScrollRange = 0
             var wasPlaying = root._panoWasPlaying
             root._panoWasPlaying = false
             var pendingNav = root._pendingNav
@@ -179,6 +203,7 @@ Rectangle {
             if (wasPlaying) controller.togglePlay()
             if (pendingNav === 1)       { root.navDir = 1;  controller.nextImage() }
             else if (pendingNav === -1) { root.navDir = -1; controller.prevImage() }
+            root._forceFit = false
         }
     }
 
@@ -286,6 +311,7 @@ Rectangle {
                 captionDimIn.stop(); captionDimOut.start()
                 _captionWasPlaying = false  // navigation started; do not resume play
             }
+            root._pendingPanorama = false
             showImage(true)
         }
         function onRatingWritten(index) {
@@ -385,6 +411,9 @@ Rectangle {
         case Qt.Key_C:
             openCaption()
             break
+        case Qt.Key_Q:
+            root.openQuitDialog()
+            break
         case Qt.Key_Escape:
             if (root._exifVisible) {
                 root._exifVisible = false
@@ -407,7 +436,10 @@ Rectangle {
             openJump()
             break
         case Qt.Key_P:
-            startPanorama()
+            if (fadeAnim.running || slideAnim.running || zoomAnim.running || fadeBlackAnim.running)
+                root._pendingPanorama = true
+            else
+                startPanorama()
             break
         case Qt.Key_Comma:
             if (root._exifVisible) {
@@ -582,23 +614,42 @@ Rectangle {
         var s = root.height * imgAspect / root.width
         var scrollRange = root.height * imgAspect - root.width
         root._panoLayer = layer
+        root._panoScrollRange = scrollRange
         root._panoWasPlaying = controller.isPlaying
         if (controller.isPlaying) controller.togglePlay()
+        // Setting panoramaActive = true switches imgA/imgB fillMode to PreserveAspectFit
+        // (via binding) so the full image width is available for the layer to render.
         root.panoramaActive = true
         root._pendingNav = 0
         root._panoCleanupPending = false
         // Render the layer into a larger FBO so the image is sampled at panorama
         // resolution rather than upscaled from a window-sized composite.
+        if (controller.imageFill) {
+            // Fill mode: force both images to PreserveAspectFit so the full image
+            // width is rendered inside the layer FBO (PreserveAspectCrop clips the
+            // sides).  The _forceFit flag is part of the declarative binding —
+            // no Qt.binding() closures needed.
+            root._forceFit = true
+        }
         layer.layer.enabled = true
         layer.layer.smooth  = true
         layer.layer.textureSize = Qt.size(Math.min(Math.round(root.width * s), 4096),
                                           Math.min(Math.round(root.height * s), 4096))
-        panoScaleIn.target = layer; panoScaleIn.from = 1.0; panoScaleIn.to = s
-        panoXLeft.target   = layer; panoXLeft.from   = 0;   panoXLeft.to   = scrollRange / 2
-        panoramaEnterAnim.start()
+        if (controller.imageFill) {
+            // Fill mode: image already appeared zoomed — skip the enter animation.
+            // Jump straight to scale=s, x=0 (centre) and begin scrolling immediately.
+            layer.scale = s
+            layer.x = 0
+            _panoramaScrollRight()
+        } else {
+            panoScaleIn.target = layer; panoScaleIn.from = 1.0; panoScaleIn.to = s
+            panoXLeft.target   = layer; panoXLeft.from   = 0;   panoXLeft.to   = scrollRange / 2
+            panoramaEnterAnim.start()
+        }
     }
 
     function stopPanorama() {
+        if (root._panoCleanupPending) return   // already stopping — ignore rapid key repeat
         root._panoCleanupPending = true
         panoramaEnterAnim.stop()
         scrollRightAnim.stop()
@@ -606,8 +657,15 @@ Rectangle {
         var layer = root._panoLayer
         panoScaleOut.target = layer; panoScaleOut.from = layer.scale
         panoXCenter.target  = layer; panoXCenter.from  = layer.x
+        // Fill mode: keep scale constant during exit so no black bars are revealed
+        // as the animation progresses. The onStopped handler resets scale to 1 in
+        // one synchronous block together with the layer/panoramaActive teardown.
+        panoScaleOut.to = controller.imageFill ? layer.scale : 1.0
         panoramaExitAnim.start()
     }
+
+    // _forceFit is cleared to restore normal fill-mode behaviour after panorama.
+    // No _restoreFillMode() helper needed — just set root._forceFit = false.
 
     function _panoramaAbort() {
         root._panoCleanupPending = false
@@ -622,14 +680,16 @@ Rectangle {
             root._panoLayer.x = 0
             root._panoLayer = null
         }
+        root._panoScrollRange = 0
         root._panoWasPlaying = false
         root._pendingNav = 0
+        root._forceFit = false
     }
 
     function _panoramaScrollRight() {
         var layer = root._panoLayer
-        var img = showingA ? imgA : imgB
-        var scrollRange = root.height * (img.implicitWidth / img.implicitHeight) - root.width
+        var scrollRange = root._panoScrollRange
+        if (!layer || !(scrollRange > 0)) return
         var dur = Math.max(1, Math.round(scrollRange / 250 * 1000))
         scrollRightAnim.target   = layer
         scrollRightAnim.from     = layer.x
@@ -640,8 +700,8 @@ Rectangle {
 
     function _panoramaScrollLeft() {
         var layer = root._panoLayer
-        var img = showingA ? imgA : imgB
-        var scrollRange = root.height * (img.implicitWidth / img.implicitHeight) - root.width
+        var scrollRange = root._panoScrollRange
+        if (!layer || !(scrollRange > 0)) return
         var dur = Math.max(1, Math.round(scrollRange / 250 * 1000))
         scrollLeftAnim.target   = layer
         scrollLeftAnim.from     = layer.x
@@ -676,7 +736,7 @@ Rectangle {
     // isPlayingChanged emission must not show the popup on the settings page.
     Connections {
         target: controller
-        function onIsPlayingChanged() { if (!root._exiting) playPauseAnim.restart() }
+        function onIsPlayingChanged() { if (!root._exiting && !root._suppressPlayAnim) playPauseAnim.restart() }
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────

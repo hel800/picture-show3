@@ -90,8 +90,10 @@ Popup {
         }
 
         Text {
-            Layout.alignment: Qt.AlignHCenter
+            Layout.fillWidth: true
             Layout.bottomMargin: 4
+            horizontalAlignment: Text.AlignHCenter
+            wrapMode: Text.Wrap
             text: qsTr("Scan with your phone to open the remote")
             color: Theme.textMuted
             font.pixelSize: 11

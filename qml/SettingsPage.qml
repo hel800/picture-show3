@@ -68,6 +68,7 @@ Item {
 
     signal startShow()
     signal openHelp()
+    signal openQuitDialog()
 
     function launchShow() {
         if (!root._canStart) return
@@ -106,7 +107,7 @@ Item {
             }
             break
         case Qt.Key_Escape:
-            quitDialog.open()
+            root.openQuitDialog()
             break
         case Qt.Key_Return:
         case Qt.Key_Enter:
@@ -151,163 +152,6 @@ Item {
             break
         }
         event.accepted = true
-    }
-
-    // ── Quit confirmation dialog ───────────────────────────────────────────────
-    Popup {
-        id: quitDialog
-        anchors.centerIn: parent
-        width: 390
-        height: dialogContent.implicitHeight + 48
-        modal: true
-        focus: true
-        closePolicy: Popup.NoAutoClose   // we handle Esc ourselves
-
-        background: Rectangle {
-            radius: 20
-            color: Theme.bgCard
-            border.color: Theme.surface
-            border.width: 1
-        }
-
-        Overlay.modal: Rectangle {
-            color: Qt.rgba(0, 0, 0, 0.6)
-        }
-
-        onOpened: yesBtn.forceActiveFocus()
-        onClosed: root.forceActiveFocus()
-
-        // Inner Item is a proper Item so Keys can attach to it
-        Item {
-            id: dialogContent
-            anchors.fill: parent
-            focus: true
-            implicitHeight: dialogCol.implicitHeight
-
-            Keys.onPressed: function(event) {
-                switch (event.key) {
-                case Qt.Key_Return:
-                case Qt.Key_Enter:
-                    if (noBtn.activeFocus) quitDialog.close()
-                    else Qt.quit()
-                    break
-                case Qt.Key_Y:
-                    Qt.quit()
-                    break
-                case Qt.Key_N:
-                case Qt.Key_Escape:
-                    quitDialog.close()
-                    break
-                case Qt.Key_Tab:
-                case Qt.Key_Backtab:
-                case Qt.Key_Left:
-                case Qt.Key_Right:
-                    if (yesBtn.activeFocus) noBtn.forceActiveFocus()
-                    else yesBtn.forceActiveFocus()
-                    break
-                default:
-                    break
-                }
-                event.accepted = true
-            }
-
-            ColumnLayout {
-                id: dialogCol
-                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 24 }
-                spacing: 20
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 14
-
-                    Image {
-                        source: "../img/icon.svg"
-                        fillMode: Image.PreserveAspectFit
-                        smooth: true
-                        mipmap: true
-                        sourceSize.width: 72
-                        sourceSize.height: 72
-                        Layout.preferredWidth: 36
-                        Layout.preferredHeight: 36
-                        Layout.fillWidth: false
-                        Layout.alignment: Qt.AlignVCenter
-                    }
-
-                    Column {
-                        Layout.fillWidth: true
-                        spacing: 4
-
-                        Text {
-                            text: qsTr("Exit Application")
-                            color: Theme.textPrimary
-                            font.pixelSize: 16
-                            font.weight: Font.Bold
-                        }
-
-                        Text {
-                            text: qsTr("Do you want to exit the application?")
-                            color: Theme.textSecondary
-                            font.pixelSize: 13
-                            wrapMode: Text.Wrap
-                            width: parent.width
-                        }
-                    }
-                }
-
-                RowLayout {
-                    Layout.fillWidth: true
-                    spacing: 10
-
-                    Rectangle {
-                        id: yesBtn
-                        Layout.fillWidth: true
-                        height: 42
-                        radius: 10
-                        color: activeFocus ? Theme.accentPress : Theme.accent
-                        border.color: activeFocus ? Theme.accentLight : "transparent"
-                        border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: qsTr("Yes")
-                            color: "white"
-                            font.pixelSize: 14
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: Qt.quit()
-                        }
-                    }
-
-                    Rectangle {
-                        id: noBtn
-                        Layout.fillWidth: true
-                        height: 42
-                        radius: 10
-                        color: activeFocus ? Theme.surfaceHover : Theme.surface
-                        border.color: activeFocus ? Theme.accent : "transparent"
-                        border.width: 1
-                        Behavior on color { ColorAnimation { duration: 120 } }
-
-                        Text {
-                            anchors.centerIn: parent
-                            text: qsTr("No")
-                            color: Theme.textPrimary
-                            font.pixelSize: 14
-                        }
-                        MouseArea {
-                            anchors.fill: parent
-                            cursorShape: Qt.PointingHandCursor
-                            onClicked: quitDialog.close()
-                        }
-                    }
-
-
-                }
-            }
-        }
     }
 
     // ── Folder dialog ──────────────────────────────────────────────────────────

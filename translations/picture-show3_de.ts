@@ -4,128 +4,153 @@
 <context>
     <name>AdvancedSettingsDialog</name>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="206"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="240"/>
         <source>ADVANCED SETTINGS</source>
         <translation>ERWEITERTE EINSTELLUNGEN</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="323"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="364"/>
         <source>TRANSITION</source>
         <translation>ÜBERGANG</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="332"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="373"/>
         <source>Duration</source>
         <translation>Dauer</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="239"/>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="598"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="744"/>
         <source>HUD</source>
         <translation>HUD</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="239"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
         <source>General</source>
         <translation>Allgemein</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="239"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
         <source>Controls</source>
         <translation>Steuerung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="239"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="273"/>
         <source>Remote</source>
         <translation>Fernbedienung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="274"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="308"/>
         <source>sections</source>
         <translation>Abschnitte</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="278"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="312"/>
         <source>option</source>
         <translation>Option</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="282"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="316"/>
         <source>change</source>
         <translation>Ändern</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="462"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="592"/>
         <source>UPDATES</source>
         <translation>UPDATES</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="473"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="603"/>
         <source>Check for updates on startup</source>
         <translation>Beim Start nach Updates suchen</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="474"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="604"/>
         <source>Checks GitHub Releases for a newer version</source>
         <translation>Prüft GitHub Releases auf eine neuere Version</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="530"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="436"/>
+        <source>IMAGE SCALE</source>
+        <translation>BILDSKALIERUNG</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="447"/>
+        <source>Image scale</source>
+        <translation>Bildskalierung</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="448"/>
+        <source>How images are scaled to fit the window</source>
+        <translation>Skalierung des Bilds im Fenster</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="455"/>
+        <source>Fit</source>
+        <translation>Einpassen</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="456"/>
+        <source>Fill</source>
+        <translation>Füllen</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="668"/>
         <source>MOUSE</source>
         <translation>MAUS</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="541"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="679"/>
         <source>Mouse button navigation</source>
         <translation>Maussteuerung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="542"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="680"/>
         <source>Left click → next  ·  Right click → previous</source>
         <translation>Linksklick → weiter  ·  Rechtsklick → zurück</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="607"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="753"/>
         <source>Size</source>
         <translation>Größe</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="676"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="830"/>
         <source>SMARTPHONE REMOTE</source>
         <translation>SMARTPHONE REMOTE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="685"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="839"/>
         <source>Enable remote control</source>
         <translation>Fernbedienung aktivieren</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="735"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="890"/>
         <source>PORT</source>
         <translation>PORT</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="744"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="899"/>
         <source>Port</source>
         <translation>Port</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="394"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="523"/>
         <source>LANGUAGE</source>
         <translation>SPRACHE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="415"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="544"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="429"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="558"/>
         <source>⚠  Restart the app to apply the language change.</source>
         <translation>⚠  App neu starten, um die Sprachänderung zu übernehmen.</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="826"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="982"/>
         <source>Done</source>
         <translation>Fertig</translation>
     </message>
@@ -313,23 +338,39 @@
 <context>
     <name>HudBar</name>
     <message>
-        <location filename="../qml/HudBar.qml" line="105"/>
         <source>fullscreen</source>
+        <translation type="vanished">Vollbild</translation>
+    </message>
+    <message>
+        <source>info</source>
+        <translation type="vanished">Info</translation>
+    </message>
+    <message>
+        <source>details</source>
+        <translation type="vanished">Details</translation>
+    </message>
+    <message>
+        <source>exit</source>
+        <translation type="vanished">Beenden</translation>
+    </message>
+    <message>
+        <location filename="../qml/HudBar.qml" line="105"/>
+        <source>Fullscreen</source>
         <translation>Vollbild</translation>
     </message>
     <message>
         <location filename="../qml/HudBar.qml" line="107"/>
-        <source>info</source>
+        <source>Info</source>
         <translation>Info</translation>
     </message>
     <message>
         <location filename="../qml/HudBar.qml" line="109"/>
-        <source>details</source>
+        <source>Details</source>
         <translation>Details</translation>
     </message>
     <message>
         <location filename="../qml/HudBar.qml" line="111"/>
-        <source>exit</source>
+        <source>Exit</source>
         <translation>Beenden</translation>
     </message>
 </context>
@@ -341,7 +382,7 @@
         <translation>SMARTPHONE REMOTE</translation>
     </message>
     <message>
-        <location filename="../qml/QrCodeDialog.qml" line="95"/>
+        <location filename="../qml/QrCodeDialog.qml" line="97"/>
         <source>Scan with your phone to open the remote</source>
         <translation>Mit dem Smartphone scannen, um die Fernbedienung zu öffnen</translation>
     </message>
@@ -351,22 +392,22 @@
     <message>
         <location filename="../qml/SettingsPage.qml" line="228"/>
         <source>Exit Application</source>
-        <translation>Anwendung beenden</translation>
+        <translation type="vanished">Anwendung beenden</translation>
     </message>
     <message>
         <location filename="../qml/SettingsPage.qml" line="235"/>
         <source>Do you want to exit the application?</source>
-        <translation>Möchten Sie die Anwendung beenden?</translation>
+        <translation type="vanished">Möchten Sie die Anwendung beenden?</translation>
     </message>
     <message>
         <location filename="../qml/SettingsPage.qml" line="283"/>
         <source>No</source>
-        <translation>Nein</translation>
+        <translation type="vanished">Nein</translation>
     </message>
     <message>
         <location filename="../qml/SettingsPage.qml" line="260"/>
         <source>Yes</source>
-        <translation>Ja</translation>
+        <translation type="vanished">Ja</translation>
     </message>
     <message>
         <location filename="../qml/SettingsPage.qml" line="303"/>
@@ -871,6 +912,29 @@
         <location filename="../qml/SlideshowPage.qml" line="432"/>
         <source>Caption</source>
         <translation>Beschreibung</translation>
+    </message>
+</context>
+<context>
+    <name>main</name>
+    <message>
+        <location filename="../qml/main.qml" line="182"/>
+        <source>Exit Application</source>
+        <translation>Anwendung beenden</translation>
+    </message>
+    <message>
+        <location filename="../qml/main.qml" line="189"/>
+        <source>Do you want to exit the application?</source>
+        <translation>Möchten Sie die Anwendung beenden?</translation>
+    </message>
+    <message>
+        <location filename="../qml/main.qml" line="214"/>
+        <source>Yes</source>
+        <translation>Ja</translation>
+    </message>
+    <message>
+        <location filename="../qml/main.qml" line="237"/>
+        <source>No</source>
+        <translation>Nein</translation>
     </message>
 </context>
 </TS>
