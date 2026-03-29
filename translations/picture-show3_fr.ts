@@ -313,24 +313,40 @@
 <context>
     <name>HudBar</name>
     <message>
-        <location filename="../qml/HudBar.qml" line="105"/>
         <source>fullscreen</source>
-        <translation>plein écran</translation>
+        <translation type="vanished">plein écran</translation>
+    </message>
+    <message>
+        <source>info</source>
+        <translation type="vanished">info</translation>
+    </message>
+    <message>
+        <source>details</source>
+        <translation type="vanished">détails</translation>
+    </message>
+    <message>
+        <source>exit</source>
+        <translation type="vanished">quitter</translation>
+    </message>
+    <message>
+        <location filename="../qml/HudBar.qml" line="105"/>
+        <source>Fullscreen</source>
+        <translation>Plein écran</translation>
     </message>
     <message>
         <location filename="../qml/HudBar.qml" line="107"/>
-        <source>info</source>
-        <translation>info</translation>
+        <source>Info</source>
+        <translation type="unfinished">Info</translation>
     </message>
     <message>
         <location filename="../qml/HudBar.qml" line="109"/>
-        <source>details</source>
-        <translation>détails</translation>
+        <source>Details</source>
+        <translation>Détails</translation>
     </message>
     <message>
         <location filename="../qml/HudBar.qml" line="111"/>
-        <source>exit</source>
-        <translation>quitter</translation>
+        <source>Exit</source>
+        <translation>Quitter</translation>
     </message>
 </context>
 <context>
