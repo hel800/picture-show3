@@ -29,6 +29,8 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Cursor** | Hidden in fullscreen; visible in windowed mode |
 | **Multilingual** | UI language selectable in Advanced settings; `Auto` follows system locale |
 | **Update check** | Checks GitHub Releases for a newer version on startup — opt-out in Advanced settings |
+| **Jump-start mode** | `python main.py <folder>` — skips the settings page and launches the show immediately; Esc returns to settings |
+| **Kiosk mode** | `python main.py --kiosk <folder>` — unattended display mode; Esc shows a quit confirmation dialog instead of going to settings |
 
 ---
 
@@ -54,6 +56,12 @@ pip install -r requirements.txt
 
 # 3. Run
 python main.py
+
+# Jump-start: load a folder and go straight to the show (Esc returns to settings)
+python main.py /path/to/photos
+
+# Kiosk mode: unattended display, no settings UI (Esc shows quit dialog)
+python main.py --kiosk /path/to/photos
 ```
 
 ---
@@ -71,7 +79,7 @@ python -m pytest
 python -m pytest -v
 ```
 
-244 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+254 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
 
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 
@@ -275,6 +283,12 @@ iscc install\windows\picture-show3.iss
 When running from source (`python main.py`), QML files are read directly from disk — edit a `.qml` file and rerun immediately, no compile step needed.
 
 When running the built exe, QML and SVGs are loaded from the compiled resource bundle embedded in `resources_rc.py`. PyInstaller sets `sys.frozen = True`, and the app switches to `qrc:/` paths automatically.
+
+---
+
+## Command-line interface
+
+See [docs/cli.md](docs/cli.md) for the full CLI reference, including all launch modes and error handling.
 
 ---
 

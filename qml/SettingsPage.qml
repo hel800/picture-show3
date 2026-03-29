@@ -11,17 +11,49 @@ Item {
     focus: true
 
     // ── Inline reusable components ───────────────────────────────────────────
-    property bool   hasStarted       : false
-    property string _folderAtStart   : ""
-    property string _sortAtStart     : ""
-    property int    _minRatingAtStart: 0
-    property string _updateVersion   : ""   // set when a newer GitHub release is found
+    property bool   hasStarted        : false
+    property string _folderAtStart    : ""
+    property string _sortAtStart      : ""
+    property int    _minRatingAtStart : 0
+    property string _updateVersion    : ""   // set when a newer GitHub release is found
+    property bool   _kioskSplashDone  : false  // true once the kiosk/jump-start fade-in completes
 
     readonly property bool _canStart: controller.imageCount > 0 && !controller.scanning
+
+    // Shorthand: true when the app was started with either --kiosk or a bare <dir> argument.
+    readonly property bool _autoLaunch: controller.kioskMode || controller.jumpStart
 
     Connections {
         target: updateChecker
         function onUpdateAvailable(version) { root._updateVersion = version }
+    }
+
+    // Kiosk / jump-start: auto-launch when both scanning=false and imageCount>0 are satisfied.
+    // These two conditions are set by separate signals in the pipeline
+    // (_scanning=false is emitted by scanningChanged, then _apply_filter emits
+    // imagesChanged which makes imageCount>0).  Both handlers run the same guard
+    // so whichever fires last triggers the launch exactly once.
+    Connections {
+        target: controller
+        function onScanningChanged() {
+            if (root._autoLaunch && root._kioskSplashDone
+                    && !controller.scanning && controller.imageCount > 0
+                    && !kioskLaunchAnim.running && splashOverlay.visible) {
+                kioskHeartbeat.stop()
+                splashLogo.scale = 1.0   // breathing may have stopped mid-cycle
+                splashLogo.opacity = 1.0
+                kioskLaunchAnim.start()
+            }
+        }
+        function onImagesChanged() {
+            if (root._autoLaunch && root._kioskSplashDone
+                    && !controller.scanning && controller.imageCount > 0
+                    && !kioskLaunchAnim.running && splashOverlay.visible) {
+                kioskHeartbeat.stop()
+                splashLogo.scale = 1.0
+                kioskLaunchAnim.start()
+            }
+        }
     }
 
     // Reset to "Start" when the user picks a different folder, sort order, or filter after a show
@@ -48,12 +80,23 @@ Item {
     }
 
     function triggerSlideIn() {
+        splashOverlay.visible = false   // ensure overlay is gone when returning from the show
+        headerLogo.opacity = 1          // may still be 0 if launched via jump-start
+        windowHelper.setCursorHidden(false)
         scrollTranslate.y = 20
         scrollSlideIn.start()
     }
 
+    // Keep the cursor hidden in fullscreen, visible in windowed — across all modes.
+    // The window reaches its final visibility after Component.onCompleted (deferred),
+    // so we react here rather than relying solely on the onCompleted check.
+    Window.onVisibilityChanged: {
+        windowHelper.setCursorHidden(Window.visibility === Window.FullScreen)
+    }
+
     Keys.onPressed: function(event) {
         if (launchAnim.running || splashAnim.running) { event.accepted = true; return }
+        if (root._autoLaunch && splashOverlay.visible) { event.accepted = true; return }
         switch (event.key) {
         case Qt.Key_F:
             var win = Window.window
@@ -1388,6 +1431,10 @@ Item {
         z: 100
         visible: true
 
+        // Block all mouse interaction with the settings page beneath while the
+        // splash (or kiosk/jump-start heartbeat) is visible.
+        MouseArea { anchors.fill: parent; hoverEnabled: true }
+
         gradient: Gradient {
             GradientStop { position: 0.0; color: Theme.bgDeep }
             GradientStop { position: 1.0; color: Theme.bgGradEnd }
@@ -1430,20 +1477,31 @@ Item {
                 }
             }
 
-            // Logo drifts up to its header position (overlay stays opaque)
+            // Auto-launch modes (kiosk / jump-start): logo stays centred (instant).
+            // Normal mode: logo drifts to header position.
             NumberAnimation {
                 target: splashLogo; property: "y"
-                to: 36
-                duration: 500; easing.type: Easing.InOutCubic
+                to: root._autoLaunch ? (root.height / 2 - splashLogo.height / 2) : 36
+                duration: root._autoLaunch ? 1 : 500
+                easing.type: Easing.InOutCubic
             }
 
-            // Swap: reveal header logo then instantly hide the overlay,
-            // then slide the content up from its offset position
+            // Branch: start auto-launch heartbeat, or reveal settings page
             ScriptAction {
                 script: {
-                    headerLogo.opacity = 1
-                    splashOverlay.visible = false
-                    scrollSlideIn.start()
+                    if (root._autoLaunch) {
+                        root._kioskSplashDone = true
+                        // If scan finished before the splash did, skip heartbeat
+                        if (!controller.scanning && controller.imageCount > 0)
+                            kioskLaunchAnim.start()
+                        else
+                            kioskHeartbeat.start()
+                    } else {
+                        headerLogo.opacity = 1
+                        splashOverlay.visible = false
+                        windowHelper.setCursorHidden(false)
+                        scrollSlideIn.start()
+                    }
                 }
             }
         }
@@ -1459,6 +1517,36 @@ Item {
         NumberAnimation { target: sunWatermark; property: "opacity";  from: 0;   to: 0.5;  duration: 700; easing.type: Easing.OutCubic }
         NumberAnimation { target: sunWatermark; property: "scale";    from: 0.9; to: 1.0;  duration: 700; easing.type: Easing.OutCubic }
         NumberAnimation { target: sunWatermark; property: "rotation"; from: 0;   to: 25;   duration: 700; easing.type: Easing.OutCubic }
+    }
+
+    // ── Waiting animation: slow breathing while images load ───────────────────
+    // Inhale 1.8 s → hold 0.4 s → exhale 2.2 s → rest 0.3 s  (≈ 4.7 s cycle)
+    // No "from:" values — Qt reads the current property value so the first
+    // cycle starts smoothly from wherever the splash left off (no flicker).
+    // InOutSine gives a perfectly smooth sine-wave curve with no visible edges.
+    SequentialAnimation {
+        id: kioskHeartbeat
+        loops: Animation.Infinite
+        ParallelAnimation {
+            NumberAnimation { target: splashLogo; property: "scale";   to: 1.08; duration: 1800; easing.type: Easing.InOutSine }
+            NumberAnimation { target: splashLogo; property: "opacity"; to: 1.0;  duration: 1800; easing.type: Easing.InOutSine }
+        }
+        PauseAnimation { duration: 400 }
+        ParallelAnimation {
+            NumberAnimation { target: splashLogo; property: "scale";   to: 1.0;  duration: 2200; easing.type: Easing.InOutSine }
+            NumberAnimation { target: splashLogo; property: "opacity"; to: 0.5;  duration: 2200; easing.type: Easing.InOutSine }
+        }
+        PauseAnimation { duration: 300 }
+    }
+
+    // ── Kiosk launch: zoom logo out, then hand off to slideshow ───────────────
+    SequentialAnimation {
+        id: kioskLaunchAnim
+        ParallelAnimation {
+            NumberAnimation { target: splashLogo; property: "scale";   to: 4.5; duration: 300; easing.type: Easing.InQuart }
+            NumberAnimation { target: splashLogo; property: "opacity"; to: 0;   duration: 300; easing.type: Easing.InQuart }
+        }
+        ScriptAction { script: root.startShow() }
     }
 
     // ── Launch transition overlay (background only) ────────────────────────

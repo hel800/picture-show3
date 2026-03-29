@@ -289,6 +289,14 @@ Rectangle {
     // ── React to controller index changes (autoplay, remote, keyboard) ────────
     Connections {
         target: controller
+        function onImagesChanged() {
+            // Covers kiosk-mode (show started before images available) and any
+            // sort/filter completing while the show is active.  _apply_filter also
+            // emits currentIndexChanged right after, so showImage may be called
+            // twice in quick succession — that is harmless (stopAll/resetLayers first).
+            if (controller.imageCount > 0)
+                showImage(true)
+        }
         function onCurrentIndexChanged() {
             if (root.panoramaActive) _panoramaAbort()
             if (root._exifVisible) {
@@ -410,6 +418,8 @@ Rectangle {
             if (root._exifVisible) {
                 root._exifVisible = false
                 exifPanel.close()
+            } else if (controller.kioskMode) {
+                kioskQuitDialog.open()
             } else {
                 root._exiting = true
                 root.exitShow()
@@ -1170,6 +1180,158 @@ Rectangle {
         }
     }
 
+    // ── Kiosk quit confirmation dialog ───────────────────────────────────────
+    Popup {
+        id: kioskQuitDialog
+        anchors.centerIn: parent
+        width: 390
+        height: kioskQuitContent.implicitHeight + 48
+        modal: true
+        focus: true
+        closePolicy: Popup.NoAutoClose
+
+        background: Rectangle {
+            radius: 20
+            color: Theme.bgCard
+            border.color: Theme.surface
+            border.width: 1
+        }
+
+        Overlay.modal: Rectangle {
+            color: Qt.rgba(0, 0, 0, 0.6)
+        }
+
+        onOpened: kioskYesBtn.forceActiveFocus()
+        onClosed: root.forceActiveFocus()
+
+        Item {
+            id: kioskQuitContent
+            anchors.fill: parent
+            focus: true
+            implicitHeight: kioskQuitCol.implicitHeight
+
+            Keys.onPressed: function(event) {
+                switch (event.key) {
+                case Qt.Key_Return:
+                case Qt.Key_Enter:
+                    if (kioskNoBtn.activeFocus) kioskQuitDialog.close()
+                    else Qt.quit()
+                    break
+                case Qt.Key_Y:
+                    Qt.quit()
+                    break
+                case Qt.Key_N:
+                case Qt.Key_Escape:
+                    kioskQuitDialog.close()
+                    break
+                case Qt.Key_Tab:
+                case Qt.Key_Backtab:
+                case Qt.Key_Left:
+                case Qt.Key_Right:
+                    if (kioskYesBtn.activeFocus) kioskNoBtn.forceActiveFocus()
+                    else kioskYesBtn.forceActiveFocus()
+                    break
+                default:
+                    break
+                }
+                event.accepted = true
+            }
+
+            ColumnLayout {
+                id: kioskQuitCol
+                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 24 }
+                spacing: 20
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 14
+
+                    Image {
+                        source: "../img/icon.svg"
+                        fillMode: Image.PreserveAspectFit
+                        smooth: true; mipmap: true
+                        sourceSize.width: 72; sourceSize.height: 72
+                        Layout.preferredWidth: 36; Layout.preferredHeight: 36
+                        Layout.fillWidth: false
+                        Layout.alignment: Qt.AlignVCenter
+                    }
+
+                    Column {
+                        Layout.fillWidth: true
+                        spacing: 4
+
+                        Text {
+                            text: qsTr("Exit Application")
+                            color: Theme.textPrimary
+                            font.pixelSize: 16
+                            font.weight: Font.Bold
+                        }
+
+                        Text {
+                            text: qsTr("Do you want to exit the application?")
+                            color: Theme.textSecondary
+                            font.pixelSize: 13
+                            wrapMode: Text.Wrap
+                            width: parent.width
+                        }
+                    }
+                }
+
+                RowLayout {
+                    Layout.fillWidth: true
+                    spacing: 10
+
+                    Rectangle {
+                        id: kioskYesBtn
+                        Layout.fillWidth: true
+                        height: 42
+                        radius: 10
+                        color: activeFocus ? Theme.accentPress : Theme.accent
+                        border.color: activeFocus ? Theme.accentLight : "transparent"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 120 } }
+                        focus: true
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("Yes")
+                            color: "white"
+                            font.pixelSize: 14
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: Qt.quit()
+                        }
+                    }
+
+                    Rectangle {
+                        id: kioskNoBtn
+                        Layout.fillWidth: true
+                        height: 42
+                        radius: 10
+                        color: activeFocus ? Theme.surfaceHover : Theme.surface
+                        border.color: activeFocus ? Theme.accent : "transparent"
+                        border.width: 1
+                        Behavior on color { ColorAnimation { duration: 120 } }
+
+                        Text {
+                            anchors.centerIn: parent
+                            text: qsTr("No")
+                            color: Theme.textPrimary
+                            font.pixelSize: 14
+                        }
+                        MouseArea {
+                            anchors.fill: parent
+                            cursorShape: Qt.PointingHandCursor
+                            onClicked: kioskQuitDialog.close()
+                        }
+                    }
+                }
+            }
+        }
+    }
+
     // ── Intro fade-in (black overlay that fades away to reveal first image) ──
     Rectangle {
         id: introOverlay
@@ -1194,7 +1356,7 @@ Rectangle {
         // Correct cursor state: onStartShow always hides it, but on desktop in
         // windowed mode the cursor should remain visible.
         windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
-        showImage(false)
+        showImage(true)
         introFadeOut.start()
         root.forceActiveFocus()
     }

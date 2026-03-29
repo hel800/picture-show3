@@ -860,6 +860,31 @@ class TestParallelLoading:
         qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
         assert len(ctrl._rating_cache) == 6
 
+    def test_partial_cache_from_rating_write_triggers_async_scan(self, rated_folder,
+                                                                   load_folder, qtbot,
+                                                                   qapp, _isolate_settings):
+        """Writing one rating during a show leaves a partial cache.
+        setMinRating must still trigger a background read, not fall through to
+        synchronous _apply_filter which would block the main thread."""
+        from slideshow_controller import SlideshowController
+        ctrl = SlideshowController(jump_start=True)
+        load_folder(ctrl, str(rated_folder))        # minRating=0 → cache stays empty
+        assert ctrl._rating_cache == {}
+
+        # Simulate user writing one rating during the show
+        ctrl.writeImageRating(0, 4)
+        assert len(ctrl._rating_cache) == 1         # partial: one entry out of 6
+
+        # Now user changes filter — must NOT go synchronous
+        scanning_states: list[bool] = []
+        ctrl.scanningChanged.connect(lambda: scanning_states.append(ctrl.scanning))
+
+        ctrl.setMinRating(3)
+        assert ctrl.scanning is True, "background scan must start immediately"
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+        assert len(ctrl._rating_cache) == 6         # all images now in cache
+        assert any(s is True for s in scanning_states), "scanningChanged(True) must fire"
+
     # ── sort change mid-scan ──────────────────────────────────────────────────
 
     def test_sort_change_during_scan_is_applied(self, tmp_path, ctrl, qtbot):
@@ -1462,3 +1487,86 @@ class TestWriteImageCaptionSlot:
         load_folder(ctrl, str(tmp_path))
         ctrl.writeImageCaption(0, "")
         assert ctrl.imageCaption(0) == ""
+
+
+# ── Date cache ────────────────────────────────────────────────────────────────
+
+class TestDateCache:
+    def test_date_cache_populated_after_date_sort(self, ctrl, image_folder, load_folder):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert len(ctrl._date_cache) == 5
+
+    def test_date_cache_reused_on_second_sort(self, ctrl, image_folder, load_folder, qtbot):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert len(ctrl._date_cache) == 5
+
+        # Record cache state after first sort
+        cache_snapshot = dict(ctrl._date_cache)
+
+        # Switch away then back to date — cache must be identical (no re-reads)
+        ctrl.setSortOrder("name")
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+        ctrl.setSortOrder("date")
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+        assert ctrl._date_cache == cache_snapshot
+
+    def test_date_cache_cleared_on_new_folder(self, ctrl, image_folder, tmp_path, load_folder):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert len(ctrl._date_cache) > 0
+
+        other = tmp_path / "other"
+        other.mkdir()
+        make_plain_jpeg(other / "x.jpg")
+        load_folder(ctrl, str(other))
+        # Cache should only contain files from the new folder
+        assert all(str(image_folder) not in p for p in ctrl._date_cache)
+
+    def test_date_cache_cleared_on_invalid_folder(self, ctrl, image_folder, load_folder):
+        ctrl.setSortOrder("date")
+        load_folder(ctrl, str(image_folder))
+        assert len(ctrl._date_cache) > 0
+        ctrl.loadFolder("/nonexistent/path/xyz")
+        assert ctrl._date_cache == {}
+
+
+# ── Kiosk mode ────────────────────────────────────────────────────────────────
+
+class TestKioskMode:
+    def test_kiosk_mode_false_by_default(self, ctrl):
+        assert ctrl.kioskMode is False
+
+    def test_kiosk_mode_true_when_set(self, qapp, _isolate_settings):
+        from slideshow_controller import SlideshowController
+        ctrl = SlideshowController(kiosk_mode=True)
+        assert ctrl.kioskMode is True
+
+    def test_kiosk_start_show_does_not_update_history(
+        self, qapp, _isolate_settings, image_folder, load_folder
+    ):
+        from slideshow_controller import SlideshowController
+        ctrl = SlideshowController(kiosk_mode=True)
+        ctrl.loadFolder(str(image_folder))
+        load_folder(ctrl, str(image_folder))
+        ctrl.startShow()
+        assert ctrl.folderHistory == []
+
+    def test_non_kiosk_start_show_updates_history(self, ctrl, image_folder, load_folder):
+        load_folder(ctrl, str(image_folder))
+        ctrl.startShow()
+        assert str(image_folder) in ctrl.folderHistory
+
+    def test_kiosk_does_not_load_history_folder_on_init(
+        self, qapp, _isolate_settings, image_folder
+    ):
+        from slideshow_controller import SlideshowController
+        # Populate history via a normal controller first
+        ctrl_normal = SlideshowController()
+        ctrl_normal._update_history(str(image_folder))
+
+        # Kiosk controller should not auto-load from history
+        ctrl_kiosk = SlideshowController(kiosk_mode=True)
+        assert ctrl_kiosk.imageCount == 0
+        assert ctrl_kiosk.folder == ""

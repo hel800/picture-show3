@@ -257,6 +257,7 @@ ApplicationWindow {
                 forceActiveFocus()
                 if (controller.remoteEnabled)
                     remoteServer.start()
+                windowHelper.setCursorHidden(Window.visibility === Window.FullScreen)
             }
             onStartShow: {
                 controller.startShow()
@@ -264,7 +265,7 @@ ApplicationWindow {
                 windowHelper.setCursorHidden(true)
                 stack.push(slideshowComp)
             }
-            onOpenHelp: helpOverlay.open()
+            onOpenHelp: if (!controller.kioskMode) helpOverlay.open()
             onOpenQuitDialog: quitDialog.open()
         }
     }
@@ -273,6 +274,7 @@ ApplicationWindow {
         id: slideshowComp
         SlideshowPage {
             onExitShow: {
+                if (controller.kioskMode) return
                 controller.stopShow()
                 remoteServer.setShowActive(false)
                 var sp = stack.get(0)
@@ -283,7 +285,7 @@ ApplicationWindow {
                 stack.pop()
                 sp.triggerSlideIn()
             }
-            onOpenHelp: helpOverlay.open()
+            onOpenHelp: if (!controller.kioskMode) helpOverlay.open()
             onOpenQuitDialog: quitDialog.open()
         }
     }

@@ -76,6 +76,7 @@ class SlideshowController(QObject):
     scanProgressChanged = Signal()
     ratingWritten       = Signal(int)    # emitted with image index after a successful rating write
     captionWritten      = Signal(int)    # emitted with image index after a successful caption write
+    kioskModeChanged    = Signal()
     # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
     _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
@@ -83,8 +84,10 @@ class SlideshowController(QObject):
     _progressUpdate     = Signal(int)           # files processed so far
 
     # ── Init ──────────────────────────────────────────────────────────────────
-    def __init__(self, parent: QObject | None = None) -> None:
+    def __init__(self, kiosk_mode: bool = False, jump_start: bool = False, parent: QObject | None = None) -> None:
         super().__init__(parent)
+        self._kiosk_mode      : bool             = kiosk_mode
+        self._jump_start      : bool             = jump_start
         self._folder          : str              = ""
         self._images          : list[str]        = []
         self._current_index   : int              = 0
@@ -103,6 +106,7 @@ class SlideshowController(QObject):
         self._all_images      : list[str]        = []
         self._min_rating      : int              = 0
         self._rating_cache    : dict[str, int]   = {}
+        self._date_cache      : dict[str, datetime] = {}
         self._exif_cache      : tuple[int, list] = (-1, [])  # (index, rows)
         self._language        : str              = "auto"
         self._update_check_enabled: bool         = True
@@ -153,7 +157,7 @@ class SlideshowController(QObject):
             case _:
                 self._folder_history = []
 
-        if self._folder_history:
+        if self._folder_history and not self._kiosk_mode and not self._jump_start:
             self._folder = self._folder_history[0]
             # Mark scanning immediately so QML shows the scanning state from the
             # first frame, but defer the actual thread start so the window can
@@ -258,6 +262,12 @@ class SlideshowController(QObject):
     @Property(int, notify=scanProgressChanged)
     def scanProgress(self) -> int: return self._scan_progress
 
+    @Property(bool, notify=kioskModeChanged)
+    def kioskMode(self) -> bool: return self._kiosk_mode
+
+    @Property(bool, constant=True)
+    def jumpStart(self) -> bool: return self._jump_start
+
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
         """
@@ -299,6 +309,7 @@ class SlideshowController(QObject):
             self._images = []
             self._current_index = 0
             self._rating_cache = {}
+            self._date_cache = {}
             self._exif_cache = (-1, [])
             self.imagesChanged.emit()
             self.currentIndexChanged.emit()
@@ -311,6 +322,7 @@ class SlideshowController(QObject):
         self._images = []
         self._current_index = 0
         self._rating_cache = {}
+        self._date_cache = {}
         self._exif_cache = (-1, [])
         self.imagesChanged.emit()
         self.currentIndexChanged.emit()
@@ -405,29 +417,36 @@ class SlideshowController(QObject):
     def _parallel_date_sort(self, images: list[str], cancel: threading.Event,
                             max_workers: int = 8,
                             report_progress: bool = False) -> list[str] | None:
-        """Sort images by EXIF date using parallel reads.  Returns None if cancelled."""
+        """Sort images by EXIF date using parallel reads.  Returns None if cancelled.
+        Results are cached in self._date_cache so repeated sort switches are instant."""
         keyed: list[tuple[datetime, str]] = []
-        done = 0
-        with ThreadPoolExecutor(max_workers=max_workers) as pool:
-            futures = {pool.submit(SlideshowController._date_key, p): p for p in images}
-            for future in futures:
-                # Poll with short timeout so cancel checks happen frequently
-                while True:
-                    if cancel.is_set():
-                        pool.shutdown(wait=False, cancel_futures=True)
-                        return None
-                    try:
-                        dt = future.result(timeout=0.1)
-                        break
-                    except TimeoutError:
-                        continue
-                    except Exception:
-                        dt = datetime.min
-                        break
-                keyed.append((dt, futures[future]))
-                if report_progress:
+        to_read = [p for p in images if p not in self._date_cache]
+        done = len(images) - len(to_read)  # cached files count as already done
+
+        if to_read:
+            with ThreadPoolExecutor(max_workers=max_workers) as pool:
+                futures = {pool.submit(SlideshowController._date_key, p): p for p in to_read}
+                for future in futures:
+                    # Poll with short timeout so cancel checks happen frequently
+                    while True:
+                        if cancel.is_set():
+                            pool.shutdown(wait=False, cancel_futures=True)
+                            return None
+                        try:
+                            dt = future.result(timeout=0.1)
+                            break
+                        except TimeoutError:
+                            continue
+                        except Exception:
+                            dt = datetime.min
+                            break
+                    path = futures[future]
+                    self._date_cache[path] = dt
                     done += 1
-                    self._progressUpdate.emit(done)
+                    if report_progress:
+                        self._progressUpdate.emit(done)
+
+        keyed = [(self._date_cache[p], p) for p in images]
         keyed.sort()
         return [p for _, p in keyed]
 
@@ -440,6 +459,7 @@ class SlideshowController(QObject):
             self._all_images = []
             self._images = []
             self._rating_cache = {}
+            self._date_cache = {}
             self._exif_cache = (-1, [])
             self._scanning = False
             self.scanningChanged.emit()
@@ -491,8 +511,8 @@ class SlideshowController(QObject):
         if result["order"] != self._sort_order:
             self._sort_in_background()
             return
-        # Chain into ratings read if star filter is active and cache is empty
-        if self._min_rating > 0 and not self._rating_cache:
+        # Chain into ratings read if filter is active and cache is incomplete
+        if self._min_rating > 0 and len(self._rating_cache) < len(self._all_images):
             self._read_ratings_in_background()
         else:
             self._scanning = False
@@ -650,7 +670,7 @@ class SlideshowController(QObject):
             # Cancel any running sort/ratings and re-apply.
             # During scan phase _all_images is empty, so we just save and
             # the pipeline will use the current _min_rating after discovery.
-            if clamped > 0 and not self._rating_cache:
+            if clamped > 0 and len(self._rating_cache) < len(self._all_images):
                 self._read_ratings_in_background()
             else:
                 # If a sort/ratings worker was running, cancel it
@@ -731,7 +751,7 @@ class SlideshowController(QObject):
     @Slot()
     def startShow(self) -> None:
         """Called when the show begins — starts the timer if autoplay is on."""
-        if self._folder and self._images:
+        if self._folder and self._images and not self._kiosk_mode:
             self._update_history(self._folder)
         if self._autoplay and self._images:
             self._timer.setInterval(self._interval)
