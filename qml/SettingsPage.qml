@@ -1278,7 +1278,7 @@ Item {
                                     color: Theme.textMuted
                                     font.pixelSize: 12
                                 }
-                                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "?" }
+                                KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "F1" }
                             }
                             MouseArea {
                                 id: helpArea
