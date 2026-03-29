@@ -38,16 +38,17 @@ Item {
         function onScanningChanged() {
             if (root._autoLaunch && root._kioskSplashDone
                     && !controller.scanning && controller.imageCount > 0
-                    && !kioskLaunchAnim.running) {
+                    && !kioskLaunchAnim.running && splashOverlay.visible) {
                 kioskHeartbeat.stop()
-                splashLogo.scale = 1.0   // heartbeat may have stopped mid-beat
+                splashLogo.scale = 1.0   // breathing may have stopped mid-cycle
+                splashLogo.opacity = 1.0
                 kioskLaunchAnim.start()
             }
         }
         function onImagesChanged() {
             if (root._autoLaunch && root._kioskSplashDone
                     && !controller.scanning && controller.imageCount > 0
-                    && !kioskLaunchAnim.running) {
+                    && !kioskLaunchAnim.running && splashOverlay.visible) {
                 kioskHeartbeat.stop()
                 splashLogo.scale = 1.0
                 kioskLaunchAnim.start()
@@ -1518,16 +1519,24 @@ Item {
         NumberAnimation { target: sunWatermark; property: "rotation"; from: 0;   to: 25;   duration: 700; easing.type: Easing.OutCubic }
     }
 
-    // ── Kiosk heartbeat (lub-dub pulse while images load) ─────────────────────
+    // ── Waiting animation: slow breathing while images load ───────────────────
+    // Inhale 1.8 s → hold 0.4 s → exhale 2.2 s → rest 0.3 s  (≈ 4.7 s cycle)
+    // No "from:" values — Qt reads the current property value so the first
+    // cycle starts smoothly from wherever the splash left off (no flicker).
+    // InOutSine gives a perfectly smooth sine-wave curve with no visible edges.
     SequentialAnimation {
         id: kioskHeartbeat
         loops: Animation.Infinite
-        NumberAnimation { target: splashLogo; property: "scale"; to: 1.07; duration: 120; easing.type: Easing.InCubic }
-        NumberAnimation { target: splashLogo; property: "scale"; to: 1.0;  duration: 200; easing.type: Easing.OutCubic }
-        PauseAnimation  { duration: 80 }
-        NumberAnimation { target: splashLogo; property: "scale"; to: 1.04; duration: 120; easing.type: Easing.InCubic }
-        NumberAnimation { target: splashLogo; property: "scale"; to: 1.0;  duration: 200; easing.type: Easing.OutCubic }
-        PauseAnimation  { duration: 700 }
+        ParallelAnimation {
+            NumberAnimation { target: splashLogo; property: "scale";   to: 1.08; duration: 1800; easing.type: Easing.InOutSine }
+            NumberAnimation { target: splashLogo; property: "opacity"; to: 1.0;  duration: 1800; easing.type: Easing.InOutSine }
+        }
+        PauseAnimation { duration: 400 }
+        ParallelAnimation {
+            NumberAnimation { target: splashLogo; property: "scale";   to: 1.0;  duration: 2200; easing.type: Easing.InOutSine }
+            NumberAnimation { target: splashLogo; property: "opacity"; to: 0.5;  duration: 2200; easing.type: Easing.InOutSine }
+        }
+        PauseAnimation { duration: 300 }
     }
 
     // ── Kiosk launch: zoom logo out, then hand off to slideshow ───────────────

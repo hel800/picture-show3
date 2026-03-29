@@ -390,52 +390,48 @@
 <context>
     <name>SettingsPage</name>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="228"/>
         <source>Exit Application</source>
         <translation type="vanished">Anwendung beenden</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="235"/>
         <source>Do you want to exit the application?</source>
         <translation type="vanished">Möchten Sie die Anwendung beenden?</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="283"/>
         <source>No</source>
         <translation type="vanished">Nein</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="260"/>
         <source>Yes</source>
         <translation type="vanished">Ja</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="303"/>
+        <location filename="../qml/SettingsPage.qml" line="160"/>
         <source>Select image folder</source>
         <translation>Bildordner auswählen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="392"/>
+        <location filename="../qml/SettingsPage.qml" line="249"/>
         <source>IMAGE FOLDER</source>
         <translation>BILDORDNER</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="433"/>
+        <location filename="../qml/SettingsPage.qml" line="290"/>
         <source>Type a path or click Browse…</source>
         <translation>Pfad eingeben oder Durchsuchen klicken …</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="453"/>
+        <location filename="../qml/SettingsPage.qml" line="310"/>
         <source>Browse...</source>
         <translation>Durchsuchen...</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="577"/>
+        <location filename="../qml/SettingsPage.qml" line="434"/>
         <source>Recent Folders</source>
         <translation>Zuletzt verwendet</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="712"/>
+        <location filename="../qml/SettingsPage.qml" line="569"/>
         <source>Clear history</source>
         <translation>Verlauf löschen</translation>
     </message>
@@ -444,207 +440,207 @@
         <translation type="vanished">Wird gescannt… %1 / %2</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="755"/>
+        <location filename="../qml/SettingsPage.qml" line="612"/>
         <source>Filtering by star… %1 / %2</source>
         <translation>Filtere nach Stern… %1 / %2</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="756"/>
+        <location filename="../qml/SettingsPage.qml" line="613"/>
         <source>Filtering by star…</source>
         <translation>Filtere nach Stern…</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="758"/>
+        <location filename="../qml/SettingsPage.qml" line="615"/>
         <source>Sorting by date… %1 / %2</source>
         <translation>Sortiere nach Datum… %1 / %2</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="759"/>
+        <location filename="../qml/SettingsPage.qml" line="616"/>
         <source>Sorting by date…</source>
         <translation>Sortiere nach Datum…</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="760"/>
+        <location filename="../qml/SettingsPage.qml" line="617"/>
         <source>Scanning…</source>
         <translation>Wird gescannt…</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="769"/>
+        <location filename="../qml/SettingsPage.qml" line="626"/>
         <source>✓  %1 images found</source>
         <translation>✓  %1 Bilder gefunden</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="770"/>
+        <location filename="../qml/SettingsPage.qml" line="627"/>
         <source>⚠  No supported images found in this folder</source>
         <translation>⚠  Keine unterstützten Bilder in diesem Ordner gefunden</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="776"/>
+        <location filename="../qml/SettingsPage.qml" line="633"/>
         <source>  ·  filter active</source>
         <translation>  ·  Filter aktiv</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="797"/>
+        <location filename="../qml/SettingsPage.qml" line="654"/>
         <source>Include subfolders</source>
         <translation>Unterordner einbeziehen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="836"/>
+        <location filename="../qml/SettingsPage.qml" line="693"/>
         <source>▶  Resume Picture Show</source>
         <translation>▶  Picture Show fortsetzen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="836"/>
+        <location filename="../qml/SettingsPage.qml" line="693"/>
         <source>▶  Start Picture Show</source>
         <translation>▶  Picture Show starten</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="837"/>
+        <location filename="../qml/SettingsPage.qml" line="694"/>
         <source>Select a folder to continue</source>
         <translation>Ordner auswählen, um fortzufahren</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="837"/>
+        <location filename="../qml/SettingsPage.qml" line="694"/>
         <source>Scanning and sorting images…</source>
         <translation>Bilder werden gescannt und sortiert…</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="869"/>
+        <location filename="../qml/SettingsPage.qml" line="726"/>
         <source>TRANSITION</source>
         <translation>ÜBERGANG</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="883"/>
+        <location filename="../qml/SettingsPage.qml" line="740"/>
         <source>Fade</source>
         <translation>Überblenden</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="884"/>
+        <location filename="../qml/SettingsPage.qml" line="741"/>
         <source>Slide</source>
         <translation>Schieben</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="885"/>
+        <location filename="../qml/SettingsPage.qml" line="742"/>
         <source>Zoom</source>
         <translation>Zoom</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="886"/>
+        <location filename="../qml/SettingsPage.qml" line="743"/>
         <source>Fade/Black</source>
         <translation>Überblenden/Schwarz</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="947"/>
+        <location filename="../qml/SettingsPage.qml" line="804"/>
         <source>SORT ORDER</source>
         <translation>SORTIERUNG</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="961"/>
+        <location filename="../qml/SettingsPage.qml" line="818"/>
         <source>By Name</source>
         <translation>Nach Name</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="962"/>
+        <location filename="../qml/SettingsPage.qml" line="819"/>
         <source>By Date</source>
         <translation>Nach Datum</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="963"/>
+        <location filename="../qml/SettingsPage.qml" line="820"/>
         <source>Random</source>
         <translation>Zufällig</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1017"/>
+        <location filename="../qml/SettingsPage.qml" line="874"/>
         <source>FILTER</source>
         <translation>FILTER</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1112"/>
+        <location filename="../qml/SettingsPage.qml" line="969"/>
         <source>STAR RATING</source>
         <translation>STERNEBEWERTUNG</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1124"/>
+        <location filename="../qml/SettingsPage.qml" line="981"/>
         <source>All</source>
         <translation>Alle</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1125"/>
+        <location filename="../qml/SettingsPage.qml" line="982"/>
         <source>1 star and above</source>
         <translation>1 Stern und mehr</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1126"/>
+        <location filename="../qml/SettingsPage.qml" line="983"/>
         <source>2 stars and above</source>
         <translation>2 Sterne und mehr</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1127"/>
+        <location filename="../qml/SettingsPage.qml" line="984"/>
         <source>3 stars and above</source>
         <translation>3 Sterne und mehr</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1128"/>
+        <location filename="../qml/SettingsPage.qml" line="985"/>
         <source>4 stars and above</source>
         <translation>4 Sterne und mehr</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1129"/>
+        <location filename="../qml/SettingsPage.qml" line="986"/>
         <source>5 stars</source>
         <translation>5 Sterne</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1206"/>
+        <location filename="../qml/SettingsPage.qml" line="1063"/>
         <source>Loop</source>
         <translation>Schleife</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1207"/>
+        <location filename="../qml/SettingsPage.qml" line="1064"/>
         <source>Repeat after last photo</source>
         <translation>Nach dem letzten Foto wiederholen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1250"/>
+        <location filename="../qml/SettingsPage.qml" line="1107"/>
         <source>Autoplay</source>
         <translation>Autoplay</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1251"/>
+        <location filename="../qml/SettingsPage.qml" line="1108"/>
         <source>Advance automatically</source>
         <translation>Automatisch weiterschalten</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1292"/>
+        <location filename="../qml/SettingsPage.qml" line="1149"/>
         <source>Interval</source>
         <translation>Intervall</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1341"/>
+        <location filename="../qml/SettingsPage.qml" line="1198"/>
         <source>Smartphone Remote</source>
         <translation>Smartphone-Fernbedienung</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1343"/>
+        <location filename="../qml/SettingsPage.qml" line="1200"/>
         <source>Open %1 on your phone during the show</source>
         <translation>%1 auf dem Smartphone öffnen</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1419"/>
+        <location filename="../qml/SettingsPage.qml" line="1276"/>
         <source>Help</source>
         <translation>Hilfe</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1449"/>
+        <location filename="../qml/SettingsPage.qml" line="1306"/>
         <source>Update available:</source>
         <translation>Update verfügbar:</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1474"/>
+        <location filename="../qml/SettingsPage.qml" line="1331"/>
         <source>Advanced settings ›</source>
         <translation>Erweiterte Einstellungen ›</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1503"/>
+        <location filename="../qml/SettingsPage.qml" line="1360"/>
         <source>Slideshow commands:</source>
         <translation>Tastenkürzel in der Slideshow:</translation>
     </message>
@@ -653,22 +649,22 @@
         <translation type="vanished">Tastenkürzel in der Show:</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1511"/>
+        <location filename="../qml/SettingsPage.qml" line="1368"/>
         <source>Navigate</source>
         <translation>Navigieren</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1524"/>
+        <location filename="../qml/SettingsPage.qml" line="1381"/>
         <source>Play/Pause</source>
         <translation>Play/Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1537"/>
+        <location filename="../qml/SettingsPage.qml" line="1394"/>
         <source>Fullscreen</source>
         <translation>Vollbild</translation>
     </message>
     <message>
-        <location filename="../qml/SettingsPage.qml" line="1550"/>
+        <location filename="../qml/SettingsPage.qml" line="1407"/>
         <source>Exit</source>
         <translation>Beenden</translation>
     </message>
@@ -676,114 +672,114 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="448"/>
+        <location filename="../slideshow_controller.py" line="458"/>
         <source>Folder not found: {}</source>
         <translation>Ordner nicht gefunden: {}</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="835"/>
+        <location filename="../slideshow_controller.py" line="851"/>
         <source>Not defined</source>
         <translation>Nicht definiert</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="836"/>
+        <location filename="../slideshow_controller.py" line="852"/>
         <source>Manual</source>
         <translation>Manuell</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="837"/>
+        <location filename="../slideshow_controller.py" line="853"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="838"/>
+        <location filename="../slideshow_controller.py" line="854"/>
         <source>Aperture priority</source>
         <translation>Blendenvorwahl</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="839"/>
+        <location filename="../slideshow_controller.py" line="855"/>
         <source>Shutter priority</source>
         <translation>Zeitvorwahl</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="840"/>
+        <location filename="../slideshow_controller.py" line="856"/>
         <source>Creative</source>
         <translation>Kreativ</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="841"/>
+        <location filename="../slideshow_controller.py" line="857"/>
         <source>Action</source>
         <translation>Action</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="842"/>
+        <location filename="../slideshow_controller.py" line="858"/>
         <source>Portrait</source>
         <translation>Porträt</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="843"/>
+        <location filename="../slideshow_controller.py" line="859"/>
         <source>Landscape</source>
         <translation>Landschaft</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="872"/>
+        <location filename="../slideshow_controller.py" line="888"/>
         <source>Camera</source>
         <translation>Kamera</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="879"/>
+        <location filename="../slideshow_controller.py" line="895"/>
         <source>Aperture</source>
         <translation>Blende</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="890"/>
-        <location filename="../slideshow_controller.py" line="892"/>
+        <location filename="../slideshow_controller.py" line="906"/>
+        <location filename="../slideshow_controller.py" line="908"/>
         <source>Shutter</source>
         <translation>Belichtungszeit</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="902"/>
+        <location filename="../slideshow_controller.py" line="918"/>
         <source>ISO</source>
         <translation>ISO</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="910"/>
+        <location filename="../slideshow_controller.py" line="926"/>
         <source>Focal length</source>
         <translation>Brennweite</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="917"/>
+        <location filename="../slideshow_controller.py" line="933"/>
         <source>Exposure</source>
         <translation>Belichtungsprogramm</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="923"/>
+        <location filename="../slideshow_controller.py" line="939"/>
         <source>Flash</source>
         <translation>Blitz</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="923"/>
+        <location filename="../slideshow_controller.py" line="939"/>
         <source>Fired</source>
         <translation>Ausgelöst</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="923"/>
+        <location filename="../slideshow_controller.py" line="939"/>
         <source>Did not fire</source>
         <translation>Nicht ausgelöst</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="931"/>
-        <location filename="../slideshow_controller.py" line="933"/>
+        <location filename="../slideshow_controller.py" line="947"/>
+        <location filename="../slideshow_controller.py" line="949"/>
         <source>Dimensions</source>
         <translation>Abmessungen</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="1006"/>
+        <location filename="../slideshow_controller.py" line="1022"/>
         <source>Could not save rating: %1</source>
         <translation>Bewertung konnte nicht gespeichert werden: %1</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="1208"/>
+        <location filename="../slideshow_controller.py" line="1224"/>
         <source>Could not save caption: %1</source>
         <translation>Beschriftung konnte nicht gespeichert werden: %1</translation>
     </message>
@@ -803,94 +799,94 @@
         <translation type="vanished">Beenden</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="717"/>
+        <location filename="../qml/SlideshowPage.qml" line="777"/>
         <source>AUTOPLAY</source>
         <translation>AUTOPLAY</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="725"/>
+        <location filename="../qml/SlideshowPage.qml" line="785"/>
         <source>Play (%1 s)</source>
         <translation>Play (%1 s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="726"/>
+        <location filename="../qml/SlideshowPage.qml" line="786"/>
         <source>Pause</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="788"/>
+        <location filename="../qml/SlideshowPage.qml" line="848"/>
         <source>JUMP TO IMAGE</source>
         <translation>ZU BILD SPRINGEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="853"/>
+        <location filename="../qml/SlideshowPage.qml" line="913"/>
         <source>go</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="856"/>
-        <location filename="../qml/SlideshowPage.qml" line="1000"/>
-        <location filename="../qml/SlideshowPage.qml" line="1114"/>
+        <location filename="../qml/SlideshowPage.qml" line="916"/>
+        <location filename="../qml/SlideshowPage.qml" line="1060"/>
+        <location filename="../qml/SlideshowPage.qml" line="1174"/>
         <source>cancel</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="953"/>
+        <location filename="../qml/SlideshowPage.qml" line="1013"/>
         <source>RATE IMAGE</source>
         <translation>BILD BEWERTEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="962"/>
+        <location filename="../qml/SlideshowPage.qml" line="1022"/>
         <source>Remove rating</source>
         <translation>Bewertung entfernen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="963"/>
+        <location filename="../qml/SlideshowPage.qml" line="1023"/>
         <source>%1 star(s)</source>
         <translation>%1 Stern(e)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="997"/>
+        <location filename="../qml/SlideshowPage.qml" line="1057"/>
         <source>confirm</source>
         <translation>Bestätigen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1002"/>
+        <location filename="../qml/SlideshowPage.qml" line="1062"/>
         <source>0–5 change</source>
         <translation>0–5 ändern</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1054"/>
+        <location filename="../qml/SlideshowPage.qml" line="1114"/>
         <source>EDIT CAPTION</source>
         <translation>BESCHRIFTUNG BEARBEITEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1111"/>
+        <location filename="../qml/SlideshowPage.qml" line="1171"/>
         <source>save</source>
         <translation>Speichern</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1117"/>
+        <location filename="../qml/SlideshowPage.qml" line="1177"/>
         <source>copy prev caption</source>
         <translation>Vorh. Beschriftung kopieren</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1204"/>
+        <location filename="../qml/SlideshowPage.qml" line="1264"/>
         <source>Exit Application</source>
         <translation>Anwendung beenden</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1211"/>
+        <location filename="../qml/SlideshowPage.qml" line="1271"/>
         <source>Do you want to exit the application?</source>
         <translation>Möchten Sie die Anwendung beenden?</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1237"/>
+        <location filename="../qml/SlideshowPage.qml" line="1297"/>
         <source>Yes</source>
         <translation>Ja</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1260"/>
+        <location filename="../qml/SlideshowPage.qml" line="1320"/>
         <source>No</source>
         <translation>Nein</translation>
     </message>
@@ -899,17 +895,17 @@
         <translation type="vanished">Beschriftung konnte nicht gespeichert werden: %1</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="425"/>
+        <location filename="../qml/SlideshowPage.qml" line="457"/>
         <source>Rating</source>
         <translation>Bewertung</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="429"/>
+        <location filename="../qml/SlideshowPage.qml" line="461"/>
         <source>Date taken</source>
         <translation>Aufnahmedatum</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="432"/>
+        <location filename="../qml/SlideshowPage.qml" line="464"/>
         <source>Caption</source>
         <translation>Beschreibung</translation>
     </message>
@@ -935,6 +931,25 @@
         <location filename="../qml/main.qml" line="237"/>
         <source>No</source>
         <translation>Nein</translation>
+    </message>
+</context>
+<context>
+    <name>main_REMOTE_10739</name>
+    <message>
+        <source>Exit Application</source>
+        <translation type="obsolete">Anwendung beenden</translation>
+    </message>
+    <message>
+        <source>Do you want to exit the application?</source>
+        <translation type="obsolete">Möchten Sie die Anwendung beenden?</translation>
+    </message>
+    <message>
+        <source>Yes</source>
+        <translation type="obsolete">Ja</translation>
+    </message>
+    <message>
+        <source>No</source>
+        <translation type="obsolete">Nein</translation>
     </message>
 </context>
 </TS>
