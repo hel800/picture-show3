@@ -14,6 +14,7 @@
     <file>qml/Theme.qml</file>
     <file>qml/qmldir</file>
     <file>img/icon.svg</file>
+    <file>img/icon_close.svg</file>
     <file>img/icon_clock.svg</file>
     <file>img/icon_picture.svg</file>
     <file>img/icon_history.svg</file>
