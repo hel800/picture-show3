@@ -38,6 +38,8 @@ Popup {
     Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.6) }
 
     property int revealStep: -1
+    property bool fromSettings: true    // false when opened from the slideshow page
+    property bool inFullscreen: false   // bound to Window.visibility from main.qml
 
     onOpened: {
         keyFocus.forceActiveFocus()
@@ -77,6 +79,29 @@ Popup {
                     win.showFullScreen()
                 }
                 event.accepted = true
+            }
+        }
+
+        // ── Close button — visible in windowed mode or when opened from settings ──
+        Rectangle {
+            visible: root.fromSettings || !root.inFullscreen
+            anchors.top: parent.top
+            anchors.right: parent.right
+            width: 26; height: 26; radius: 13
+            color: closeArea.containsMouse ? Theme.surfaceHover : "transparent"
+            Behavior on color { ColorAnimation { duration: 120 } }
+            ThemedIcon {
+                anchors.centerIn: parent
+                source: "../img/icon_close.svg"
+                size: 14
+                iconColor: closeArea.containsMouse ? Theme.textPrimary : Theme.textMuted
+            }
+            MouseArea {
+                id: closeArea
+                anchors.fill: parent
+                hoverEnabled: true
+                cursorShape: Qt.PointingHandCursor
+                onClicked: root.close()
             }
         }
 

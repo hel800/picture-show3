@@ -66,6 +66,7 @@ ApplicationWindow {
     property bool _wasPlaying: false
     HelpOverlay {
         id: helpOverlay
+        inFullscreen: root.visibility === Window.FullScreen
         onOpened: {
             root._wasPlaying = controller.isPlaying
             if (controller.isPlaying) controller.togglePlay()
@@ -265,7 +266,7 @@ ApplicationWindow {
                 windowHelper.setCursorHidden(true)
                 stack.push(slideshowComp)
             }
-            onOpenHelp: if (!controller.kioskMode) helpOverlay.open()
+            onOpenHelp: if (!controller.kioskMode) { helpOverlay.fromSettings = true; helpOverlay.open() }
             onOpenQuitDialog: quitDialog.open()
         }
     }
@@ -285,7 +286,7 @@ ApplicationWindow {
                 stack.pop()
                 sp.triggerSlideIn()
             }
-            onOpenHelp: if (!controller.kioskMode) helpOverlay.open()
+            onOpenHelp: if (!controller.kioskMode) { helpOverlay.fromSettings = false; helpOverlay.open() }
             onOpenQuitDialog: quitDialog.open()
         }
     }
