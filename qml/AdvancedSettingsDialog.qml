@@ -33,12 +33,12 @@ Popup {
     property string _startupLang: ""
     Component.onCompleted: _startupLang = controller.language
 
-    property int  _section: 0       // 0 General · 1 Controls · 2 HUD · 3 Remote
+    property int  _section: 0       // 0 Show · 1 Controls · 2 HUD · 3 Remote · 4 Misc
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: General=[duration,imageScale,language,updateCheck] Controls=[mouseNav] HUD=[size] Remote=[enable,port]
-    readonly property var _optionCounts: [4, 1, 1, 2]
+    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size] Remote=[enable,port] Misc=[language,updateCheck]
+    readonly property var _optionCounts: [2, 1, 1, 2, 2]
 
     // Returns false for options that are currently inactive and should be skipped
     function _optionEnabled(section, option) {
@@ -59,7 +59,7 @@ Popup {
         var item  = null
         if (root._section === 0) {
             flick = genScroll.contentItem
-            var g = [gen0Item, gen1Item, gen2Item, gen3Item]
+            var g = [gen0Item, gen1Item]
             item = g[root._focusedOption]
         } else if (root._section === 1) {
             flick = ctrlScroll.contentItem
@@ -71,6 +71,10 @@ Popup {
             flick = remScroll.contentItem
             var r = [rem0Item, rem1Item]
             item = r[root._focusedOption]
+        } else if (root._section === 4) {
+            flick = miscScroll.contentItem
+            var m = [misc0Item, misc1Item]
+            item = m[root._focusedOption]
         }
         if (!flick || !item) return
         // item.mapToItem(flick, 0, 0).y gives visual y inside the Flickable;
@@ -143,12 +147,12 @@ Popup {
                         root._updateOptionFocus()
                     } else if (event.key === Qt.Key_Tab) {
                         root._doneFocused = false
-                        root._section = (root._section + 1) % 4
+                        root._section = (root._section + 1) % 5
                         root._focusedOption = 0
                         root._updateOptionFocus()
                     } else if (event.key === Qt.Key_Backtab) {
                         root._doneFocused = false
-                        root._section = (root._section + 3) % 4
+                        root._section = (root._section + 4) % 5
                         root._focusedOption = 0
                         root._updateOptionFocus()
                     }
@@ -159,13 +163,13 @@ Popup {
 
                 // ── Normal option navigation ───────────────────────────────────
                 if (event.key === Qt.Key_Tab) {
-                    root._section = (root._section + 1) % 4
+                    root._section = (root._section + 1) % 5
                     root._focusedOption = 0
                     root._updateOptionFocus()
                     event.accepted = true
 
                 } else if (event.key === Qt.Key_Backtab) {
-                    root._section = (root._section + 3) % 4
+                    root._section = (root._section + 4) % 5
                     root._focusedOption = 0
                     root._updateOptionFocus()
                     event.accepted = true
@@ -198,14 +202,14 @@ Popup {
                     } else if (root._isOptionFocused(0, 1)) {
                         controller.setImageFill(d > 0)
 
-                    } else if (root._isOptionFocused(0, 2)) {
+                    } else if (root._isOptionFocused(4, 0)) {
                         var langs = controller.availableLanguages
                         var idx = 0
                         for (var i = 0; i < langs.length; i++)
                             if (langs[i].code === controller.language) { idx = i; break }
                         controller.setLanguage(langs[(idx + d + langs.length) % langs.length].code)
 
-                    } else if (root._isOptionFocused(0, 3)) {
+                    } else if (root._isOptionFocused(4, 1)) {
                         controller.setUpdateCheckEnabled(d > 0)
 
                     } else if (root._isOptionFocused(2, 0)) {
@@ -270,10 +274,10 @@ Popup {
                 spacing: 3
 
                 Repeater {
-                    model: [qsTr("General"), qsTr("Controls"), qsTr("HUD"), qsTr("Remote")]
+                    model: [qsTr("Show"), qsTr("Controls"), qsTr("HUD"), qsTr("Remote"), qsTr("Misc")]
                     delegate: Rectangle {
                         height: parent.height
-                        width: (parent.width - 3 * spacing) / 4
+                        width: Math.floor((parent.width - 12) / 5)
                         radius: 8
                         color: root._section === index ? Theme.bgCard
                                : (tabHover.containsMouse ? Theme.surfaceHover : "transparent")
@@ -323,7 +327,7 @@ Popup {
             Layout.fillHeight: true
             currentIndex: root._section
 
-            // ── General ───────────────────────────────────────────────────────
+            // ── Show ──────────────────────────────────────────────────────────
             Item {
                 ScrollView {
                     id: genScroll
@@ -493,137 +497,6 @@ Popup {
                         }
                     }
 
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
-
-                    // Option 2: Language ──────────────────────────────────────
-                    Item {
-                        id: gen2Item
-                        Layout.fillWidth: true
-                        implicitHeight: gen2Inner.implicitHeight + 24
-                        Rectangle {
-                            anchors.fill: parent; radius: 8
-                            color: root._isOptionFocused(0, 2)
-                                   ? Theme.surface : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                        }
-                        ColumnLayout {
-                            id: gen2Inner
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                            spacing: 0
-
-                            RowLayout {
-                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
-                                Rectangle {
-                                    width: 3; height: 11; radius: 1.5
-                                    color: root._isOptionFocused(0, 2)
-                                           ? Theme.accent : "transparent"
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-                                Text {
-                                    text: qsTr("LANGUAGE")
-                                    color: root._isOptionFocused(0, 2)
-                                           ? Theme.accentLight : Theme.textMuted
-                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-                            }
-                            Flow {
-                                Layout.fillWidth: true; Layout.bottomMargin: 8; spacing: 8
-                                Repeater {
-                                    model: controller.availableLanguages
-                                    delegate: Rectangle {
-                                        height: 32; width: langLabel.implicitWidth + 24; radius: 10
-                                        color: controller.language === modelData.code
-                                               ? Theme.accentDeep
-                                               : (langArea.containsMouse ? Theme.surfaceHover : Theme.surface)
-                                        border.color: controller.language === modelData.code ? Theme.accent : "transparent"
-                                        border.width: 1
-                                        Behavior on color { ColorAnimation { duration: 150 } }
-                                        Text {
-                                            id: langLabel; anchors.centerIn: parent
-                                            text: modelData.code === "auto" ? qsTr("Auto") : modelData.name
-                                            font.pixelSize: 12
-                                            color: controller.language === modelData.code ? Theme.textPrimary : Theme.textMuted
-                                        }
-                                        MouseArea {
-                                            id: langArea; anchors.fill: parent; hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: controller.setLanguage(modelData.code)
-                                        }
-                                    }
-                                }
-                            }
-                            Text {
-                                visible: controller.language !== root._startupLang
-                                text: qsTr("⚠  Restart the app to apply the language change.")
-                                color: Theme.statusWarn; font.pixelSize: 11
-                                wrapMode: Text.Wrap; Layout.fillWidth: true
-                            }
-                        }
-                    }
-
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
-
-                    // Option 3: Update check ──────────────────────────────────
-                    Item {
-                        id: gen3Item
-                        Layout.fillWidth: true
-                        implicitHeight: gen3Inner.implicitHeight + 24
-                        Rectangle {
-                            anchors.fill: parent; radius: 8
-                            color: root._isOptionFocused(0, 3)
-                                   ? Theme.surface : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                        }
-                        ColumnLayout {
-                            id: gen3Inner
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                            spacing: 0
-
-                            RowLayout {
-                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
-                                Rectangle {
-                                    width: 3; height: 11; radius: 1.5
-                                    color: root._isOptionFocused(0, 3)
-                                           ? Theme.accent : "transparent"
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-                                Text {
-                                    text: qsTr("UPDATES")
-                                    color: root._isOptionFocused(0, 3)
-                                           ? Theme.accentLight : Theme.textMuted
-                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-                            }
-                            RowLayout {
-                                Layout.fillWidth: true; Layout.bottomMargin: 4
-                                Column {
-                                    spacing: 2
-                                    Text { text: qsTr("Check for updates on startup"); color: Theme.textPrimary; font.pixelSize: 14 }
-                                    Text { text: qsTr("Checks GitHub Releases for a newer version"); color: Theme.textMuted; font.pixelSize: 11 }
-                                }
-                                Item { Layout.fillWidth: true }
-                                Switch {
-                                    id: updateCheckSwitch
-                                    checked: controller.updateCheckEnabled
-                                    onToggled: controller.setUpdateCheckEnabled(checked)
-                                    indicator: Rectangle {
-                                        implicitWidth: 44; implicitHeight: 24; radius: 12
-                                        color: updateCheckSwitch.checked ? Theme.accent : Theme.surface
-                                        Behavior on color { ColorAnimation { duration: 120 } }
-                                        Rectangle {
-                                            x: updateCheckSwitch.checked ? parent.width - width - 3 : 3
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            width: 18; height: 18; radius: 9
-                                            color: updateCheckSwitch.checked ? "white" : Theme.textMuted
-                                            Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
                 }
                 } // ScrollView
             }
@@ -932,13 +805,13 @@ Popup {
                                                 Qt.callLater(keyHandler.forceActiveFocus)
 
                                             } else if (event.key === Qt.Key_Tab) {
-                                                root._section = (root._section + 1) % 4
+                                                root._section = (root._section + 1) % 5
                                                 root._focusedOption = 0
                                                 event.accepted = true
                                                 Qt.callLater(keyHandler.forceActiveFocus)
 
                                             } else if (event.key === Qt.Key_Backtab) {
-                                                root._section = (root._section + 3) % 4
+                                                root._section = (root._section + 4) % 5
                                                 root._focusedOption = 0
                                                 event.accepted = true
                                                 Qt.callLater(keyHandler.forceActiveFocus)
@@ -957,6 +830,152 @@ Popup {
                                                 event.accepted = true
                                                 Qt.callLater(keyHandler.forceActiveFocus)
                                             }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                } // ScrollView
+            }
+
+            // ── Misc ──────────────────────────────────────────────────────────
+            Item {
+                ScrollView {
+                    id: miscScroll
+                    anchors.fill: parent
+                    contentWidth: availableWidth
+                    clip: true
+                    ScrollBar.horizontal.policy: ScrollBar.AlwaysOff
+                ColumnLayout {
+                    width: miscScroll.availableWidth
+                    spacing: 0
+
+                    // Option 0: Language ──────────────────────────────────────
+                    Item {
+                        id: misc0Item
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 4
+                        implicitHeight: misc0Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(4, 0)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: misc0Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(4, 0)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("LANGUAGE")
+                                    color: root._isOptionFocused(4, 0)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            Flow {
+                                Layout.fillWidth: true; Layout.bottomMargin: 8; spacing: 8
+                                Repeater {
+                                    model: controller.availableLanguages
+                                    delegate: Rectangle {
+                                        height: 32; width: langLabel.implicitWidth + 24; radius: 10
+                                        color: controller.language === modelData.code
+                                               ? Theme.accentDeep
+                                               : (langArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                        border.color: controller.language === modelData.code ? Theme.accent : "transparent"
+                                        border.width: 1
+                                        Behavior on color { ColorAnimation { duration: 150 } }
+                                        Text {
+                                            id: langLabel; anchors.centerIn: parent
+                                            text: modelData.code === "auto" ? qsTr("Auto") : modelData.name
+                                            font.pixelSize: 12
+                                            color: controller.language === modelData.code ? Theme.textPrimary : Theme.textMuted
+                                        }
+                                        MouseArea {
+                                            id: langArea; anchors.fill: parent; hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: controller.setLanguage(modelData.code)
+                                        }
+                                    }
+                                }
+                            }
+                            Text {
+                                visible: controller.language !== root._startupLang
+                                text: qsTr("⚠  Restart the app to apply the language change.")
+                                color: Theme.statusWarn; font.pixelSize: 11
+                                wrapMode: Text.Wrap; Layout.fillWidth: true
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+
+                    // Option 1: Update check ──────────────────────────────────
+                    Item {
+                        id: misc1Item
+                        Layout.fillWidth: true
+                        implicitHeight: misc1Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(4, 1)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: misc1Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(4, 1)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("UPDATES")
+                                    color: root._isOptionFocused(4, 1)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 4
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("Check for updates on startup"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("Checks GitHub Releases for a newer version"); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
+                                Item { Layout.fillWidth: true }
+                                Switch {
+                                    id: updateCheckSwitch
+                                    checked: controller.updateCheckEnabled
+                                    onToggled: controller.setUpdateCheckEnabled(checked)
+                                    indicator: Rectangle {
+                                        implicitWidth: 44; implicitHeight: 24; radius: 12
+                                        color: updateCheckSwitch.checked ? Theme.accent : Theme.surface
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                        Rectangle {
+                                            x: updateCheckSwitch.checked ? parent.width - width - 3 : 3
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 18; height: 18; radius: 9
+                                            color: updateCheckSwitch.checked ? "white" : Theme.textMuted
+                                            Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
                                         }
                                     }
                                 }
