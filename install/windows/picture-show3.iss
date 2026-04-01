@@ -67,12 +67,25 @@ MinVersion=10.0
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "german";  MessagesFile: "compiler:Languages\German.isl"
+Name: "french";  MessagesFile: "compiler:Languages\French.isl"
+
+[CustomMessages]
+english.ShellMenuLabel=Start picture show here
+german.ShellMenuLabel=Picture Show hier starten
+french.ShellMenuLabel=Démarrer picture show ici
 
 [Tasks]
 ; Desktop shortcut — unchecked by default, user opts in
 Name: "desktopicon"; \
   Description: "{cm:CreateDesktopIcon}"; \
   GroupDescription: "{cm:AdditionalIcons}"; \
+  Flags: unchecked
+
+; Shell extension — unchecked by default, user opts in
+Name: "shellext"; \
+  Description: "Add ""Show in picture-show3"" to folder right-click menu"; \
+  GroupDescription: "Shell integration:"; \
   Flags: unchecked
 
 [InstallDelete]
@@ -100,6 +113,21 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; \
   Filename: "{app}\{#MyAppExeName}"; \
   Tasks: desktopicon
+
+[Registry]
+; Shell extension: right-click on a folder → "Show in picture-show3"
+; uninsdeletekey removes the whole subtree on uninstall.
+Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\PictureShow3"; \
+  ValueType: string; ValueName: ""; ValueData: "{cm:ShellMenuLabel}"; \
+  Flags: uninsdeletekey; Tasks: shellext
+Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\PictureShow3"; \
+  ValueType: string; ValueName: "Icon"; \
+  ValueData: "{app}\{#MyAppExeName},0"; \
+  Tasks: shellext
+Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\PictureShow3\command"; \
+  ValueType: string; ValueName: ""; \
+  ValueData: """{app}\{#MyAppExeName}"" ""%1"""; \
+  Tasks: shellext
 
 [Run]
 ; Offer to launch the app after installation

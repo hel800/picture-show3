@@ -36,22 +36,34 @@ Item {
     Connections {
         target: controller
         function onScanningChanged() {
-            if (root._autoLaunch && root._kioskSplashDone
-                    && !controller.scanning && controller.imageCount > 0
-                    && !kioskLaunchAnim.running && splashOverlay.visible) {
+            if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
+            if (!controller.scanning && controller.imageCount > 0
+                    && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
                 splashLogo.scale = 1.0   // breathing may have stopped mid-cycle
                 splashLogo.opacity = 1.0
                 kioskLaunchAnim.start()
+            } else if (!controller.scanning && controller.imageCount === 0) {
+                kioskHeartbeat.stop()
+                headerLogo.opacity = 1
+                splashOverlay.visible = false
+                windowHelper.setCursorHidden(false)
+                scrollSlideIn.start()
             }
         }
         function onImagesChanged() {
-            if (root._autoLaunch && root._kioskSplashDone
-                    && !controller.scanning && controller.imageCount > 0
-                    && !kioskLaunchAnim.running && splashOverlay.visible) {
+            if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
+            if (!controller.scanning && controller.imageCount > 0
+                    && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
                 splashLogo.scale = 1.0
                 kioskLaunchAnim.start()
+            } else if (!controller.scanning && controller.imageCount === 0) {
+                kioskHeartbeat.stop()
+                headerLogo.opacity = 1
+                splashOverlay.visible = false
+                windowHelper.setCursorHidden(false)
+                scrollSlideIn.start()
             }
         }
     }
@@ -1494,7 +1506,13 @@ Item {
                         // If scan finished before the splash did, skip heartbeat
                         if (!controller.scanning && controller.imageCount > 0)
                             kioskLaunchAnim.start()
-                        else
+                        else if (!controller.scanning && controller.imageCount === 0) {
+                            // Scan already done, no images — fall back to settings page
+                            headerLogo.opacity = 1
+                            splashOverlay.visible = false
+                            windowHelper.setCursorHidden(false)
+                            scrollSlideIn.start()
+                        } else
                             kioskHeartbeat.start()
                     } else {
                         headerLogo.opacity = 1
