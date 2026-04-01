@@ -12,7 +12,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Transitions** | Fade, Slide, Zoom, Fade-to-black — GPU-accelerated via Qt Quick |
 | **Sort** | By filename, by EXIF date taken, or random |
 | **Loop** | Optional looping after the last photo |
-| **Autoplay** | Configurable interval (1–30 s), timer restarts on manual navigation |
+| **Autoplay** | Configurable interval (1–99 s), timer restarts on manual navigation; adjust interval live from the slideshow via the play popup (↑↓ or 1–9, ↵ to confirm) |
 | **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken |
 | **EXIF panel** | Press `,` during the show for a detailed EXIF overlay: camera, aperture, shutter, ISO, focal length, exposure program, flash, dimensions |
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
@@ -79,7 +79,7 @@ python -m pytest
 python -m pytest -v
 ```
 
-254 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+258 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
 
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 
@@ -110,6 +110,10 @@ Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\pict
 |-----|--------|
 | `→` / `←` | Next / previous photo |
 | `Space` | Play / pause autoplay |
+| `↑` / `↓` *(play popup)* | Increase / decrease autoplay interval (enters edit mode) |
+| `1`–`9` *(play popup)* | Set autoplay interval in seconds (enters edit mode) |
+| `↵` *(interval edit)* | Confirm new interval and start autoplay |
+| `Esc` *(interval edit)* | Cancel interval edit, leave autoplay stopped |
 | `F` | Toggle fullscreen |
 | `I` | Toggle HUD info bar |
 | `,` | Show / hide extended EXIF info panel |

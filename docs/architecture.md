@@ -124,7 +124,7 @@ Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`,
 
 **Splash animation**: logo fades in + scales up centred on screen, then drifts to the header position; header logo has `opacity: 0` at startup; a `ScriptAction` sets `headerLogo.opacity = 1` and hides the overlay in the same frame — no double-image flicker. Animated sun watermark (`logo_sun.svg`) in bottom-right background.
 
-**Controls**: folder input + Browse button (opens at current folder) + history button with inline `KeyHint` badges. Recent-folders popup: Up/Down (no wrap-around), Enter to select. Star rating filter popup (All / 1–5 stars). Transition style chips (fade/slide/zoom/fadeblack). Sort order chips (name/date/random). Loop + Autoplay toggles. Autoplay interval slider (1–30 s). Advanced Settings link → `AdvancedSettingsDialog` (four tabs: General, Controls, HUD, Remote). Remote URL + QR button. Quit confirm popup (Y/N/←/→/Enter).
+**Controls**: folder input + Browse button (opens at current folder) + history button with inline `KeyHint` badges. Recent-folders popup: Up/Down (no wrap-around), Enter to select. Star rating filter popup (All / 1–5 stars). Transition style chips (fade/slide/zoom/fadeblack). Sort order chips (name/date/random). Loop + Autoplay toggles. Autoplay interval slider (1–99 s). Advanced Settings link → `AdvancedSettingsDialog` (four tabs: General, Controls, HUD, Remote). Remote URL + QR button. Quit confirm popup (Y/N/←/→/Enter).
 
 **`_canStart`**: `controller.imageCount > 0 && !controller.scanning`. Start button disabled and relabelled "Scanning…" while scanning. Scanning status row: hourglass + "Scanning… N / total" driven by `scanProgress`.
 
@@ -156,7 +156,7 @@ Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`,
 
 **EXIF panel** (`ExifPanel.qml`, `z: 11`): opened **,**, closed **,** or **Esc**, auto-closes on navigation or when a higher-z overlay opens (`_closeExifIfOpen()` helper). Positioned `anchors.bottom: hud.top`. Animation: `transform: Translate { y: _slideOffset }` — 20 px below at opacity 0; fade-in 260 ms OutCubic + bounce-up 320 ms OutBack; close 200 ms. `exifData` set before `open()` so content never changes mid-animation. `_stoppingForReopen` flag prevents `closeAnim.onStopped` from clearing data when `open()` interrupts an in-progress close. Caption row scrolls when text overflows (`SequentialAnimation on x`, `from: 0` ensures scroll starts from left on reopen). When `!hudVisible`, up to 3 extra rows appended: Rating, Date, Caption. Label column width is locale-aware via `Number(qsTr("100", "exif_label_width"))`.
 
-**Play/pause popup** (`z: 20`): centred icon overlay; triggered by `isPlayingChanged`; fades in 120 ms, holds 700 ms, fades out 400 ms.
+**Play/pause popup** (`z: 20`): fixed 242×88 px overlay; triggered by `isPlayingChanged`; fades in 120 ms, holds 3 s (with depleting countdown border on the icon), fades out 400 ms. While the **play** popup is visible, `↑`/`↓` or `1`–`9` pause autoplay and enter interval edit mode (`_ppEditMode`); `↵` confirms the new interval and restarts autoplay; `Esc` cancels and leaves autoplay stopped. `0`–`9` and `↑`/`↓` are blocked during the **pause** popup. The autoplay timer is frozen via `controller.pauseInterval()` when the popup appears and restarted via `controller.restartInterval()` in `playPauseAnim.onFinished`.
 
 **Jump dialog** (`z: 30`): opened **J**; `IntValidator` (1–imageCount); pauses autoplay; Enter to jump, Esc to cancel.
 
