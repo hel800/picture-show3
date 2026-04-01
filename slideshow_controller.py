@@ -719,6 +719,17 @@ class SlideshowController(QObject):
         self._save_settings()
         self.settingsChanged.emit()
 
+    @Slot()
+    def pauseInterval(self) -> None:
+        """Stop the autoplay timer without changing playing state (call when popup appears)."""
+        self._timer.stop()
+
+    @Slot()
+    def restartInterval(self) -> None:
+        """Start a fresh autoplay countdown (call after popup fades out)."""
+        if self._is_playing:
+            self._timer.start()
+
     @Slot(str)
     def setLanguage(self, code: str) -> None:
         self._language = code
