@@ -67,6 +67,13 @@ MinVersion=10.0
 
 [Languages]
 Name: "english"; MessagesFile: "compiler:Default.isl"
+Name: "german";  MessagesFile: "compiler:Languages\German.isl"
+Name: "french";  MessagesFile: "compiler:Languages\French.isl"
+
+[CustomMessages]
+english.ShellMenuLabel=Start picture show here
+german.ShellMenuLabel=Picture Show hier starten
+french.ShellMenuLabel=Démarrer picture show ici
 
 [Tasks]
 ; Desktop shortcut — unchecked by default, user opts in
@@ -111,7 +118,7 @@ Name: "{autodesktop}\{#MyAppName}"; \
 ; Shell extension: right-click on a folder → "Show in picture-show3"
 ; uninsdeletekey removes the whole subtree on uninstall.
 Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\PictureShow3"; \
-  ValueType: string; ValueName: ""; ValueData: "Start picture show here"; \
+  ValueType: string; ValueName: ""; ValueData: "{cm:ShellMenuLabel}"; \
   Flags: uninsdeletekey; Tasks: shellext
 Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\PictureShow3"; \
   ValueType: string; ValueName: "Icon"; \
