@@ -75,6 +75,12 @@ Name: "desktopicon"; \
   GroupDescription: "{cm:AdditionalIcons}"; \
   Flags: unchecked
 
+; Shell extension — unchecked by default, user opts in
+Name: "shellext"; \
+  Description: "Add ""Show in picture-show3"" to folder right-click menu"; \
+  GroupDescription: "Shell integration:"; \
+  Flags: unchecked
+
 [InstallDelete]
 ; Remove the old PyInstaller runtime bundle so that files dropped in
 ; newer builds do not leave orphaned remnants behind.
@@ -100,6 +106,21 @@ Name: "{group}\{cm:UninstallProgram,{#MyAppName}}"; Filename: "{uninstallexe}"
 Name: "{autodesktop}\{#MyAppName}"; \
   Filename: "{app}\{#MyAppExeName}"; \
   Tasks: desktopicon
+
+[Registry]
+; Shell extension: right-click on a folder → "Show in picture-show3"
+; uninsdeletekey removes the whole subtree on uninstall.
+Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\PictureShow3"; \
+  ValueType: string; ValueName: ""; ValueData: "Start picture show here"; \
+  Flags: uninsdeletekey; Tasks: shellext
+Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\PictureShow3"; \
+  ValueType: string; ValueName: "Icon"; \
+  ValueData: "{app}\{#MyAppExeName},0"; \
+  Tasks: shellext
+Root: HKLM; Subkey: "SOFTWARE\Classes\Directory\shell\PictureShow3\command"; \
+  ValueType: string; ValueName: ""; \
+  ValueData: """{app}\{#MyAppExeName}"" ""%1"""; \
+  Tasks: shellext
 
 [Run]
 ; Offer to launch the app after installation
