@@ -350,6 +350,33 @@ class TestPlayback:
         ctrl_with_images.startShow()
         assert ctrl_with_images.isPlaying is False
 
+    def test_pause_interval_stops_timer_keeps_playing(self, ctrl_with_images):
+        ctrl_with_images.togglePlay()
+        assert ctrl_with_images.isPlaying is True
+        ctrl_with_images.pauseInterval()
+        assert ctrl_with_images.isPlaying is True
+        assert ctrl_with_images._timer.isActive() is False
+        ctrl_with_images.stopShow()
+
+    def test_pause_interval_noop_when_not_playing(self, ctrl_with_images):
+        assert ctrl_with_images.isPlaying is False
+        ctrl_with_images.pauseInterval()   # must not raise or change state
+        assert ctrl_with_images.isPlaying is False
+        assert ctrl_with_images._timer.isActive() is False
+
+    def test_restart_interval_starts_timer_when_playing(self, ctrl_with_images):
+        ctrl_with_images.togglePlay()
+        ctrl_with_images.pauseInterval()
+        assert ctrl_with_images._timer.isActive() is False
+        ctrl_with_images.restartInterval()
+        assert ctrl_with_images._timer.isActive() is True
+        ctrl_with_images.stopShow()
+
+    def test_restart_interval_noop_when_not_playing(self, ctrl_with_images):
+        assert ctrl_with_images.isPlaying is False
+        ctrl_with_images.restartInterval()   # must not raise or start timer
+        assert ctrl_with_images._timer.isActive() is False
+
 
 # ── XMP star-rating extraction ────────────────────────────────────────────────
 
