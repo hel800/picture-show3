@@ -31,6 +31,7 @@ Rectangle {
     property bool _ppEditMode      : false
     property int  _ppEditSeconds   : 5
     property int  _ppDigitCount    : 0    // 0 = no digit yet, 1 = one digit, 2 = two digits
+    property bool _ppEndOfShow     : false  // true when autoplay stopped at last image
 
     onWidthChanged:  if (panoramaActive) _panoramaAbort()
     onHeightChanged: if (panoramaActive) _panoramaAbort()
@@ -841,9 +842,13 @@ Rectangle {
                 // Freeze the autoplay timer while the popup is visible so the
                 // first image advance is a full interval after the popup fades,
                 // not after Space was pressed. onFinished restarts it.
-                if (controller.isPlaying) controller.pauseInterval()
+                if (controller.isPlaying) {
+                    controller.pauseInterval()
+                    root._ppEndOfShow = false   // reset when autoplay (re)starts
+                }
             }
         }
+        function onShowEnded() { root._ppEndOfShow = true }
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────
@@ -954,7 +959,7 @@ Rectangle {
                               ? qsTr("Timer: %1 s").arg(root._ppEditSeconds)
                               : (controller.isPlaying
                                  ? qsTr("Timer: %1 s").arg(Math.round(controller.interval / 1000))
-                                 : qsTr("Pause"))
+                                 : (root._ppEndOfShow ? qsTr("Last image") : qsTr("Pause")))
                         color: Theme.textSecondary
                         font.pixelSize: 15
                         font.weight: Font.Medium

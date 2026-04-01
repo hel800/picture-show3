@@ -76,6 +76,7 @@ class SlideshowController(QObject):
     scanProgressChanged = Signal()
     ratingWritten       = Signal(int)    # emitted with image index after a successful rating write
     captionWritten      = Signal(int)    # emitted with image index after a successful caption write
+    showEnded           = Signal()       # emitted when autoplay stops at the last image (no loop)
     kioskModeChanged    = Signal()
     # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
@@ -798,6 +799,7 @@ class SlideshowController(QObject):
             case False if self._loop:
                 self._current_index = 0
             case _:
+                self.showEnded.emit()
                 self.stopShow()
                 return
         if self._is_playing:
