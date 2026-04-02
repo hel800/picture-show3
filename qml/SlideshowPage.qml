@@ -324,6 +324,11 @@ Rectangle {
                 captionDimIn.stop(); captionDimOut.start()
                 _captionWasPlaying = false  // navigation started; do not resume play
             }
+            if (floatingHud.editing) {
+                floatingHud.editing = false
+                _captionWasPlaying = false
+                root.forceActiveFocus()
+            }
             root._pendingPanorama = false
             showImage(true)
         }
@@ -340,6 +345,21 @@ Rectangle {
 
     // ── Keyboard control ──────────────────────────────────────────────────────
     Keys.onPressed: function(event) {
+        // Floating HUD inline edit — handle Enter/Esc as fallback if TextInput
+        // lost focus transiently; re-force focus for any other key so typing works
+        if (floatingHud.editing) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                floatingHud.confirmEdit()
+            else if (event.key === Qt.Key_Escape)
+                floatingHud.cancelEdit()
+            else if (event.key === Qt.Key_F)
+                toggleFullscreen()
+            else
+                floatingHud.refocusEdit()
+            event.accepted = true
+            return
+        }
+
         // Caption popup is open — TextInput handles Enter/Esc/Tab; absorb everything else
         if (captionOverlay.visible) {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
@@ -503,7 +523,10 @@ Rectangle {
                 openRating(event.key - Qt.Key_0)
             break
         case Qt.Key_C:
-            openCaption()
+            if (root.hudStyle === "floating" && root.hudVisible)
+                floatingHud.openEdit()
+            else
+                openCaption()
             break
         case Qt.Key_Q:
             root.openQuitDialog()
@@ -848,6 +871,23 @@ Rectangle {
         hudVisible : root.hudVisible && root.hudStyle === "floating"
         hudCaption : root.hudCaption
         hudRating  : root.hudRating
+
+        onEditStarted: {
+            root._closeExifIfOpen()
+            root._captionWasPlaying = controller.isPlaying
+            if (controller.isPlaying) controller.togglePlay()
+        }
+        onEditClosed: {
+            if (root._captionWasPlaying) controller.togglePlay()
+            root._captionWasPlaying = false
+            root.forceActiveFocus()
+        }
+        onEditConfirmed: function(text) {
+            controller.writeImageCaption(controller.currentIndex, text)
+            if (root._captionWasPlaying) controller.togglePlay()
+            root._captionWasPlaying = false
+            root.forceActiveFocus()
+        }
     }
 
     ExifPanel {

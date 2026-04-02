@@ -12,6 +12,15 @@ Item {
     property string hudCaption : ""
     property int    hudRating  : 0
 
+    // ── Inline caption edit state ─────────────────────────────────────────────
+    property bool editing      : false
+    property real _lastTabMs   : 0
+
+    // Signals to SlideshowPage for autoplay pause/resume
+    signal editStarted()
+    signal editClosed()
+    signal editConfirmed(string text)
+
     anchors.fill: parent
     z: 10
 
@@ -43,8 +52,33 @@ Item {
     }
 
     function _close() {
+        if (root.editing) cancelEdit()
         openAnim.stop()
         closeAnim.start()
+    }
+
+    // ── Edit API (called from SlideshowPage) ──────────────────────────────────
+    function openEdit() {
+        root._lastTabMs = 0
+        captionEditInput.text = root.hudCaption
+        root.editing = true
+        captionEditInput.forceActiveFocus()
+        captionEditInput.selectAll()
+        root.editStarted()
+    }
+
+    function cancelEdit() {
+        root.editing = false
+        root.editClosed()
+    }
+
+    function confirmEdit() {
+        root.editConfirmed(captionEditInput.text)
+        root.editing = false
+    }
+
+    function refocusEdit() {
+        captionEditInput.forceActiveFocus()
     }
 
     // Fade in + nudge up with bounce
@@ -84,8 +118,9 @@ Item {
         anchors.bottomMargin: Math.round(40 * root.hudScale)
         radius: 18
         color:        Qt.rgba(0, 0, 0, 0.82)
-        border.color: Qt.rgba(1, 1, 1, 0.25)
+        border.color: root.editing ? Theme.accent : Qt.rgba(1, 1, 1, 0.25)
         border.width: 1
+        Behavior on border.color { ColorAnimation { duration: 150 } }
 
         RowLayout {
             anchors {
@@ -110,7 +145,7 @@ Item {
                 Layout.alignment: Qt.AlignVCenter
             }
 
-            // ── Caption ───────────────────────────────────────────────────────
+            // ── Caption (display) / TextInput (edit) ──────────────────────────
             Item {
                 Layout.fillWidth: true
                 Layout.alignment: Qt.AlignVCenter
@@ -124,20 +159,17 @@ Item {
                     color: Theme.textPrimary
                     font.pixelSize: root._contentH
                     font.weight: Font.Medium
-                    // Use natural width when scrolling; wrap to container otherwise
                     width:  root.hudCaption.length > 0 ? implicitWidth : parent.width
                     elide:  Text.ElideNone
-                    visible: root.hudCaption.length > 0
+                    visible: root.hudCaption.length > 0 && !root.editing
 
                     readonly property real _overflow: implicitWidth - parent.width
 
                     SequentialAnimation on x {
-                        running: root.hudCaption.length > 0 && captionText._overflow > 0
+                        running: captionText.visible && root.hudCaption.length > 0
+                                 && captionText._overflow > 0 && !root.editing
                         loops:   Animation.Infinite
-                        // Reset x to 0 when animation stops (caption became short/empty)
                         onRunningChanged: if (!running) captionText.x = 0
-                        // Instant snap to start — fires on every (re)start and loop,
-                        // ensuring x is never mispositioned when the animation begins.
                         NumberAnimation { to: 0; duration: 0 }
                         PauseAnimation  { duration: 1500 }
                         NumberAnimation {
@@ -150,6 +182,44 @@ Item {
                             to: 0
                             duration: Math.max(800, captionText._overflow * 10)
                             easing.type: Easing.InOutSine
+                        }
+                    }
+                }
+
+                TextInput {
+                    id: captionEditInput
+                    anchors { left: parent.left; right: parent.right; verticalCenter: parent.verticalCenter }
+                    color: Theme.textPrimary
+                    font.pixelSize: root._contentH
+                    font.weight: Font.Medium
+                    selectionColor: Theme.accent
+                    selectedTextColor: "white"
+                    clip: true
+                    visible: root.editing
+
+                    // Re-grab focus immediately if lost while editing (no mouse in fullscreen)
+                    onActiveFocusChanged: if (!activeFocus && root.editing)
+                        Qt.callLater(captionEditInput.forceActiveFocus)
+
+                    Keys.onReturnPressed: root.confirmEdit()
+                    Keys.onEnterPressed:  root.confirmEdit()
+                    Keys.onEscapePressed: root.cancelEdit()
+                    Keys.onPressed: function(event) {
+                        if (event.key === Qt.Key_Tab) {
+                            var now = Date.now()
+                            if (now - root._lastTabMs < 600) {
+                                var prevIdx = controller.currentIndex > 0
+                                              ? controller.currentIndex - 1
+                                              : controller.imageCount - 1
+                                captionEditInput.text = controller.imageCaption(prevIdx)
+                                captionEditInput.selectAll()
+                                root._lastTabMs = 0
+                            } else {
+                                root._lastTabMs = now
+                            }
+                            event.accepted = true
+                        } else if (event.key === Qt.Key_F) {
+                            // Let SlideshowPage handle fullscreen toggle
                         }
                     }
                 }
@@ -195,6 +265,26 @@ Item {
                 visible: text.length > 0
                 Layout.alignment: Qt.AlignVCenter
             }
+        }
+
+        // ── Key hints (inside box, anchored to bottom — no layout shift) ──────
+        Row {
+            anchors.horizontalCenter: hudBox.horizontalCenter
+            anchors.bottom: hudBox.bottom
+            anchors.bottomMargin: 8
+            spacing: 6
+            opacity: root.editing ? 1.0 : 0.0
+            visible: opacity > 0
+            Behavior on opacity { NumberAnimation { duration: 150 } }
+
+            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("save"); color: Theme.textDisabled; font.pixelSize: 11 }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("cancel"); color: Theme.textDisabled; font.pixelSize: 11 }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
+            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Tab Tab" }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("copy prev caption"); color: Theme.textDisabled; font.pixelSize: 11 }
         }
     }
 }
