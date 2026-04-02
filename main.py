@@ -9,7 +9,7 @@ import ctypes
 from pathlib import Path
 
 from PySide6.QtCore import QLocale, QObject, QSettings, QTimer, QTranslator, QUrl, Qt, Slot
-from PySide6.QtGui import QCursor, QGuiApplication, QIcon, QWindow
+from PySide6.QtGui import QCursor, QGuiApplication, QIcon, QImageReader, QWindow
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
 
@@ -265,6 +265,7 @@ def main() -> None:
     if start_folder is not None and not Path(start_folder).is_dir():
         print(f"Error: folder does not exist: {start_folder}", file=sys.stderr)
         sys.exit(1)
+    QImageReader.setAllocationLimit(1024)
     app = QGuiApplication(argv)
     app.setApplicationName("picture-show3")
     app.setOrganizationName("picture-show3")
