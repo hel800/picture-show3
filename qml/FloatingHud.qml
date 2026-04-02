@@ -16,46 +16,63 @@ Item {
     z: 10
 
     // ── Sizing ────────────────────────────────────────────────────────────────
-    // height = 18 % of parent, width derived from h/w ratio 0.22,
-    // clamped so width ≤ 90 % of parent width.
-    readonly property real _targetH : parent.height * 0.18
-    readonly property real _targetW : _targetH / 0.22
-    readonly property real _maxW    : parent.width  * 0.9
-    readonly property real _hudW    : Math.min(_targetW, _maxW)
-    readonly property real _hudH    : _targetW <= _maxW ? _targetH : _maxW * 0.22
+    // height = 8 % of parent height, width = 80 % of parent width.
+    // _contentH drives all font sizes, star size and separator heights (50 % of HUD height).
+    readonly property real _hudW     : parent.width  * 0.80
+    readonly property real _hudH     : parent.height * 0.08
+    readonly property real _contentH : Math.round(_hudH * 0.35)
 
-    // ── Transition offset (animated via states) ───────────────────────────────
-    property real _yOffset: _hudH + 20
+    // Vertical offset via transform — 0 = resting position, positive = shifted downward.
+    property real _slideOffset: 20
+    property bool _stoppingForReopen: false
 
     opacity: 0
 
-    state: hudVisible ? "shown" : "hidden"
-    states: [
-        State {
-            name: "shown"
-            PropertyChanges { target: root; opacity: 1; _yOffset: 0 }
-        },
-        State {
-            name: "hidden"
-            PropertyChanges { target: root; opacity: 0; _yOffset: root._hudH + 20 }
+    transform: Translate { y: root._slideOffset }
+
+    onHudVisibleChanged: hudVisible ? _open() : _close()
+
+    function _open() {
+        _stoppingForReopen = true
+        closeAnim.stop()
+        _stoppingForReopen = false
+        openAnim.stop()
+        root.opacity      = 0
+        root._slideOffset = 20
+        openAnim.start()
+    }
+
+    function _close() {
+        openAnim.stop()
+        closeAnim.start()
+    }
+
+    // Fade in + nudge up with bounce
+    ParallelAnimation {
+        id: openAnim
+        NumberAnimation {
+            target: root; property: "opacity"
+            from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic
         }
-    ]
-    transitions: [
-        Transition {
-            to: "shown"
-            ParallelAnimation {
-                NumberAnimation { property: "opacity"; duration: 250; easing.type: Easing.OutQuad }
-                NumberAnimation { property: "_yOffset"; duration: 320; easing.type: Easing.OutCubic }
-            }
-        },
-        Transition {
-            to: "hidden"
-            ParallelAnimation {
-                NumberAnimation { property: "opacity"; duration: 200; easing.type: Easing.InQuad }
-                NumberAnimation { property: "_yOffset"; duration: 200; easing.type: Easing.InCubic }
-            }
+        NumberAnimation {
+            target: root; property: "_slideOffset"
+            from: 20; to: 0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2
         }
-    ]
+    }
+
+    // Fade out + nudge down
+    ParallelAnimation {
+        id: closeAnim
+        NumberAnimation {
+            target: root; property: "opacity"
+            to: 0; duration: 200; easing.type: Easing.InCubic
+        }
+        NumberAnimation {
+            target: root; property: "_slideOffset"
+            to: 20; duration: 200; easing.type: Easing.InQuad
+        }
+        onStopped: if (!root._stoppingForReopen) root._slideOffset = 20
+    }
 
     // ── Box ───────────────────────────────────────────────────────────────────
     Rectangle {
@@ -63,7 +80,8 @@ Item {
         width:  root._hudW
         height: root._hudH
         anchors.horizontalCenter: parent.horizontalCenter
-        y: parent.height - height - Math.round(24 * root.hudScale) + root._yOffset
+        anchors.bottom: parent.bottom
+        anchors.bottomMargin: Math.round(40 * root.hudScale)
         radius: 18
         color:        Qt.rgba(0, 0, 0, 0.82)
         border.color: Qt.rgba(1, 1, 1, 0.25)
@@ -72,22 +90,22 @@ Item {
         RowLayout {
             anchors {
                 fill: parent
-                leftMargin:  Math.round(16 * root.hudScale)
-                rightMargin: Math.round(16 * root.hudScale)
+                leftMargin:  Math.round(32 * root.hudScale)
+                rightMargin: Math.round(32 * root.hudScale)
             }
-            spacing: Math.round(10 * root.hudScale)
+            spacing: Math.round(18 * root.hudScale)
 
             // ── Counter ───────────────────────────────────────────────────────
             Text {
                 text: (controller.currentIndex + 1) + " / " + controller.imageCount
                 color: Theme.textPrimary
-                font.pixelSize: Math.round(13 * root.hudScale)
+                font.pixelSize: root._contentH
                 font.weight: Font.Bold
                 Layout.alignment: Qt.AlignVCenter
             }
 
             Rectangle {
-                width: 1; height: Math.round(14 * root.hudScale)
+                width: 1; height: root._contentH
                 color: Qt.rgba(1, 1, 1, 0.2)
                 Layout.alignment: Qt.AlignVCenter
             }
@@ -104,7 +122,7 @@ Item {
                     anchors.verticalCenter: parent.verticalCenter
                     text: root.hudCaption
                     color: Theme.textPrimary
-                    font.pixelSize: Math.round(14 * root.hudScale)
+                    font.pixelSize: root._contentH
                     font.weight: Font.Medium
                     // Use natural width when scrolling; wrap to container otherwise
                     width:  root.hudCaption.length > 0 ? implicitWidth : parent.width
@@ -116,16 +134,21 @@ Item {
                     SequentialAnimation on x {
                         running: root.hudCaption.length > 0 && captionText._overflow > 0
                         loops:   Animation.Infinite
+                        // Reset x to 0 when animation stops (caption became short/empty)
+                        onRunningChanged: if (!running) captionText.x = 0
+                        // Instant snap to start — fires on every (re)start and loop,
+                        // ensuring x is never mispositioned when the animation begins.
+                        NumberAnimation { to: 0; duration: 0 }
                         PauseAnimation  { duration: 1500 }
                         NumberAnimation {
                             from: 0; to: -captionText._overflow
-                            duration: Math.max(1500, captionText._overflow * 25)
+                            duration: Math.max(800, captionText._overflow * 10)
                             easing.type: Easing.InOutSine
                         }
                         PauseAnimation  { duration: 1000 }
                         NumberAnimation {
                             to: 0
-                            duration: Math.max(1500, captionText._overflow * 25)
+                            duration: Math.max(800, captionText._overflow * 10)
                             easing.type: Easing.InOutSine
                         }
                     }
@@ -134,7 +157,7 @@ Item {
 
             // ── Separator before meta (hidden when no meta to show) ───────────
             Rectangle {
-                width: 1; height: Math.round(14 * root.hudScale)
+                width: 1; height: root._contentH
                 color: Qt.rgba(1, 1, 1, 0.2)
                 Layout.alignment: Qt.AlignVCenter
                 visible: root.hudRating > 0 || dateText.visible
@@ -149,10 +172,18 @@ Item {
                     model: 5
                     ThemedIcon {
                         source: "../img/icon_star.svg"
-                        size: Math.round(12 * root.hudScale)
+                        size: root._contentH
                         iconColor: index < root.hudRating ? Theme.accentLight : Theme.starInactive
                     }
                 }
+            }
+
+            // ── Separator between stars and date ─────────────────────────────
+            Rectangle {
+                width: 1; height: root._contentH
+                color: Qt.rgba(1, 1, 1, 0.2)
+                Layout.alignment: Qt.AlignVCenter
+                visible: root.hudRating > 0 && dateText.visible
             }
 
             // ── Date taken ────────────────────────────────────────────────────
@@ -160,7 +191,7 @@ Item {
                 id: dateText
                 text: controller.imageDateTaken(controller.currentIndex)
                 color: Theme.textSubtle
-                font.pixelSize: Math.round(12 * root.hudScale)
+                font.pixelSize: root._contentH
                 visible: text.length > 0
                 Layout.alignment: Qt.AlignVCenter
             }

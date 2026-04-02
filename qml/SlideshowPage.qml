@@ -24,6 +24,12 @@ Rectangle {
     property string hudCaption : controller.imageCaption(controller.currentIndex)
     property int    hudRating  : controller.imageRating(controller.currentIndex)
     property string hudStyle   : controller.hudStyle
+    // Height the floating HUD occupies from the bottom (HUD height + its bottom margin).
+    // Zero when not in floating mode or when the HUD is hidden.
+    readonly property real _floatingHudClearance:
+        (root.hudStyle === "floating" && root.hudVisible)
+        ? floatingHud._hudH + 40 : 0
+
     property bool   _exifVisible     : false
     property bool   _exiting         : false   // set on exit to suppress the play/pause popup
     property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
@@ -733,8 +739,8 @@ Rectangle {
         // Anchored above the HUD — QML owns the final position, no height
         // measurement needed; the slide animation uses transform: Translate.
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: hud.top
-        anchors.bottomMargin: 8
+        anchors.bottom: root.hudStyle === "floating" ? parent.bottom : hud.top
+        anchors.bottomMargin: 8 + root._floatingHudClearance
         // exifData is set explicitly in the key handler before open() is called,
         // not via a reactive binding — prevents content changing mid-animation.
     }
@@ -830,7 +836,8 @@ Rectangle {
             width: 400
             height: jumpLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * 5 / 6 - height / 2
+            y: Math.min(parent.height * 5 / 6 - height / 2,
+                        parent.height - height - root._floatingHudClearance - 16)
             radius: 18
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
@@ -991,7 +998,8 @@ Rectangle {
             width: 380
             height: ratingLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * 5 / 6 - height / 2
+            y: Math.min(parent.height * 5 / 6 - height / 2,
+                        parent.height - height - root._floatingHudClearance - 16)
             radius: 18
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
@@ -1096,7 +1104,8 @@ Rectangle {
             width: Math.min(parent.width - 40, 480)
             height: captionLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * 5 / 6 - height / 2
+            y: Math.min(parent.height * 5 / 6 - height / 2,
+                        parent.height - height - root._floatingHudClearance - 16)
             radius: 18
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
