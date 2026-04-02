@@ -98,7 +98,7 @@ Item {
             // ── Counter ───────────────────────────────────────────────────────
             Text {
                 text: (controller.currentIndex + 1) + " / " + controller.imageCount
-                color: Theme.textPrimary
+                color: Theme.textSubtle
                 font.pixelSize: root._contentH
                 font.weight: Font.Bold
                 Layout.alignment: Qt.AlignVCenter
