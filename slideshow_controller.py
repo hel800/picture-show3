@@ -799,8 +799,9 @@ class SlideshowController(QObject):
             case False if self._loop:
                 self._current_index = 0
             case _:
-                self.showEnded.emit()
-                self.stopShow()
+                if self._is_playing:
+                    self.showEnded.emit()
+                    self.stopShow()
                 return
         if self._is_playing:
             self._timer.start()   # restart countdown after any navigation

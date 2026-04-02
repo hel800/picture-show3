@@ -201,6 +201,25 @@ class TestNavigation:
         ctrl_with_images.nextImage()
         assert ctrl_with_images.isPlaying is False
 
+    def test_next_without_loop_emits_show_ended_when_playing(self, ctrl_with_images, qtbot):
+        ctrl_with_images.setLoop(False)
+        ctrl_with_images.togglePlay()         # start autoplay
+        ctrl_with_images.goTo(4)              # last image
+        with qtbot.waitSignal(ctrl_with_images.showEnded, timeout=1000):
+            ctrl_with_images.nextImage()
+
+    def test_next_without_loop_no_show_ended_when_not_playing(self, ctrl_with_images, qtbot):
+        ctrl_with_images.setLoop(False)
+        ctrl_with_images.goTo(4)              # last image, no autoplay
+        with qtbot.assertNotEmitted(ctrl_with_images.showEnded):
+            ctrl_with_images.nextImage()
+
+    def test_next_without_loop_no_is_playing_changed_when_not_playing(self, ctrl_with_images, qtbot):
+        ctrl_with_images.setLoop(False)
+        ctrl_with_images.goTo(4)              # last image, no autoplay
+        with qtbot.assertNotEmitted(ctrl_with_images.isPlayingChanged):
+            ctrl_with_images.nextImage()
+
 
 # ── Star-rating filter ────────────────────────────────────────────────────────
 
