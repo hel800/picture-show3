@@ -646,6 +646,12 @@ class TestSettingsSetters:
         ctrl.setHudVisible(True)
         assert ctrl.hudVisible is True
 
+    def test_set_hud_style(self, ctrl):
+        ctrl.setHudStyle("floating")
+        assert ctrl.hudStyle == "floating"
+        ctrl.setHudStyle("fundamental")
+        assert ctrl.hudStyle == "fundamental"
+
     def test_set_loop(self, ctrl):
         ctrl.setLoop(False)
         assert ctrl.loop is False

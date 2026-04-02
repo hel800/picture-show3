@@ -37,8 +37,8 @@ Popup {
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size] Remote=[enable,port] Misc=[language,updateCheck]
-    readonly property var _optionCounts: [2, 1, 1, 2, 2]
+    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[language,updateCheck]
+    readonly property var _optionCounts: [2, 1, 2, 2, 2]
 
     // Returns false for options that are currently inactive and should be skipped
     function _optionEnabled(section, option) {
@@ -66,7 +66,8 @@ Popup {
             item  = ctrl0Item
         } else if (root._section === 2) {
             flick = hudScroll.contentItem
-            item  = hud0Item
+            var h = [hud0Item, hud1Item]
+            item = h[root._focusedOption]
         } else if (root._section === 3) {
             flick = remScroll.contentItem
             var r = [rem0Item, rem1Item]
@@ -215,6 +216,11 @@ Popup {
                     } else if (root._isOptionFocused(2, 0)) {
                         controller.setHudSize(
                             Math.max(50, Math.min(200, controller.hudSize + d * 10)))
+
+                    } else if (root._isOptionFocused(2, 1)) {
+                        var hudStyles = ["fundamental", "floating"]
+                        var hsi = hudStyles.indexOf(controller.hudStyle)
+                        controller.setHudStyle(hudStyles[(hsi + d + hudStyles.length) % hudStyles.length])
 
                     } else if (root._isOptionFocused(1, 0)) {
                         controller.setMouseNavEnabled(d > 0)
@@ -655,6 +661,91 @@ Popup {
                                 Text { text: "50 %"; color: Theme.textDisabled; font.pixelSize: 11 }
                                 Item { Layout.fillWidth: true }
                                 Text { text: "200 %"; color: Theme.textDisabled; font.pixelSize: 11 }
+                            }
+                        }
+                    }
+
+                    // Option 1: HUD Style ─────────────────────────────────────
+                    Item {
+                        id: hud1Item
+                        Layout.fillWidth: true
+                        implicitHeight: hud1Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(2, 1)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: hud1Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(2, 1)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("HUD STYLE")
+                                    color: root._isOptionFocused(2, 1)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 4; spacing: 12
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("HUD style"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("Bar: slim and unobtrusive. Floating: larger, more prominent."); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
+                                Item { Layout.fillWidth: true }
+                                Row {
+                                    spacing: 8
+                                    Repeater {
+                                        model: [
+                                            { label: qsTr("Bar"),         icon: "../img/icon_hud_fundamental.svg", style: "fundamental" },
+                                            { label: qsTr("Floating"),    icon: "../img/icon_hud_floating.svg",    style: "floating"     }
+                                        ]
+                                        delegate: Rectangle {
+                                            width: 76; height: 50; radius: 12
+                                            color: controller.hudStyle === modelData.style
+                                                   ? Theme.accentDeep
+                                                   : (hudStyleArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                            border.color: controller.hudStyle === modelData.style ? Theme.accent : "transparent"
+                                            border.width: 1
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Column {
+                                                anchors.centerIn: parent
+                                                spacing: 3
+                                                ThemedIcon {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    source: modelData.icon
+                                                    size: 20
+                                                    iconColor: controller.hudStyle === modelData.style
+                                                               ? Theme.accentLight : Theme.textMuted
+                                                    Behavior on iconColor { ColorAnimation { duration: 150 } }
+                                                }
+                                                Text {
+                                                    anchors.horizontalCenter: parent.horizontalCenter
+                                                    text: modelData.label; font.pixelSize: 11
+                                                    color: controller.hudStyle === modelData.style
+                                                           ? Theme.textPrimary : Theme.textMuted
+                                                }
+                                            }
+                                            MouseArea {
+                                                id: hudStyleArea; anchors.fill: parent; hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: controller.setHudStyle(modelData.style)
+                                            }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }

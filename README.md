@@ -13,11 +13,11 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Sort** | By filename, by EXIF date taken, or random |
 | **Loop** | Optional looping after the last photo |
 | **Autoplay** | Configurable interval (1–99 s), timer restarts on manual navigation; adjust interval live from the slideshow via the play popup (↑↓ or 1–9, ↵ to confirm) |
-| **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken |
+| **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken — choose **Bar** (slim bottom strip) or **Floating** (centred pill) style in Advanced settings |
 | **EXIF panel** | Press `,` during the show for a detailed EXIF overlay: camera, aperture, shutter, ISO, focal length, exposure program, flash, dimensions |
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
 | **Star rating editor** | Press `0`–`5` during the show to set the XMP star rating of the current image; `0` removes it. A confirmation popup with animated stars appears — `↵` to save, `Esc` to cancel |
-| **Caption editor** | Press `C` during the show to edit the IPTC caption of the current image. A popup loads the existing caption into a text field — `↵` to save, `Esc` to cancel. Press `Tab Tab` (< 600 ms apart) to copy the previous image's caption |
+| **Caption editor** | Press `C` during the show to edit the IPTC caption of the current image. In Floating HUD mode, editing happens inline within the HUD bar. Otherwise a popup appears. `↵` to save, `Esc` to cancel. Press `Tab Tab` (< 600 ms apart) to copy the previous image's caption |
 | **Recursive folders** | Optional: include subfolders in the scan (toggle in settings) |
 | **Background scanning** | Folder scanning and sorting run in background threads — UI stays responsive; Start button enables when ready |
 | **Jump to image** | Instantly jump to any image by number with a live preview |
@@ -172,7 +172,7 @@ Settings are grouped into four tabs:
 |---|---|
 | **General** | Transition duration (100–3000 ms) · UI language · Update check on startup |
 | **Controls** | Mouse button navigation (left = next, right = previous) |
-| **HUD** | HUD size (50–200 %) |
+| **HUD** | HUD size (50–200 %) · HUD style (Bar / Floating) |
 | **Remote** | Smartphone remote enable/disable · Port |
 
 ### Keyboard navigation inside Advanced settings

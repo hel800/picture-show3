@@ -23,6 +23,13 @@ Rectangle {
     property real   hudScale   : controller.hudSize / 100.0
     property string hudCaption : controller.imageCaption(controller.currentIndex)
     property int    hudRating  : controller.imageRating(controller.currentIndex)
+    property string hudStyle   : controller.hudStyle
+    // Height the floating HUD occupies from the bottom (HUD height + its bottom margin).
+    // Zero when not in floating mode or when the HUD is hidden.
+    readonly property real _floatingHudClearance:
+        (root.hudStyle === "floating" && root.hudVisible)
+        ? floatingHud._hudH + 40 : 0
+
     property bool   _exifVisible     : false
     property bool   _exiting         : false   // set on exit to suppress the play/pause popup
     property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
@@ -244,8 +251,11 @@ Rectangle {
             inc.opacity = 1; inc.x = 0; inc.scale = 1; inc.z = 2
             out.opacity = 0; out.x = 0; out.scale = 1; out.z = 1
             showingA = !showingA
+            floatingHud.refreshDisplay()
             return
         }
+
+        floatingHud.crossfadeContent()
 
         inc.z = 2; out.z = 1
         var style = controller.transitionStyle
@@ -317,22 +327,46 @@ Rectangle {
                 captionDimIn.stop(); captionDimOut.start()
                 _captionWasPlaying = false  // navigation started; do not resume play
             }
+            if (floatingHud.editing) {
+                floatingHud.editing = false
+                _captionWasPlaying = false
+                root.forceActiveFocus()
+            }
             root._pendingPanorama = false
             showImage(true)
         }
         function onRatingWritten(index) {
             // Restore the binding so HUD still tracks future navigations
-            if (index === controller.currentIndex)
+            if (index === controller.currentIndex) {
                 root.hudRating = Qt.binding(function() { return controller.imageRating(controller.currentIndex) })
+                floatingHud.refreshDisplay()
+            }
         }
         function onCaptionWritten(index) {
-            if (index === controller.currentIndex)
+            if (index === controller.currentIndex) {
                 root.hudCaption = Qt.binding(function() { return controller.imageCaption(controller.currentIndex) })
+                floatingHud.refreshDisplay()
+            }
         }
     }
 
     // ── Keyboard control ──────────────────────────────────────────────────────
     Keys.onPressed: function(event) {
+        // Floating HUD inline edit — handle Enter/Esc as fallback if TextInput
+        // lost focus transiently; re-force focus for any other key so typing works
+        if (floatingHud.editing) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+                floatingHud.confirmEdit()
+            else if (event.key === Qt.Key_Escape)
+                floatingHud.cancelEdit()
+            else if (event.key === Qt.Key_F)
+                toggleFullscreen()
+            else
+                floatingHud.refocusEdit()
+            event.accepted = true
+            return
+        }
+
         // Caption popup is open — TextInput handles Enter/Esc/Tab; absorb everything else
         if (captionOverlay.visible) {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
@@ -496,7 +530,10 @@ Rectangle {
                 openRating(event.key - Qt.Key_0)
             break
         case Qt.Key_C:
-            openCaption()
+            if (root.hudStyle === "floating" && root.hudVisible)
+                floatingHud.openEdit()
+            else
+                openCaption()
             break
         case Qt.Key_Q:
             root.openQuitDialog()
@@ -829,10 +866,36 @@ Rectangle {
     HudBar {
         id: hud
         hudScale      : root.hudScale
-        hudVisible    : root.hudVisible
+        hudVisible    : root.hudVisible && root.hudStyle === "fundamental"
         hudCaption    : root.hudCaption
         hudRating     : root.hudRating
         exifPanelOpen : root._exifVisible
+    }
+
+    FloatingHud {
+        id: floatingHud
+        hudScale           : root.hudScale
+        hudVisible         : root.hudVisible && root.hudStyle === "floating"
+        hudCaption         : root.hudCaption
+        hudRating          : root.hudRating
+        transitionDuration : root.transDur
+
+        onEditStarted: {
+            root._closeExifIfOpen()
+            root._captionWasPlaying = controller.isPlaying
+            if (controller.isPlaying) controller.togglePlay()
+        }
+        onEditClosed: {
+            if (root._captionWasPlaying) controller.togglePlay()
+            root._captionWasPlaying = false
+            root.forceActiveFocus()
+        }
+        onEditConfirmed: function(text) {
+            controller.writeImageCaption(controller.currentIndex, text)
+            if (root._captionWasPlaying) controller.togglePlay()
+            root._captionWasPlaying = false
+            root.forceActiveFocus()
+        }
     }
 
     ExifPanel {
@@ -840,8 +903,8 @@ Rectangle {
         // Anchored above the HUD — QML owns the final position, no height
         // measurement needed; the slide animation uses transform: Translate.
         anchors.horizontalCenter: parent.horizontalCenter
-        anchors.bottom: hud.top
-        anchors.bottomMargin: 8
+        anchors.bottom: root.hudStyle === "floating" ? parent.bottom : hud.top
+        anchors.bottomMargin: 8 + root._floatingHudClearance
         // exifData is set explicitly in the key handler before open() is called,
         // not via a reactive binding — prevents content changing mid-animation.
     }
@@ -1093,7 +1156,8 @@ Rectangle {
             width: 400
             height: jumpLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * 5 / 6 - height / 2
+            y: Math.min(parent.height * 5 / 6 - height / 2,
+                        parent.height - height - root._floatingHudClearance - 16)
             radius: 18
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
@@ -1254,7 +1318,8 @@ Rectangle {
             width: 380
             height: ratingLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * 5 / 6 - height / 2
+            y: Math.min(parent.height * 5 / 6 - height / 2,
+                        parent.height - height - root._floatingHudClearance - 16)
             radius: 18
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
@@ -1359,7 +1424,8 @@ Rectangle {
             width: Math.min(parent.width - 40, 480)
             height: captionLayout.implicitHeight + 40
             anchors.horizontalCenter: parent.horizontalCenter
-            y: parent.height * 5 / 6 - height / 2
+            y: Math.min(parent.height * 5 / 6 - height / 2,
+                        parent.height - height - root._floatingHudClearance - 16)
             radius: 18
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
