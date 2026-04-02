@@ -23,6 +23,7 @@ Rectangle {
     property real   hudScale   : controller.hudSize / 100.0
     property string hudCaption : controller.imageCaption(controller.currentIndex)
     property int    hudRating  : controller.imageRating(controller.currentIndex)
+    property string hudStyle   : controller.hudStyle
     property bool   _exifVisible     : false
     property bool   _exiting         : false   // set on exit to suppress the play/pause popup
     property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
@@ -713,10 +714,18 @@ Rectangle {
     HudBar {
         id: hud
         hudScale      : root.hudScale
-        hudVisible    : root.hudVisible
+        hudVisible    : root.hudVisible && root.hudStyle === "fundamental"
         hudCaption    : root.hudCaption
         hudRating     : root.hudRating
         exifPanelOpen : root._exifVisible
+    }
+
+    FloatingHud {
+        id: floatingHud
+        hudScale   : root.hudScale
+        hudVisible : root.hudVisible && root.hudStyle === "floating"
+        hudCaption : root.hudCaption
+        hudRating  : root.hudRating
     }
 
     ExifPanel {

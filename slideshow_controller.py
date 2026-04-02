@@ -96,6 +96,7 @@ class SlideshowController(QObject):
         self._transition_duration: int            = 600     # milliseconds
         self._hud_size           : int            = 100     # percent (50–200)
         self._hud_visible        : bool           = False
+        self._hud_style          : str            = "fundamental"
         self._sort_order         : SortOrder      = "name"
         self._loop               : bool           = True
         self._autoplay           : bool           = False
@@ -134,6 +135,7 @@ class SlideshowController(QObject):
         self._transition_duration = s.value("transitionDuration", 600, type=int)
         self._hud_size            = s.value("hudSize",            100, type=int)
         self._hud_visible         = s.value("hudVisible",         False, type=bool)
+        self._hud_style           = s.value("hudStyle",           "fundamental")
         self._sort_order          = s.value("sort",               "name")
         self._loop             = s.value("loop",          True,  type=bool)
         self._autoplay         = s.value("autoplay",      False, type=bool)
@@ -172,6 +174,7 @@ class SlideshowController(QObject):
         s.setValue("transitionDuration",  self._transition_duration)
         s.setValue("hudSize",             self._hud_size)
         s.setValue("hudVisible",          self._hud_visible)
+        s.setValue("hudStyle",            self._hud_style)
         s.setValue("sort",          self._sort_order)
         s.setValue("loop",          self._loop)
         s.setValue("autoplay",       self._autoplay)
@@ -213,6 +216,9 @@ class SlideshowController(QObject):
 
     @Property(bool, notify=settingsChanged)
     def hudVisible(self) -> bool: return self._hud_visible
+
+    @Property(str, notify=settingsChanged)
+    def hudStyle(self) -> str: return self._hud_style
 
     @Property(str, notify=settingsChanged)
     def sortOrder(self) -> SortOrder: return self._sort_order
@@ -640,6 +646,12 @@ class SlideshowController(QObject):
     @Slot(bool)
     def setHudVisible(self, visible: bool) -> None:
         self._hud_visible = visible
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(str)
+    def setHudStyle(self, style: str) -> None:
+        self._hud_style = style
         self._save_settings()
         self.settingsChanged.emit()
 
