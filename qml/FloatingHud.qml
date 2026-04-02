@@ -54,6 +54,8 @@ Item {
 
     function _close() {
         if (root.editing) cancelEdit()
+        contentCrossfade.stop()
+        root._crossfading = false
         openAnim.stop()
         closeAnim.start()
     }

@@ -136,7 +136,8 @@ class SlideshowController(QObject):
         self._transition_duration = s.value("transitionDuration", 600, type=int)
         self._hud_size            = s.value("hudSize",            100, type=int)
         self._hud_visible         = s.value("hudVisible",         False, type=bool)
-        self._hud_style           = s.value("hudStyle",           "fundamental")
+        _hs = s.value("hudStyle", "fundamental")
+        self._hud_style           = _hs if _hs in ("fundamental", "floating") else "fundamental"
         self._sort_order          = s.value("sort",               "name")
         self._loop             = s.value("loop",          True,  type=bool)
         self._autoplay         = s.value("autoplay",      False, type=bool)
@@ -650,8 +651,12 @@ class SlideshowController(QObject):
         self._save_settings()
         self.settingsChanged.emit()
 
+    _VALID_HUD_STYLES = ("fundamental", "floating")
+
     @Slot(str)
     def setHudStyle(self, style: str) -> None:
+        if style not in self._VALID_HUD_STYLES:
+            style = "fundamental"
         self._hud_style = style
         self._save_settings()
         self.settingsChanged.emit()
