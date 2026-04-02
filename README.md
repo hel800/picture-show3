@@ -17,7 +17,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **EXIF panel** | Press `,` during the show for a detailed EXIF overlay: camera, aperture, shutter, ISO, focal length, exposure program, flash, dimensions |
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
 | **Star rating editor** | Press `0`–`5` during the show to set the XMP star rating of the current image; `0` removes it. A confirmation popup with animated stars appears — `↵` to save, `Esc` to cancel |
-| **Caption editor** | Press `C` during the show to edit the IPTC caption of the current image. A popup loads the existing caption into a text field — `↵` to save, `Esc` to cancel. Press `Tab Tab` (< 600 ms apart) to copy the previous image's caption |
+| **Caption editor** | Press `C` during the show to edit the IPTC caption of the current image. In Floating HUD mode, editing happens inline within the HUD bar. Otherwise a popup appears. `↵` to save, `Esc` to cancel. Press `Tab Tab` (< 600 ms apart) to copy the previous image's caption |
 | **Recursive folders** | Optional: include subfolders in the scan (toggle in settings) |
 | **Background scanning** | Folder scanning and sorting run in background threads — UI stays responsive; Start button enables when ready |
 | **Jump to image** | Instantly jump to any image by number with a live preview |
