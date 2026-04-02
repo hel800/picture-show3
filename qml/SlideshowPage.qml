@@ -880,7 +880,7 @@ Rectangle {
         anchors.horizontalCenter: parent.horizontalCenter
         y: parent.height * 5 / 6 - height / 2
         // Fixed size — never changes between play / pause / edit states
-        width: 242
+        width: 300
         height: 88
         opacity: 0
         z: 20
