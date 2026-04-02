@@ -13,7 +13,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Sort** | By filename, by EXIF date taken, or random |
 | **Loop** | Optional looping after the last photo |
 | **Autoplay** | Configurable interval (1–99 s), timer restarts on manual navigation; adjust interval live from the slideshow via the play popup (↑↓ or 1–9, ↵ to confirm) |
-| **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken |
+| **HUD** | Toggleable info bar: index, filename, IPTC caption, XMP star rating, EXIF date taken — choose **Bar** (slim bottom strip) or **Floating** (centred pill) style in Advanced settings |
 | **EXIF panel** | Press `,` during the show for a detailed EXIF overlay: camera, aperture, shutter, ISO, focal length, exposure program, flash, dimensions |
 | **Star filter** | Filter the playlist to images at or above a minimum XMP star rating (1–5) |
 | **Star rating editor** | Press `0`–`5` during the show to set the XMP star rating of the current image; `0` removes it. A confirmation popup with animated stars appears — `↵` to save, `Esc` to cancel |
@@ -172,7 +172,7 @@ Settings are grouped into four tabs:
 |---|---|
 | **General** | Transition duration (100–3000 ms) · UI language · Update check on startup |
 | **Controls** | Mouse button navigation (left = next, right = previous) |
-| **HUD** | HUD size (50–200 %) |
+| **HUD** | HUD size (50–200 %) · HUD style (Bar / Floating) |
 | **Remote** | Smartphone remote enable/disable · Port |
 
 ### Keyboard navigation inside Advanced settings
