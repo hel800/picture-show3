@@ -48,7 +48,11 @@ stateDiagram-v2
 | Key | Action |
 |-----|--------|
 | `→` / `←` | Next / previous image |
-| `Space` | Play / pause (popup flashes 1.2 s) |
+| `Space` | Play / pause (popup visible 3 s with countdown border) |
+| `↑` / `↓` *(play popup)* | Enter interval edit mode, increment / decrement seconds |
+| `1`–`9` *(play popup)* | Enter interval edit mode, set first digit |
+| `↵` *(interval edit)* | Confirm new interval, start autoplay |
+| `Esc` *(interval edit)* | Cancel, leave autoplay stopped |
 | `F` | Toggle fullscreen |
 | `I` | Toggle HUD info bar |
 | `,` | Toggle EXIF panel |
