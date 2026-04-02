@@ -7,10 +7,11 @@ import "."
 Item {
     id: root
 
-    property real   hudScale   : 1.0
-    property bool   hudVisible : false
-    property string hudCaption : ""
-    property int    hudRating  : 0
+    property real   hudScale          : 1.0
+    property bool   hudVisible        : false
+    property string hudCaption        : ""
+    property int    hudRating         : 0
+    property int    transitionDuration: 600
 
     // ── Inline caption edit state ─────────────────────────────────────────────
     property bool editing      : false
@@ -81,6 +82,54 @@ Item {
         captionEditInput.forceActiveFocus()
     }
 
+    // ── Buffered display values (frozen during crossfade) ────────────────────
+    // Declared as plain values — no declarative bindings, so they only change
+    // when explicitly assigned (in _refreshDisplay or the change handlers).
+    property bool   _crossfading    : false
+    property string _displayCount   : ""
+    property string _displayCaption : ""
+    property int    _displayRating  : 0
+    property string _displayDate    : ""
+
+    Component.onCompleted: refreshDisplay()
+
+    // Display values are updated ONLY by:
+    //   1. _refreshDisplay()       — called from SlideshowPage for non-transition updates
+    //   2. ScriptAction midpoint   — called at opacity 0 during crossfade
+    // No automatic handlers — prevents premature updates before crossfade starts.
+
+    function refreshDisplay() {
+        _displayCount   = (controller.currentIndex + 1) + " / " + controller.imageCount
+        _displayCaption = root.hudCaption
+        _displayRating  = root.hudRating
+        _displayDate    = controller.imageDateTaken(controller.currentIndex)
+    }
+
+    // ── Content crossfade on image change ─────────────────────────────────────
+    function crossfadeContent() {
+        if (!root.hudVisible) return
+        contentCrossfade.stop()
+        root._crossfading = true
+        contentRow.opacity = 1
+        contentCrossfade.start()
+    }
+
+    SequentialAnimation {
+        id: contentCrossfade
+        NumberAnimation {
+            target: contentRow; property: "opacity"
+            to: 0; duration: root.transitionDuration / 2
+            easing.type: Easing.OutQuad
+        }
+        ScriptAction { script: root.refreshDisplay() }
+        NumberAnimation {
+            target: contentRow; property: "opacity"
+            to: 1; duration: root.transitionDuration / 2
+            easing.type: Easing.InQuad
+        }
+        ScriptAction { script: root._crossfading = false }
+    }
+
     // Fade in + nudge up with bounce
     ParallelAnimation {
         id: openAnim
@@ -123,6 +172,7 @@ Item {
         Behavior on border.color { ColorAnimation { duration: 150 } }
 
         RowLayout {
+            id: contentRow
             anchors {
                 fill: parent
                 leftMargin:  Math.round(32 * root.hudScale)
@@ -132,7 +182,7 @@ Item {
 
             // ── Counter ───────────────────────────────────────────────────────
             Text {
-                text: (controller.currentIndex + 1) + " / " + controller.imageCount
+                text: root._displayCount
                 color: Theme.textSubtle
                 font.pixelSize: root._contentH
                 font.weight: Font.Bold
@@ -155,18 +205,18 @@ Item {
                 Text {
                     id: captionText
                     anchors.verticalCenter: parent.verticalCenter
-                    text: root.hudCaption
+                    text: root._displayCaption
                     color: Theme.textPrimary
                     font.pixelSize: root._contentH
                     font.weight: Font.Medium
-                    width:  root.hudCaption.length > 0 ? implicitWidth : parent.width
+                    width:  root._displayCaption.length > 0 ? implicitWidth : parent.width
                     elide:  Text.ElideNone
-                    visible: root.hudCaption.length > 0 && !root.editing
+                    visible: root._displayCaption.length > 0 && !root.editing
 
                     readonly property real _overflow: implicitWidth - parent.width
 
                     SequentialAnimation on x {
-                        running: captionText.visible && root.hudCaption.length > 0
+                        running: captionText.visible && root._displayCaption.length > 0
                                  && captionText._overflow > 0 && !root.editing
                         loops:   Animation.Infinite
                         onRunningChanged: if (!running) captionText.x = 0
@@ -230,20 +280,20 @@ Item {
                 width: 1; height: root._contentH
                 color: Qt.rgba(1, 1, 1, 0.2)
                 Layout.alignment: Qt.AlignVCenter
-                visible: root.hudRating > 0 || dateText.visible
+                visible: root._displayRating > 0 || dateText.visible
             }
 
             // ── Star rating ───────────────────────────────────────────────────
             Row {
                 spacing: Math.round(2 * root.hudScale)
-                visible: root.hudRating > 0
+                visible: root._displayRating > 0
                 Layout.alignment: Qt.AlignVCenter
                 Repeater {
                     model: 5
                     ThemedIcon {
                         source: "../img/icon_star.svg"
                         size: root._contentH
-                        iconColor: index < root.hudRating ? Theme.accentLight : Theme.starInactive
+                        iconColor: index < root._displayRating ? Theme.accentLight : Theme.starInactive
                     }
                 }
             }
@@ -253,13 +303,13 @@ Item {
                 width: 1; height: root._contentH
                 color: Qt.rgba(1, 1, 1, 0.2)
                 Layout.alignment: Qt.AlignVCenter
-                visible: root.hudRating > 0 && dateText.visible
+                visible: root._displayRating > 0 && dateText.visible
             }
 
             // ── Date taken ────────────────────────────────────────────────────
             Text {
                 id: dateText
-                text: controller.imageDateTaken(controller.currentIndex)
+                text: root._displayDate
                 color: Theme.textSubtle
                 font.pixelSize: root._contentH
                 visible: text.length > 0

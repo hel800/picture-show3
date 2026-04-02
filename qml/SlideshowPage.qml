@@ -251,8 +251,11 @@ Rectangle {
             inc.opacity = 1; inc.x = 0; inc.scale = 1; inc.z = 2
             out.opacity = 0; out.x = 0; out.scale = 1; out.z = 1
             showingA = !showingA
+            floatingHud.refreshDisplay()
             return
         }
+
+        floatingHud.crossfadeContent()
 
         inc.z = 2; out.z = 1
         var style = controller.transitionStyle
@@ -334,12 +337,16 @@ Rectangle {
         }
         function onRatingWritten(index) {
             // Restore the binding so HUD still tracks future navigations
-            if (index === controller.currentIndex)
+            if (index === controller.currentIndex) {
                 root.hudRating = Qt.binding(function() { return controller.imageRating(controller.currentIndex) })
+                floatingHud.refreshDisplay()
+            }
         }
         function onCaptionWritten(index) {
-            if (index === controller.currentIndex)
+            if (index === controller.currentIndex) {
                 root.hudCaption = Qt.binding(function() { return controller.imageCaption(controller.currentIndex) })
+                floatingHud.refreshDisplay()
+            }
         }
     }
 
@@ -867,10 +874,11 @@ Rectangle {
 
     FloatingHud {
         id: floatingHud
-        hudScale   : root.hudScale
-        hudVisible : root.hudVisible && root.hudStyle === "floating"
-        hudCaption : root.hudCaption
-        hudRating  : root.hudRating
+        hudScale           : root.hudScale
+        hudVisible         : root.hudVisible && root.hudStyle === "floating"
+        hudCaption         : root.hudCaption
+        hudRating          : root.hudRating
+        transitionDuration : root.transDur
 
         onEditStarted: {
             root._closeExifIfOpen()
