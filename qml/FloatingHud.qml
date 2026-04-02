@@ -20,7 +20,7 @@ Item {
     // _contentH drives all font sizes, star size and separator heights (50 % of HUD height).
     readonly property real _hudW     : parent.width  * 0.80
     readonly property real _hudH     : parent.height * 0.08
-    readonly property real _contentH : Math.round(_hudH * 0.35)
+    readonly property real _contentH : Math.round(_hudH * 0.28)
 
     // Vertical offset via transform — 0 = resting position, positive = shifted downward.
     property real _slideOffset: 20
