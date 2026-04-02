@@ -1162,7 +1162,7 @@ Item {
                             Text { text: qsTr("Interval"); color: Theme.textSecondary; font.pixelSize: 13 }
                             Item { Layout.fillWidth: true }
                             Text {
-                                text: (intervalSlider.value / 1000).toFixed(1) + " s"
+                                text: Math.round(intervalSlider.value / 1000) + " s"
                                 color: Theme.accentLight; font.pixelSize: 13; font.weight: Font.Medium
                             }
                         }
@@ -1170,7 +1170,7 @@ Item {
                         Slider {
                             id: intervalSlider
                             Layout.fillWidth: true
-                            from: 1000; to: 30000; stepSize: 500
+                            from: 1000; to: 99000; stepSize: 1000
                             value: controller.interval || 5000
                             onMoved: controller.setInterval(value)
 

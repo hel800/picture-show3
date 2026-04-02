@@ -76,6 +76,7 @@ class SlideshowController(QObject):
     scanProgressChanged = Signal()
     ratingWritten       = Signal(int)    # emitted with image index after a successful rating write
     captionWritten      = Signal(int)    # emitted with image index after a successful caption write
+    showEnded           = Signal()       # emitted when autoplay stops at the last image (no loop)
     kioskModeChanged    = Signal()
     # Private: background thread → main thread handoffs
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
@@ -719,6 +720,17 @@ class SlideshowController(QObject):
         self._save_settings()
         self.settingsChanged.emit()
 
+    @Slot()
+    def pauseInterval(self) -> None:
+        """Stop the autoplay timer without changing playing state (call when popup appears)."""
+        self._timer.stop()
+
+    @Slot()
+    def restartInterval(self) -> None:
+        """Start a fresh autoplay countdown (call after popup fades out)."""
+        if self._is_playing:
+            self._timer.start()
+
     @Slot(str)
     def setLanguage(self, code: str) -> None:
         self._language = code
@@ -787,7 +799,9 @@ class SlideshowController(QObject):
             case False if self._loop:
                 self._current_index = 0
             case _:
-                self.stopShow()
+                if self._is_playing:
+                    self.showEnded.emit()
+                    self.stopShow()
                 return
         if self._is_playing:
             self._timer.start()   # restart countdown after any navigation

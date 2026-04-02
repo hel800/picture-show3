@@ -27,6 +27,12 @@ Rectangle {
     property bool   _exiting         : false   // set on exit to suppress the play/pause popup
     property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
 
+    // ── Interval edit state (play/pause popup in edit mode) ───────────────────
+    property bool _ppEditMode      : false
+    property int  _ppEditSeconds   : 5
+    property int  _ppDigitCount    : 0    // 0 = no digit yet, 1 = one digit, 2 = two digits
+    property bool _ppEndOfShow     : false  // true when autoplay stopped at last image
+
     onWidthChanged:  if (panoramaActive) _panoramaAbort()
     onHeightChanged: if (panoramaActive) _panoramaAbort()
 
@@ -369,6 +375,42 @@ Rectangle {
             return
         }
 
+        // Interval edit mode — intercepts before panorama and main switch
+        if (root._ppEditMode) {
+            switch (event.key) {
+            case Qt.Key_Up:
+                root._ppEditSeconds = Math.min(99, root._ppEditSeconds + 1)
+                root._ppDigitCount = 0
+                break
+            case Qt.Key_Down:
+                root._ppEditSeconds = Math.max(1, root._ppEditSeconds - 1)
+                root._ppDigitCount = 0
+                break
+            case Qt.Key_0: case Qt.Key_1: case Qt.Key_2: case Qt.Key_3: case Qt.Key_4:
+            case Qt.Key_5: case Qt.Key_6: case Qt.Key_7: case Qt.Key_8: case Qt.Key_9: {
+                const d = event.key - Qt.Key_0
+                if (root._ppDigitCount === 0 || root._ppDigitCount === 2) {
+                    if (d > 0) { root._ppEditSeconds = d; root._ppDigitCount = 1 }
+                } else {   // _ppDigitCount === 1: append second digit
+                    root._ppEditSeconds = Math.min(99, root._ppEditSeconds * 10 + d)
+                    root._ppDigitCount = 2
+                }
+                break
+            }
+            case Qt.Key_Return: case Qt.Key_Enter:
+                confirmIntervalEdit()
+                break
+            case Qt.Key_Escape:
+                cancelIntervalEdit()
+                break
+            case Qt.Key_F:
+                toggleFullscreen()
+                break
+            }
+            event.accepted = true
+            return
+        }
+
         // Panorama mode — limited key set; F/Space/J/F1 are absorbed
         if (root.panoramaActive) {
             switch (event.key) {
@@ -391,6 +433,38 @@ Rectangle {
             return
         }
 
+        // While the play popup just appeared and autoplay started, digits 1–9 enter
+        // interval edit mode instead of opening the star-rating overlay.
+        if (playPauseAnim.running && controller.isPlaying
+                && event.key >= Qt.Key_1 && event.key <= Qt.Key_9) {
+            openIntervalEdit()
+            root._ppEditSeconds = event.key - Qt.Key_0
+            root._ppDigitCount = 1
+            event.accepted = true
+            return
+        }
+
+        // While the autoplay countdown popup is running, Enter dismisses it and
+        // starts the interval timer immediately; Escape cancels autoplay entirely.
+        if (playPauseAnim.running && controller.isPlaying) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                playPauseAnim.stop()
+                ppFadeOut.restart()
+                controller.restartInterval()
+                event.accepted = true
+                return
+            }
+            if (event.key === Qt.Key_Escape) {
+                playPauseAnim.stop()
+                root._suppressPlayAnim = true
+                controller.stopShow()
+                root._suppressPlayAnim = false
+                ppFadeOut.restart()
+                event.accepted = true
+                return
+            }
+        }
+
         switch (event.key) {
         case Qt.Key_Right:
             navDir = 1
@@ -404,9 +478,22 @@ Rectangle {
             _closeExifIfOpen()
             controller.togglePlay()
             break
+        case Qt.Key_Up:
+            if (playPauseAnim.running && controller.isPlaying) {
+                openIntervalEdit()
+                root._ppEditSeconds = Math.min(99, root._ppEditSeconds + 1)
+            }
+            break
+        case Qt.Key_Down:
+            if (playPauseAnim.running && controller.isPlaying) {
+                openIntervalEdit()
+                root._ppEditSeconds = Math.max(1, root._ppEditSeconds - 1)
+            }
+            break
         case Qt.Key_0: case Qt.Key_1: case Qt.Key_2:
         case Qt.Key_3: case Qt.Key_4: case Qt.Key_5:
-            openRating(event.key - Qt.Key_0)
+            if (!playPauseAnim.running || controller.isPlaying)
+                openRating(event.key - Qt.Key_0)
             break
         case Qt.Key_C:
             openCaption()
@@ -556,6 +643,35 @@ Rectangle {
     function confirmRating() {
         controller.writeImageRating(controller.currentIndex, root._pendingRating)
         closeRating()
+    }
+
+    function openIntervalEdit() {
+        if (controller.isPlaying) {
+            root._suppressPlayAnim = true
+            controller.togglePlay()
+            root._suppressPlayAnim = false
+        }
+        countdownCanvas.progress = 0
+        countdownCanvas.requestPaint()   // flush bright border before edit popup shows
+        root._ppEditSeconds = Math.round(controller.interval / 1000)
+        root._ppDigitCount = 0
+        root._ppEditMode = true
+        playPauseAnim.stop()
+        playPausePopup.opacity = 1
+    }
+
+    function confirmIntervalEdit() {
+        controller.setInterval(root._ppEditSeconds * 1000)
+        root._ppEditMode = false
+        root._suppressPlayAnim = true
+        controller.togglePlay()   // always start autoplay on confirm
+        root._suppressPlayAnim = false
+        ppFadeOut.restart()
+    }
+
+    function cancelIntervalEdit() {
+        root._ppEditMode = false
+        ppFadeOut.restart()
     }
 
     function openJump() {
@@ -736,7 +852,26 @@ Rectangle {
     // isPlayingChanged emission must not show the popup on the settings page.
     Connections {
         target: controller
-        function onIsPlayingChanged() { if (!root._exiting && !root._suppressPlayAnim) playPauseAnim.restart() }
+        function onIsPlayingChanged() {
+            if (!root._exiting && !root._suppressPlayAnim && !root._ppEditMode) {
+                // Set progress synchronously before restart() so the animation
+                // always starts from the correct value (binding on `from` is
+                // not reliably re-evaluated inside a ParallelAnimation group).
+                countdownCanvas.progress = controller.isPlaying ? 1.0 : 0
+                countdownCanvas.requestPaint()   // flush stale frame before popup appears
+                playPausePopup.opacity = 0
+                playPausePopup._ppSlideOffset = 20
+                playPauseAnim.restart()
+                // Freeze the autoplay timer while the popup is visible so the
+                // first image advance is a full interval after the popup fades,
+                // not after Space was pressed. onFinished restarts it.
+                if (controller.isPlaying) {
+                    controller.pauseInterval()
+                    root._ppEndOfShow = false   // reset when autoplay (re)starts
+                }
+            }
+        }
+        function onShowEnded() { root._ppEndOfShow = true }
     }
 
     // ── Play / Pause popup ────────────────────────────────────────────────────
@@ -744,58 +879,195 @@ Rectangle {
         id: playPausePopup
         anchors.horizontalCenter: parent.horizontalCenter
         y: parent.height * 5 / 6 - height / 2
-        width: ppBox.implicitWidth
-        height: ppBox.implicitHeight
+        // Fixed size — never changes between play / pause / edit states
+        width: 242
+        height: 88
         opacity: 0
         z: 20
+        property real _ppSlideOffset: 20
+        transform: Translate { y: playPausePopup._ppSlideOffset }
 
         Rectangle {
-            id: ppBox
-            implicitWidth: ppLayout.implicitWidth + 40
-            implicitHeight: ppLayout.implicitHeight + 32
-            radius: 18
+            anchors.fill: parent
+            radius: 14
             color: Qt.rgba(0, 0, 0, 0.82)
-            border.color: Qt.rgba(1, 1, 1, 0.25)
+            border.color: Qt.rgba(1, 1, 1, 0.22)
             border.width: 1
 
             RowLayout {
-                id: ppLayout
-                anchors { left: parent.left; right: parent.right; top: parent.top; margins: 16 }
-                spacing: 14
+                anchors { fill: parent; leftMargin: 16; rightMargin: 16 }
+                spacing: 12
 
-                ThemedIcon {
-                    source: controller.isPlaying ? "../img/icon_play.svg" : "../img/icon_pause.svg"
-                    size: 36
-                    iconColor: Theme.accentLight
+                Item {
+                    implicitWidth: 56; implicitHeight: 56
                     Layout.alignment: Qt.AlignVCenter
+
+                    ThemedIcon {
+                        source: (root._ppEditMode || controller.isPlaying) ? "../img/icon_play.svg" : "../img/icon_pause.svg"
+                        size: 56
+                        iconColor: Theme.accentLight
+                    }
+
+                    // Countdown border: draws a partial clockwise rounded-rect path
+                    // that shrinks like a retreating snake as progress goes 1→0.
+                    // Explicit segment-by-segment drawing avoids setLineDash issues.
+                    // A Timer (below) drives repaints instead of onProgressChanged
+                    // to guarantee a fresh frame every 16 ms while the anim runs.
+                    Canvas {
+                        id: countdownCanvas
+                        width: parent.width; height: parent.height
+                        property real progress: 1.0
+
+                        onPaint: {
+                            var ctx = getContext("2d")
+                            ctx.clearRect(0, 0, width, height)
+                            if (progress <= 0) return
+
+                            var sc = width / 32
+                            var bx = sc, by = sc
+                            var bw = 30*sc, bh = 30*sc, r = 6*sc
+                            var arcL = Math.PI / 2 * r
+                            var side = bw - 2*r   // all four straight sides equal (square icon)
+                            var rem  = progress * (4*side + 4*arcL)
+
+                            ctx.beginPath()
+                            ctx.strokeStyle = "#e2e8f0"
+                            ctx.lineWidth   = 1.6 * sc
+                            ctx.lineCap     = "round"
+                            ctx.moveTo(bx + r, by)
+
+                            // 1 top →
+                            if (rem <= side) { ctx.lineTo(bx+r+rem, by); ctx.stroke(); return }
+                            ctx.lineTo(bx+bw-r, by); rem -= side
+                            // 2 top-right arc ↘
+                            if (rem <= arcL) { ctx.arc(bx+bw-r, by+r, r, -Math.PI/2, -Math.PI/2+rem/r, false); ctx.stroke(); return }
+                            ctx.arc(bx+bw-r, by+r, r, -Math.PI/2, 0, false); rem -= arcL
+                            // 3 right ↓
+                            if (rem <= side) { ctx.lineTo(bx+bw, by+r+rem); ctx.stroke(); return }
+                            ctx.lineTo(bx+bw, by+bh-r); rem -= side
+                            // 4 bottom-right arc ↙
+                            if (rem <= arcL) { ctx.arc(bx+bw-r, by+bh-r, r, 0, rem/r, false); ctx.stroke(); return }
+                            ctx.arc(bx+bw-r, by+bh-r, r, 0, Math.PI/2, false); rem -= arcL
+                            // 5 bottom ←
+                            if (rem <= side) { ctx.lineTo(bx+bw-r-rem, by+bh); ctx.stroke(); return }
+                            ctx.lineTo(bx+r, by+bh); rem -= side
+                            // 6 bottom-left arc ↖
+                            if (rem <= arcL) { ctx.arc(bx+r, by+bh-r, r, Math.PI/2, Math.PI/2+rem/r, false); ctx.stroke(); return }
+                            ctx.arc(bx+r, by+bh-r, r, Math.PI/2, Math.PI, false); rem -= arcL
+                            // 7 left ↑
+                            if (rem <= side) { ctx.lineTo(bx, by+bh-r-rem); ctx.stroke(); return }
+                            ctx.lineTo(bx, by+r); rem -= side
+                            // 8 top-left arc ↗
+                            if (rem <= arcL) { ctx.arc(bx+r, by+r, r, Math.PI, Math.PI+rem/r, false); ctx.stroke(); return }
+                            ctx.arc(bx+r, by+r, r, Math.PI, 3*Math.PI/2, false)
+
+                            ctx.stroke()
+                        }
+                    }
                 }
 
                 ColumnLayout {
-                    spacing: 4
+                    spacing: 3
+                    Layout.alignment: Qt.AlignVCenter
 
+                    // Heading — always shown
                     Text {
-                        text: qsTr("AUTOPLAY")
+                        text: qsTr("Auto play")
                         color: Theme.textMuted
-                        font.pixelSize: 10
+                        font.pixelSize: 11
                         font.weight: Font.Medium
-                        font.letterSpacing: 1.4
                     }
+
+                    // Timer value or pause state
                     Text {
-                        text: controller.isPlaying
-                              ? qsTr("Play (%1 s)").arg((controller.interval / 1000).toFixed(1))
-                              : qsTr("Pause")
+                        text: root._ppEditMode
+                              ? qsTr("Timer: %1 s").arg(root._ppEditSeconds)
+                              : (controller.isPlaying
+                                 ? qsTr("Timer: %1 s").arg(Math.round(controller.interval / 1000))
+                                 : (root._ppEndOfShow ? qsTr("Last image") : qsTr("Pause")))
                         color: Theme.textSecondary
-                        font.pixelSize: 14
+                        font.pixelSize: 15
+                        font.weight: Font.Medium
+                    }
+
+                    // Key hints row — always occupies space to keep fixed popup size.
+                    // ↑↓ / 0–9 appear immediately in play mode; ↵ / Esc only after edit is entered.
+                    Row {
+                        spacing: 5
+                        // Visible in play mode and edit mode; hidden in pause mode
+                        opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
+                        Behavior on opacity { NumberAnimation { duration: 150 } }
+
+                        KeyHint { label: "↑↓"; anchors.verticalCenter: parent.verticalCenter }
+                        KeyHint { label: "0–9"; anchors.verticalCenter: parent.verticalCenter }
+                        // Confirm/cancel hints — revealed in play mode and edit mode
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "·"; color: Theme.textDisabled; font.pixelSize: 11
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                        }
+                        KeyHint {
+                            label: "↵"; anchors.verticalCenter: parent.verticalCenter
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: qsTr("start"); color: Theme.textDisabled; font.pixelSize: 11
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                        }
+                        Text {
+                            anchors.verticalCenter: parent.verticalCenter
+                            text: "·"; color: Theme.textDisabled; font.pixelSize: 11
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                        }
+                        KeyHint {
+                            label: "Esc"; anchors.verticalCenter: parent.verticalCenter
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
+                            Behavior on opacity { NumberAnimation { duration: 150 } }
+                        }
                     }
                 }
             }
+
         }
 
         SequentialAnimation {
             id: playPauseAnim
-            NumberAnimation { target: playPausePopup; property: "opacity"; to: 1; duration: 120; easing.type: Easing.OutQuad }
-            PauseAnimation  { duration: 900 }
-            NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 400; easing.type: Easing.InQuad }
+            // Phase 1: popup fades in and slides up — matches ExifPanel entrance animation
+            ParallelAnimation {
+                NumberAnimation { target: playPausePopup; property: "opacity"; from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic }
+                NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; from: 20; to: 0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+            }
+            // Phase 2 (3000 ms): popup fully visible — border depletes exactly during this window
+            ParallelAnimation {
+                PauseAnimation  { duration: 3000 }
+                NumberAnimation { target: countdownCanvas; property: "progress"; to: 0; duration: 3000; easing.type: Easing.Linear }
+            }
+            // Phase 3: popup fades out and slides down — matches ExifPanel exit animation
+            ParallelAnimation {
+                NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
+                NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; to: 20; duration: 200; easing.type: Easing.InQuad }
+            }
+
+            // Reset the autoplay countdown so the first image advance is a full
+            // interval after the popup disappears, not after Space was pressed.
+            onFinished: if (controller.isPlaying) controller.restartInterval()
+        }
+        // Drives canvas repaints every frame while autoplay popup is live.
+        // More reliable than onProgressChanged → requestPaint() which can be skipped.
+        Timer {
+            interval: 16; repeat: true
+            running: playPauseAnim.running && controller.isPlaying
+            onTriggered: countdownCanvas.requestPaint()
+        }
+        ParallelAnimation {
+            id: ppFadeOut
+            NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
+            NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; to: 20; duration: 200; easing.type: Easing.InQuad }
         }
     }
 
