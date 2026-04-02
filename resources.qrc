@@ -35,6 +35,8 @@
     <file>img/icon_jump.svg</file>
     <file>img/icon_play.svg</file>
     <file>img/icon_pause.svg</file>
+    <file>img/icon_hud_fundamental.svg</file>
+    <file>img/icon_hud_floating.svg</file>
     <file>img/logo.svg</file>
     <file>img/logo_sun.svg</file>
   </qresource>
