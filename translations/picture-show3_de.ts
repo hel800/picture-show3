@@ -214,6 +214,24 @@
     </message>
 </context>
 <context>
+    <name>FloatingHud</name>
+    <message>
+        <location filename="../qml/FloatingHud.qml" line="331"/>
+        <source>save</source>
+        <translation>Speichern</translation>
+    </message>
+    <message>
+        <location filename="../qml/FloatingHud.qml" line="334"/>
+        <source>cancel</source>
+        <translation>Abbrechen</translation>
+    </message>
+    <message>
+        <location filename="../qml/FloatingHud.qml" line="337"/>
+        <source>copy prev caption</source>
+        <translation>Vorh. Beschriftung kopieren</translation>
+    </message>
+</context>
+<context>
     <name>HelpOverlay</name>
     <message>
         <location filename="../qml/HelpOverlay.qml" line="127"/>
@@ -837,105 +855,105 @@
         <translation type="vanished">Play (%1 s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="990"/>
+        <location filename="../qml/SlideshowPage.qml" line="1038"/>
         <source>Auto play</source>
         <translation>Autoplay</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="999"/>
-        <location filename="../qml/SlideshowPage.qml" line="1001"/>
+        <location filename="../qml/SlideshowPage.qml" line="1047"/>
+        <location filename="../qml/SlideshowPage.qml" line="1049"/>
         <source>Timer: %1 s</source>
         <translation>Timer: %1 s</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1002"/>
+        <location filename="../qml/SlideshowPage.qml" line="1050"/>
         <source>Pause</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1002"/>
+        <location filename="../qml/SlideshowPage.qml" line="1050"/>
         <source>Last image</source>
         <translation>Letztes Bild</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1032"/>
+        <location filename="../qml/SlideshowPage.qml" line="1080"/>
         <source>start</source>
         <translation>starten</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1136"/>
+        <location filename="../qml/SlideshowPage.qml" line="1184"/>
         <source>JUMP TO IMAGE</source>
         <translation>ZU BILD SPRINGEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1201"/>
+        <location filename="../qml/SlideshowPage.qml" line="1249"/>
         <source>go</source>
         <translation>OK</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1204"/>
-        <location filename="../qml/SlideshowPage.qml" line="1349"/>
-        <location filename="../qml/SlideshowPage.qml" line="1464"/>
+        <location filename="../qml/SlideshowPage.qml" line="1252"/>
+        <location filename="../qml/SlideshowPage.qml" line="1397"/>
+        <location filename="../qml/SlideshowPage.qml" line="1512"/>
         <source>cancel</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1302"/>
+        <location filename="../qml/SlideshowPage.qml" line="1350"/>
         <source>RATE IMAGE</source>
         <translation>BILD BEWERTEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1311"/>
+        <location filename="../qml/SlideshowPage.qml" line="1359"/>
         <source>Remove rating</source>
         <translation>Bewertung entfernen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1312"/>
+        <location filename="../qml/SlideshowPage.qml" line="1360"/>
         <source>%1 star(s)</source>
         <translation>%1 Stern(e)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1346"/>
+        <location filename="../qml/SlideshowPage.qml" line="1394"/>
         <source>confirm</source>
         <translation>Bestätigen</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1351"/>
+        <location filename="../qml/SlideshowPage.qml" line="1399"/>
         <source>0–5 change</source>
         <translation>0–5 ändern</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1404"/>
+        <location filename="../qml/SlideshowPage.qml" line="1452"/>
         <source>EDIT CAPTION</source>
         <translation>BESCHRIFTUNG BEARBEITEN</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1461"/>
+        <location filename="../qml/SlideshowPage.qml" line="1509"/>
         <source>save</source>
         <translation>Speichern</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1467"/>
+        <location filename="../qml/SlideshowPage.qml" line="1515"/>
         <source>copy prev caption</source>
         <translation>Vorh. Beschriftung kopieren</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1554"/>
+        <location filename="../qml/SlideshowPage.qml" line="1602"/>
         <source>Exit Application</source>
         <translation>Anwendung beenden</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1561"/>
+        <location filename="../qml/SlideshowPage.qml" line="1609"/>
         <source>Do you want to exit the application?</source>
         <translation>Möchten Sie die Anwendung beenden?</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1587"/>
+        <location filename="../qml/SlideshowPage.qml" line="1635"/>
         <source>Yes</source>
         <translation>Ja</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1610"/>
+        <location filename="../qml/SlideshowPage.qml" line="1658"/>
         <source>No</source>
         <translation>Nein</translation>
     </message>
@@ -944,17 +962,17 @@
         <translation type="vanished">Beschriftung konnte nicht gespeichert werden: %1</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="551"/>
+        <location filename="../qml/SlideshowPage.qml" line="581"/>
         <source>Rating</source>
         <translation>Bewertung</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="555"/>
+        <location filename="../qml/SlideshowPage.qml" line="585"/>
         <source>Date taken</source>
         <translation>Aufnahmedatum</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="558"/>
+        <location filename="../qml/SlideshowPage.qml" line="588"/>
         <source>Caption</source>
         <translation>Beschreibung</translation>
     </message>
