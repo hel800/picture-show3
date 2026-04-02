@@ -444,6 +444,27 @@ Rectangle {
             return
         }
 
+        // While the autoplay countdown popup is running, Enter dismisses it and
+        // starts the interval timer immediately; Escape cancels autoplay entirely.
+        if (playPauseAnim.running && controller.isPlaying) {
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
+                playPauseAnim.stop()
+                ppFadeOut.restart()
+                controller.restartInterval()
+                event.accepted = true
+                return
+            }
+            if (event.key === Qt.Key_Escape) {
+                playPauseAnim.stop()
+                root._suppressPlayAnim = true
+                controller.stopShow()
+                root._suppressPlayAnim = false
+                ppFadeOut.restart()
+                event.accepted = true
+                return
+            }
+        }
+
         switch (event.key) {
         case Qt.Key_Right:
             navDir = 1
@@ -838,6 +859,8 @@ Rectangle {
                 // not reliably re-evaluated inside a ParallelAnimation group).
                 countdownCanvas.progress = controller.isPlaying ? 1.0 : 0
                 countdownCanvas.requestPaint()   // flush stale frame before popup appears
+                playPausePopup.opacity = 0
+                playPausePopup._ppSlideOffset = 20
                 playPauseAnim.restart()
                 // Freeze the autoplay timer while the popup is visible so the
                 // first image advance is a full interval after the popup fades,
@@ -861,6 +884,8 @@ Rectangle {
         height: 88
         opacity: 0
         z: 20
+        property real _ppSlideOffset: 20
+        transform: Translate { y: playPausePopup._ppSlideOffset }
 
         Rectangle {
             anchors.fill: parent
@@ -975,33 +1000,33 @@ Rectangle {
 
                         KeyHint { label: "↑↓"; anchors.verticalCenter: parent.verticalCenter }
                         KeyHint { label: "0–9"; anchors.verticalCenter: parent.verticalCenter }
-                        // Confirm/cancel hints — only revealed once edit mode is active
+                        // Confirm/cancel hints — revealed in play mode and edit mode
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "·"; color: Theme.textDisabled; font.pixelSize: 11
-                            opacity: root._ppEditMode ? 1.0 : 0.0
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
                             Behavior on opacity { NumberAnimation { duration: 150 } }
                         }
                         KeyHint {
                             label: "↵"; anchors.verticalCenter: parent.verticalCenter
-                            opacity: root._ppEditMode ? 1.0 : 0.0
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
                             Behavior on opacity { NumberAnimation { duration: 150 } }
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: qsTr("start"); color: Theme.textDisabled; font.pixelSize: 11
-                            opacity: root._ppEditMode ? 1.0 : 0.0
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
                             Behavior on opacity { NumberAnimation { duration: 150 } }
                         }
                         Text {
                             anchors.verticalCenter: parent.verticalCenter
                             text: "·"; color: Theme.textDisabled; font.pixelSize: 11
-                            opacity: root._ppEditMode ? 1.0 : 0.0
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
                             Behavior on opacity { NumberAnimation { duration: 150 } }
                         }
                         KeyHint {
                             label: "Esc"; anchors.verticalCenter: parent.verticalCenter
-                            opacity: root._ppEditMode ? 1.0 : 0.0
+                            opacity: (root._ppEditMode || controller.isPlaying) ? 1.0 : 0.0
                             Behavior on opacity { NumberAnimation { duration: 150 } }
                         }
                     }
@@ -1012,15 +1037,21 @@ Rectangle {
 
         SequentialAnimation {
             id: playPauseAnim
-            // Phase 1 (120 ms): popup fades in — border holds at full (set by JS before restart)
-            NumberAnimation { target: playPausePopup; property: "opacity"; to: 1; duration: 120; easing.type: Easing.OutQuad }
+            // Phase 1: popup fades in and slides up — matches ExifPanel entrance animation
+            ParallelAnimation {
+                NumberAnimation { target: playPausePopup; property: "opacity"; from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic }
+                NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; from: 20; to: 0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+            }
             // Phase 2 (3000 ms): popup fully visible — border depletes exactly during this window
             ParallelAnimation {
                 PauseAnimation  { duration: 3000 }
                 NumberAnimation { target: countdownCanvas; property: "progress"; to: 0; duration: 3000; easing.type: Easing.Linear }
             }
-            // Phase 3 (400 ms): popup fades out — border already at 0
-            NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 400; easing.type: Easing.InQuad }
+            // Phase 3: popup fades out and slides down — matches ExifPanel exit animation
+            ParallelAnimation {
+                NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
+                NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; to: 20; duration: 200; easing.type: Easing.InQuad }
+            }
 
             // Reset the autoplay countdown so the first image advance is a full
             // interval after the popup disappears, not after Space was pressed.
@@ -1033,10 +1064,10 @@ Rectangle {
             running: playPauseAnim.running && controller.isPlaying
             onTriggered: countdownCanvas.requestPaint()
         }
-        NumberAnimation {
+        ParallelAnimation {
             id: ppFadeOut
-            target: playPausePopup; property: "opacity"
-            to: 0; duration: 400; easing.type: Easing.InQuad
+            NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
+            NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; to: 20; duration: 200; easing.type: Easing.InQuad }
         }
     }
 
