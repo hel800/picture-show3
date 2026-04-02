@@ -37,7 +37,7 @@ Popup {
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size] Remote=[enable,port] Misc=[language,updateCheck]
+    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[language,updateCheck]
     readonly property var _optionCounts: [2, 1, 2, 2, 2]
 
     // Returns false for options that are currently inactive and should be skipped
