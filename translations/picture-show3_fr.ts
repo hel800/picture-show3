@@ -124,6 +124,26 @@
         <translation>Taille</translation>
     </message>
     <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="704"/>
+        <source>HUD style</source>
+        <translation>Style du HUD</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="705"/>
+        <source>Bar: slim and unobtrusive. Floating: larger, more prominent.</source>
+        <translation>Barre : fine et discrète. Flottant : plus grande, plus visible.</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="712"/>
+        <source>Bar</source>
+        <translation>Barre</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="713"/>
+        <source>Floating</source>
+        <translation>Flottant</translation>
+    </message>
+    <message>
         <location filename="../qml/AdvancedSettingsDialog.qml" line="703"/>
         <source>SMARTPHONE REMOTE</source>
         <translation>TÉLÉCOMMANDE SMARTPHONE</translation>

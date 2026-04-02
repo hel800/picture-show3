@@ -124,6 +124,26 @@
         <translation>Größe</translation>
     </message>
     <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="704"/>
+        <source>HUD style</source>
+        <translation>HUD-Stil</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="705"/>
+        <source>Bar: slim and unobtrusive. Floating: larger, more prominent.</source>
+        <translation>Leiste: schlank und dezent. Floating: größer, mehr im Vordergrund.</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="712"/>
+        <source>Bar</source>
+        <translation>Leiste</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="713"/>
+        <source>Floating</source>
+        <translation>Floating</translation>
+    </message>
+    <message>
         <location filename="../qml/AdvancedSettingsDialog.qml" line="703"/>
         <source>SMARTPHONE REMOTE</source>
         <translation>SMARTPHONE REMOTE</translation>

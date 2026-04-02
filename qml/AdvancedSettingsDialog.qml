@@ -702,14 +702,14 @@ Popup {
                                 Column {
                                     spacing: 2
                                     Text { text: qsTr("HUD style"); color: Theme.textPrimary; font.pixelSize: 14 }
-                                    Text { text: qsTr("How the HUD is displayed during the show"); color: Theme.textMuted; font.pixelSize: 11 }
+                                    Text { text: qsTr("Bar: slim and unobtrusive. Floating: larger, more prominent."); color: Theme.textMuted; font.pixelSize: 11 }
                                 }
                                 Item { Layout.fillWidth: true }
                                 Row {
                                     spacing: 8
                                     Repeater {
                                         model: [
-                                            { label: qsTr("Fundamental"), icon: "../img/icon_hud_fundamental.svg", style: "fundamental" },
+                                            { label: qsTr("Bar"),         icon: "../img/icon_hud_fundamental.svg", style: "fundamental" },
                                             { label: qsTr("Floating"),    icon: "../img/icon_hud_floating.svg",    style: "floating"     }
                                         ]
                                         delegate: Rectangle {
