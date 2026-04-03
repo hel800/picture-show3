@@ -637,7 +637,11 @@ Popup {
                             }
                             RowLayout {
                                 Layout.fillWidth: true; Layout.bottomMargin: 10
-                                Text { text: qsTr("Size"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("Size"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("Applied on top of the global UI scale"); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
                                 Item { Layout.fillWidth: true }
                                 Text {
                                     text: hudSizeSlider.value + " %"

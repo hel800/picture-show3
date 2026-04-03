@@ -4,23 +4,23 @@
 <context>
     <name>AdvancedSettingsDialog</name>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="250"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="258"/>
         <source>ADVANCED SETTINGS</source>
         <translation>ERWEITERTE EINSTELLUNGEN</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="374"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="382"/>
         <source>TRANSITION</source>
         <translation>ÜBERGANG</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="383"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="391"/>
         <source>Duration</source>
         <translation>Dauer</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="283"/>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="623"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="291"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="631"/>
         <source>HUD</source>
         <translation>HUD</translation>
     </message>
@@ -29,162 +29,187 @@
         <translation type="vanished">Allgemein</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="283"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="291"/>
         <source>Controls</source>
         <translation>Steuerung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="283"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="291"/>
         <source>Remote</source>
         <translation>Fernbedienung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="318"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="326"/>
         <source>sections</source>
         <translation>Abschnitte</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="322"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="330"/>
         <source>option</source>
         <translation>Option</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="326"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="334"/>
         <source>change</source>
         <translation>Ändern</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1041"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1135"/>
         <source>UPDATES</source>
         <translation>UPDATES</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1052"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1146"/>
         <source>Check for updates on startup</source>
         <translation>Beim Start nach Updates suchen</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1053"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1147"/>
         <source>Checks GitHub Releases for a newer version</source>
         <translation>Prüft GitHub Releases auf eine neuere Version</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="446"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="454"/>
         <source>IMAGE SCALE</source>
         <translation>BILDSKALIERUNG</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="283"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="291"/>
         <source>Show</source>
         <translation>Show</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="283"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="291"/>
         <source>Misc</source>
         <translation>Sonstiges</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="457"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="465"/>
         <source>Image scale</source>
         <translation>Bildskalierung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="458"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="466"/>
         <source>How images are scaled to fit the window</source>
         <translation>Skalierung des Bilds im Fenster</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="465"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="473"/>
         <source>Fit</source>
         <translation>Einpassen</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="466"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="474"/>
         <source>Fill</source>
         <translation>Füllen</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="547"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="555"/>
         <source>MOUSE</source>
         <translation>MAUS</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="558"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="566"/>
         <source>Mouse button navigation</source>
         <translation>Maussteuerung</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="559"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="567"/>
         <source>Left click → next  ·  Right click → previous</source>
         <translation>Linksklick → weiter  ·  Rechtsklick → zurück</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="632"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="642"/>
         <source>Size</source>
         <translation>Größe</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="693"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="643"/>
+        <source>Applied on top of the global UI scale</source>
+        <translation>Wird auf die globale UI-Skalierung aufgerechnet</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="705"/>
         <source>HUD STYLE</source>
         <translation>HUD-STIL</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="704"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="716"/>
         <source>HUD style</source>
         <translation>HUD-Stil</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="705"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="717"/>
         <source>Bar: slim and unobtrusive. Floating: larger, more prominent.</source>
         <translation>Leiste: schlank und dezent. Floating: größer, mehr im Vordergrund.</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="712"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="724"/>
         <source>Bar</source>
         <translation>Leiste</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="713"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="725"/>
         <source>Floating</source>
         <translation>Floating</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="794"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="806"/>
         <source>SMARTPHONE REMOTE</source>
         <translation>SMARTPHONE REMOTE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="803"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="815"/>
         <source>Enable remote control</source>
         <translation>Fernbedienung aktivieren</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="854"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="866"/>
         <source>PORT</source>
         <translation>PORT</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="863"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="875"/>
         <source>Port</source>
         <translation>Port</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="972"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="983"/>
+        <source>UI SCALE</source>
+        <translation>UI-SKALIERUNG</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="994"/>
+        <source>Global UI scale factor</source>
+        <translation>Globaler UI-Skalierungsfaktor</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="995"/>
+        <source>Scales all menus, dialogs, and controls</source>
+        <translation>Skaliert alle Menüs, Dialoge und Steuerelemente</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1031"/>
+        <source>⚠  Restart the app to apply the scale change.</source>
+        <translation>⚠  App neu starten, um die Skalierung zu übernehmen.</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1066"/>
         <source>LANGUAGE</source>
         <translation>SPRACHE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="993"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1087"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1007"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1101"/>
         <source>⚠  Restart the app to apply the language change.</source>
         <translation>⚠  App neu starten, um die Sprachänderung zu übernehmen.</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1092"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1186"/>
         <source>Done</source>
         <translation>Fertig</translation>
     </message>
@@ -216,17 +241,17 @@
 <context>
     <name>FloatingHud</name>
     <message>
-        <location filename="../qml/FloatingHud.qml" line="331"/>
+        <location filename="../qml/FloatingHud.qml" line="333"/>
         <source>save</source>
         <translation>Speichern</translation>
     </message>
     <message>
-        <location filename="../qml/FloatingHud.qml" line="334"/>
+        <location filename="../qml/FloatingHud.qml" line="336"/>
         <source>cancel</source>
         <translation>Abbrechen</translation>
     </message>
     <message>
-        <location filename="../qml/FloatingHud.qml" line="337"/>
+        <location filename="../qml/FloatingHud.qml" line="339"/>
         <source>copy prev caption</source>
         <translation>Vorh. Beschriftung kopieren</translation>
     </message>
@@ -724,114 +749,114 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="465"/>
+        <location filename="../slideshow_controller.py" line="472"/>
         <source>Folder not found: {}</source>
         <translation>Ordner nicht gefunden: {}</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="877"/>
+        <location filename="../slideshow_controller.py" line="894"/>
         <source>Not defined</source>
         <translation>Nicht definiert</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="878"/>
+        <location filename="../slideshow_controller.py" line="895"/>
         <source>Manual</source>
         <translation>Manuell</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="879"/>
+        <location filename="../slideshow_controller.py" line="896"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="880"/>
+        <location filename="../slideshow_controller.py" line="897"/>
         <source>Aperture priority</source>
         <translation>Blendenvorwahl</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="881"/>
+        <location filename="../slideshow_controller.py" line="898"/>
         <source>Shutter priority</source>
         <translation>Zeitvorwahl</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="882"/>
+        <location filename="../slideshow_controller.py" line="899"/>
         <source>Creative</source>
         <translation>Kreativ</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="883"/>
+        <location filename="../slideshow_controller.py" line="900"/>
         <source>Action</source>
         <translation>Action</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="884"/>
+        <location filename="../slideshow_controller.py" line="901"/>
         <source>Portrait</source>
         <translation>Porträt</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="885"/>
+        <location filename="../slideshow_controller.py" line="902"/>
         <source>Landscape</source>
         <translation>Landschaft</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="914"/>
+        <location filename="../slideshow_controller.py" line="931"/>
         <source>Camera</source>
         <translation>Kamera</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="921"/>
+        <location filename="../slideshow_controller.py" line="938"/>
         <source>Aperture</source>
         <translation>Blende</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="932"/>
-        <location filename="../slideshow_controller.py" line="934"/>
+        <location filename="../slideshow_controller.py" line="949"/>
+        <location filename="../slideshow_controller.py" line="951"/>
         <source>Shutter</source>
         <translation>Belichtungszeit</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="944"/>
+        <location filename="../slideshow_controller.py" line="961"/>
         <source>ISO</source>
         <translation>ISO</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="952"/>
+        <location filename="../slideshow_controller.py" line="969"/>
         <source>Focal length</source>
         <translation>Brennweite</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="959"/>
+        <location filename="../slideshow_controller.py" line="976"/>
         <source>Exposure</source>
         <translation>Belichtungsprogramm</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="965"/>
+        <location filename="../slideshow_controller.py" line="982"/>
         <source>Flash</source>
         <translation>Blitz</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="965"/>
+        <location filename="../slideshow_controller.py" line="982"/>
         <source>Fired</source>
         <translation>Ausgelöst</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="965"/>
+        <location filename="../slideshow_controller.py" line="982"/>
         <source>Did not fire</source>
         <translation>Nicht ausgelöst</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="973"/>
-        <location filename="../slideshow_controller.py" line="975"/>
+        <location filename="../slideshow_controller.py" line="990"/>
+        <location filename="../slideshow_controller.py" line="992"/>
         <source>Dimensions</source>
         <translation>Abmessungen</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="1048"/>
+        <location filename="../slideshow_controller.py" line="1065"/>
         <source>Could not save rating: %1</source>
         <translation>Bewertung konnte nicht gespeichert werden: %1</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="1250"/>
+        <location filename="../slideshow_controller.py" line="1267"/>
         <source>Could not save caption: %1</source>
         <translation>Beschriftung konnte nicht gespeichert werden: %1</translation>
     </message>
