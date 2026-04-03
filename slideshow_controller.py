@@ -96,6 +96,7 @@ class SlideshowController(QObject):
         self._transition_style   : TransitionStyle  = "fade"
         self._transition_duration: int            = 600     # milliseconds
         self._hud_size           : int            = 100     # percent (50–200)
+        self._ui_scale           : int            = 100     # percent (75–200), requires restart
         self._hud_visible        : bool           = False
         self._hud_style          : str            = "fundamental"
         self._sort_order         : SortOrder      = "name"
@@ -135,6 +136,7 @@ class SlideshowController(QObject):
         self._transition_style    = s.value("transition",         "fade")
         self._transition_duration = s.value("transitionDuration", 600, type=int)
         self._hud_size            = s.value("hudSize",            100, type=int)
+        self._ui_scale            = s.value("uiScale",            100, type=int)
         self._hud_visible         = s.value("hudVisible",         False, type=bool)
         _hs = s.value("hudStyle", "fundamental")
         self._hud_style           = _hs if _hs in ("fundamental", "floating") else "fundamental"
@@ -175,6 +177,7 @@ class SlideshowController(QObject):
         s.setValue("transition",          self._transition_style)
         s.setValue("transitionDuration",  self._transition_duration)
         s.setValue("hudSize",             self._hud_size)
+        s.setValue("uiScale",             self._ui_scale)
         s.setValue("hudVisible",          self._hud_visible)
         s.setValue("hudStyle",            self._hud_style)
         s.setValue("sort",          self._sort_order)
@@ -215,6 +218,9 @@ class SlideshowController(QObject):
 
     @Property(int, notify=settingsChanged)
     def hudSize(self) -> int: return self._hud_size
+
+    @Property(int, notify=settingsChanged)
+    def uiScale(self) -> int: return self._ui_scale
 
     @Property(bool, notify=settingsChanged)
     def hudVisible(self) -> bool: return self._hud_visible
@@ -642,6 +648,12 @@ class SlideshowController(QObject):
     @Slot(int)
     def setHudSize(self, percent: int) -> None:
         self._hud_size = percent
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(int)
+    def setUiScale(self, percent: int) -> None:
+        self._ui_scale = percent
         self._save_settings()
         self.settingsChanged.emit()
 
