@@ -40,4 +40,14 @@ QtObject {
     // ── Status ───────────────────────────────────────────────────────────────
     readonly property color statusOk:   "#34d399"  // ✓ images found
     readonly property color statusWarn: "#f59e0b"  // ⚠ no images found
+
+    // ── Overlay animation — popups and panels ─────────────────────────────────
+    // Single source of truth for all enter/exit transitions.
+    // Popups use these via BasePopup.qml; panels (ExifPanel, FloatingHud,
+    // playPausePopup) reference them directly in their named animations.
+    readonly property int  animFadeInDuration:  260   // opacity 0→1 on enter
+    readonly property int  animSlideInDuration: 320   // slide-up with bounce on enter
+    readonly property int  animFadeOutDuration: 200   // opacity 1→0 and slide-down on exit
+    readonly property real animSlideOffset:      20   // px below final position at start
+    readonly property real animSlideOvershoot:  1.2   // OutBack easing overshoot
 }

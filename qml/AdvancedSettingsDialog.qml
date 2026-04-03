@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "."
 
-Popup {
+BasePopup {
     id: root
     anchors.centerIn: Overlay.overlay
     width: Math.min(Overlay.overlay.width - 32, 680)
@@ -13,19 +13,6 @@ Popup {
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
-
-    enter: Transition {
-        ParallelAnimation {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 250; easing.type: Easing.OutCubic }
-            NumberAnimation { property: "scale";   from: 0.92; to: 1; duration: 250; easing.type: Easing.OutCubic }
-        }
-    }
-    exit: Transition {
-        ParallelAnimation {
-            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.InCubic }
-            NumberAnimation { property: "scale";   from: 1; to: 0.92; duration: 200; easing.type: Easing.InCubic }
-        }
-    }
 
     // Capture the language and UI scale at app start so we can show restart
     // notices when the user changes them during this session.
@@ -109,25 +96,26 @@ Popup {
         }
     }
 
+    onAboutToShow: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = true }
+    onAboutToHide: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = false }
     onOpened: {
-        var w = parent ? parent.Window.window : null
-        if (w) w.advancedOpen = true
         root._doneFocused = false
         keyHandler.forceActiveFocus()
     }
-    onClosed: { var w = parent ? parent.Window.window : null; if (w) w.advancedOpen = false }
 
     background: Rectangle {
         radius: 20
         color: Theme.bgCard
         border.color: Theme.surface
         border.width: 1
+        transform: Translate { y: root._slideOffset }
     }
 
     Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.5) }
 
     contentItem: ColumnLayout {
         spacing: 0
+        transform: Translate { y: root._slideOffset }
 
         // ── Keyboard handler (zero-size, focus capture) ───────────────────────
         Item {

@@ -33,7 +33,7 @@ Item {
     readonly property real _contentH : Math.round(_hudH * 0.28)
 
     // Vertical offset via transform — 0 = resting position, positive = shifted downward.
-    property real _slideOffset: 20
+    property real _slideOffset: Theme.animSlideOffset
     property bool _stoppingForReopen: false
 
     opacity: 0
@@ -48,7 +48,7 @@ Item {
         _stoppingForReopen = false
         openAnim.stop()
         root.opacity      = 0
-        root._slideOffset = 20
+        root._slideOffset = Theme.animSlideOffset
         openAnim.start()
     }
 
@@ -137,11 +137,12 @@ Item {
         id: openAnim
         NumberAnimation {
             target: root; property: "opacity"
-            from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic
+            from: 0; to: 1; duration: Theme.animFadeInDuration; easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root; property: "_slideOffset"
-            from: 20; to: 0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2
+            from: Theme.animSlideOffset; to: 0
+            duration: Theme.animSlideInDuration; easing.type: Easing.OutBack; easing.overshoot: Theme.animSlideOvershoot
         }
     }
 
@@ -150,13 +151,13 @@ Item {
         id: closeAnim
         NumberAnimation {
             target: root; property: "opacity"
-            to: 0; duration: 200; easing.type: Easing.InCubic
+            to: 0; duration: Theme.animFadeOutDuration; easing.type: Easing.InCubic
         }
         NumberAnimation {
             target: root; property: "_slideOffset"
-            to: 20; duration: 200; easing.type: Easing.InQuad
+            to: Theme.animSlideOffset; duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad
         }
-        onStopped: if (!root._stoppingForReopen) root._slideOffset = 20
+        onStopped: if (!root._stoppingForReopen) root._slideOffset = Theme.animSlideOffset
     }
 
     // ── Box ───────────────────────────────────────────────────────────────────

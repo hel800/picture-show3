@@ -24,11 +24,16 @@ ApplicationWindow {
         id: stack
         anchors.fill: parent
 
-        // Blur the stack behind any modal dialog — uses scene-graph layer, survives fullscreen
-        layer.enabled: root.advancedOpen || helpOverlay.visible
+        // Blur the stack behind modal dialogs.  _blurLevel animates via
+        // Behavior so the blur fades in/out smoothly; layer.enabled tracks
+        // _blurLevel > 0 so it stays on during the fade-out animation.
+        property bool _shouldBlur: root.advancedOpen || helpOverlay.visible || quitDialog.visible
+        property real _blurLevel: _shouldBlur ? 0.8 : 0
+        Behavior on _blurLevel { NumberAnimation { duration: Theme.animFadeInDuration; easing.type: Easing.OutCubic } }
+        layer.enabled: _blurLevel > 0
         layer.effect: MultiEffect {
             blurEnabled: true
-            blur: 0.8
+            blur: stack._blurLevel
             blurMax: 48
         }
 
@@ -79,7 +84,7 @@ ApplicationWindow {
 
     // ── Quit confirmation dialog (global — settings & slideshow) ─────────────
     property bool _wasPlayingQuit: false
-    Popup {
+    BasePopup {
         id: quitDialog
         anchors.centerIn: Overlay.overlay
         width: 390
@@ -93,6 +98,7 @@ ApplicationWindow {
             color: Theme.bgCard
             border.color: Theme.surface
             border.width: 1
+            transform: Translate { y: quitDialog._slideOffset }
         }
 
         Overlay.modal: Rectangle {

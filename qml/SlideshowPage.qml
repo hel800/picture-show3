@@ -640,12 +640,16 @@ Rectangle {
         root._lastTabMs = 0
         captionOverlay.visible = true
         captionDimIn.start()
+        captionCloseAnim.stop()
+        captionBox._slideOffset = Theme.animSlideOffset
+        captionOpenAnim.start()
         captionInput.forceActiveFocus()
         captionInput.selectAll()
     }
 
     function closeCaption() {
         captionDimIn.stop(); captionDimOut.start()   // visible = false fires in onStopped
+        captionOpenAnim.stop(); captionCloseAnim.start()
         if (_captionWasPlaying) controller.togglePlay()
         _captionWasPlaying = false
         root.forceActiveFocus()
@@ -664,6 +668,9 @@ Rectangle {
             if (controller.isPlaying) controller.togglePlay()
             ratingOverlay.visible = true
             ratingDimIn.start()
+            ratingCloseAnim.stop()
+            ratingBox._slideOffset = Theme.animSlideOffset
+            ratingOpenAnim.start()
         }
         root._pendingRating = r
         root._starsRevealedCount = 0
@@ -672,6 +679,7 @@ Rectangle {
 
     function closeRating() {
         ratingDimIn.stop(); ratingDimOut.start()   // visible = false fires in onStopped
+        ratingOpenAnim.stop(); ratingCloseAnim.start()
         if (_ratingWasPlaying) controller.togglePlay()
         _ratingWasPlaying = false
         root.forceActiveFocus()
@@ -718,6 +726,9 @@ Rectangle {
         jumpInput.text = (controller.currentIndex + 1).toString()
         jumpOverlay.visible = true
         dimOut.stop(); dimIn.start()
+        jumpCloseAnim.stop()
+        jumpBox._slideOffset = Theme.animSlideOffset
+        jumpOpenAnim.start()
         jumpInput.forceActiveFocus()
         jumpInput.selectAll()
         previewTimer.stop()
@@ -730,6 +741,7 @@ Rectangle {
 
     function closeJump() {
         dimIn.stop(); dimOut.start()   // visible = false fires in onStopped
+        jumpOpenAnim.stop(); jumpCloseAnim.start()
         if (_jumpWasPlaying) controller.togglePlay()
         root.forceActiveFocus()
     }
@@ -923,7 +935,7 @@ Rectangle {
                 countdownCanvas.progress = controller.isPlaying ? 1.0 : 0
                 countdownCanvas.requestPaint()   // flush stale frame before popup appears
                 playPausePopup.opacity = 0
-                playPausePopup._ppSlideOffset = 20
+                playPausePopup._ppSlideOffset = Theme.animSlideOffset
                 playPauseAnim.restart()
                 // Freeze the autoplay timer while the popup is visible so the
                 // first image advance is a full interval after the popup fades,
@@ -947,7 +959,7 @@ Rectangle {
         height: 88
         opacity: 0
         z: 20
-        property real _ppSlideOffset: 20
+        property real _ppSlideOffset: Theme.animSlideOffset
         transform: Translate { y: playPausePopup._ppSlideOffset }
 
         Rectangle {
@@ -1100,20 +1112,20 @@ Rectangle {
 
         SequentialAnimation {
             id: playPauseAnim
-            // Phase 1: popup fades in and slides up — matches ExifPanel entrance animation
+            // Phase 1: popup fades in and slides up
             ParallelAnimation {
-                NumberAnimation { target: playPausePopup; property: "opacity"; from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic }
-                NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; from: 20; to: 0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2 }
+                NumberAnimation { target: playPausePopup; property: "opacity"; from: 0; to: 1; duration: Theme.animFadeInDuration; easing.type: Easing.OutCubic }
+                NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; from: Theme.animSlideOffset; to: 0; duration: Theme.animSlideInDuration; easing.type: Easing.OutBack; easing.overshoot: Theme.animSlideOvershoot }
             }
             // Phase 2 (3000 ms): popup fully visible — border depletes exactly during this window
             ParallelAnimation {
                 PauseAnimation  { duration: 3000 }
                 NumberAnimation { target: countdownCanvas; property: "progress"; to: 0; duration: 3000; easing.type: Easing.Linear }
             }
-            // Phase 3: popup fades out and slides down — matches ExifPanel exit animation
+            // Phase 3: popup fades out and slides down
             ParallelAnimation {
-                NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
-                NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; to: 20; duration: 200; easing.type: Easing.InQuad }
+                NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: Theme.animFadeOutDuration; easing.type: Easing.InCubic }
+                NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; to: Theme.animSlideOffset; duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad }
             }
 
             // Reset the autoplay countdown so the first image advance is a full
@@ -1129,8 +1141,8 @@ Rectangle {
         }
         ParallelAnimation {
             id: ppFadeOut
-            NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: 200; easing.type: Easing.InCubic }
-            NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; to: 20; duration: 200; easing.type: Easing.InQuad }
+            NumberAnimation { target: playPausePopup; property: "opacity"; to: 0; duration: Theme.animFadeOutDuration; easing.type: Easing.InCubic }
+            NumberAnimation { target: playPausePopup; property: "_ppSlideOffset"; to: Theme.animSlideOffset; duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad }
         }
     }
 
@@ -1146,8 +1158,8 @@ Rectangle {
             anchors.fill: parent
             color: "black"
             opacity: 0
-            NumberAnimation { id: dimIn;  target: dimBg; property: "opacity"; to: 0.45; duration: 220; easing.type: Easing.OutQuad }
-            NumberAnimation { id: dimOut; target: dimBg; property: "opacity"; to: 0;    duration: 220; easing.type: Easing.InQuad
+            NumberAnimation { id: dimIn;  target: dimBg; property: "opacity"; to: 0.45; duration: Theme.animFadeInDuration;  easing.type: Easing.OutQuad }
+            NumberAnimation { id: dimOut; target: dimBg; property: "opacity"; to: 0;    duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad
                 onStopped: jumpOverlay.visible = false }
         }
 
@@ -1162,6 +1174,19 @@ Rectangle {
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
             border.width: 1
+            opacity: 0
+            property real _slideOffset: Theme.animSlideOffset
+            transform: Translate { y: jumpBox._slideOffset }
+            ParallelAnimation {
+                id: jumpOpenAnim
+                NumberAnimation { target: jumpBox; property: "opacity"; from: 0; to: 1; duration: Theme.animFadeInDuration; easing.type: Easing.OutCubic }
+                NumberAnimation { target: jumpBox; property: "_slideOffset"; from: Theme.animSlideOffset; to: 0; duration: Theme.animSlideInDuration; easing.type: Easing.OutBack; easing.overshoot: Theme.animSlideOvershoot }
+            }
+            ParallelAnimation {
+                id: jumpCloseAnim
+                NumberAnimation { target: jumpBox; property: "opacity"; to: 0; duration: Theme.animFadeOutDuration; easing.type: Easing.InCubic }
+                NumberAnimation { target: jumpBox; property: "_slideOffset"; to: Theme.animSlideOffset; duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad }
+            }
 
             RowLayout {
                 id: jumpLayout
@@ -1308,8 +1333,8 @@ Rectangle {
             anchors.fill: parent
             color: "black"
             opacity: 0
-            NumberAnimation { id: ratingDimIn;  target: ratingDimBg; property: "opacity"; to: 0.45; duration: 200; easing.type: Easing.OutQuad }
-            NumberAnimation { id: ratingDimOut; target: ratingDimBg; property: "opacity"; to: 0;    duration: 200; easing.type: Easing.InQuad
+            NumberAnimation { id: ratingDimIn;  target: ratingDimBg; property: "opacity"; to: 0.45; duration: Theme.animFadeInDuration;  easing.type: Easing.OutQuad }
+            NumberAnimation { id: ratingDimOut; target: ratingDimBg; property: "opacity"; to: 0;    duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad
                 onStopped: ratingOverlay.visible = false }
         }
 
@@ -1324,6 +1349,19 @@ Rectangle {
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
             border.width: 1
+            opacity: 0
+            property real _slideOffset: Theme.animSlideOffset
+            transform: Translate { y: ratingBox._slideOffset }
+            ParallelAnimation {
+                id: ratingOpenAnim
+                NumberAnimation { target: ratingBox; property: "opacity"; from: 0; to: 1; duration: Theme.animFadeInDuration; easing.type: Easing.OutCubic }
+                NumberAnimation { target: ratingBox; property: "_slideOffset"; from: Theme.animSlideOffset; to: 0; duration: Theme.animSlideInDuration; easing.type: Easing.OutBack; easing.overshoot: Theme.animSlideOvershoot }
+            }
+            ParallelAnimation {
+                id: ratingCloseAnim
+                NumberAnimation { target: ratingBox; property: "opacity"; to: 0; duration: Theme.animFadeOutDuration; easing.type: Easing.InCubic }
+                NumberAnimation { target: ratingBox; property: "_slideOffset"; to: Theme.animSlideOffset; duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad }
+            }
 
             ColumnLayout {
                 id: ratingLayout
@@ -1414,8 +1452,8 @@ Rectangle {
             anchors.fill: parent
             color: "black"
             opacity: 0
-            NumberAnimation { id: captionDimIn;  target: captionDimBg; property: "opacity"; to: 0.45; duration: 200; easing.type: Easing.OutQuad }
-            NumberAnimation { id: captionDimOut; target: captionDimBg; property: "opacity"; to: 0;    duration: 200; easing.type: Easing.InQuad
+            NumberAnimation { id: captionDimIn;  target: captionDimBg; property: "opacity"; to: 0.45; duration: Theme.animFadeInDuration;  easing.type: Easing.OutQuad }
+            NumberAnimation { id: captionDimOut; target: captionDimBg; property: "opacity"; to: 0;    duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad
                 onStopped: captionOverlay.visible = false }
         }
 
@@ -1430,6 +1468,19 @@ Rectangle {
             color: Qt.rgba(0, 0, 0, 0.82)
             border.color: Qt.rgba(1, 1, 1, 0.4)
             border.width: 1
+            opacity: 0
+            property real _slideOffset: Theme.animSlideOffset
+            transform: Translate { y: captionBox._slideOffset }
+            ParallelAnimation {
+                id: captionOpenAnim
+                NumberAnimation { target: captionBox; property: "opacity"; from: 0; to: 1; duration: Theme.animFadeInDuration; easing.type: Easing.OutCubic }
+                NumberAnimation { target: captionBox; property: "_slideOffset"; from: Theme.animSlideOffset; to: 0; duration: Theme.animSlideInDuration; easing.type: Easing.OutBack; easing.overshoot: Theme.animSlideOvershoot }
+            }
+            ParallelAnimation {
+                id: captionCloseAnim
+                NumberAnimation { target: captionBox; property: "opacity"; to: 0; duration: Theme.animFadeOutDuration; easing.type: Easing.InCubic }
+                NumberAnimation { target: captionBox; property: "_slideOffset"; to: Theme.animSlideOffset; duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad }
+            }
 
             ColumnLayout {
                 id: captionLayout
@@ -1519,7 +1570,7 @@ Rectangle {
     }
 
     // ── Kiosk quit confirmation dialog ───────────────────────────────────────
-    Popup {
+    BasePopup {
         id: kioskQuitDialog
         anchors.centerIn: parent
         width: 390
@@ -1533,6 +1584,7 @@ Rectangle {
             color: Theme.bgCard
             border.color: Theme.surface
             border.width: 1
+            transform: Translate { y: kioskQuitDialog._slideOffset }
         }
 
         Overlay.modal: Rectangle {

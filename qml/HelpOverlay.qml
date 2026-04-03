@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "."
 
-Popup {
+BasePopup {
     id: root
     anchors.centerIn: Overlay.overlay
     width: Math.min(Overlay.overlay.width - 32, 680)
@@ -15,24 +15,12 @@ Popup {
 
     leftPadding: 28; rightPadding: 28; topPadding: 24; bottomPadding: 24
 
-    enter: Transition {
-        ParallelAnimation {
-            NumberAnimation { property: "opacity"; from: 0; to: 1; duration: 250; easing.type: Easing.OutCubic }
-            NumberAnimation { property: "scale";   from: 0.92; to: 1; duration: 250; easing.type: Easing.OutCubic }
-        }
-    }
-    exit: Transition {
-        ParallelAnimation {
-            NumberAnimation { property: "opacity"; from: 1; to: 0; duration: 200; easing.type: Easing.InCubic }
-            NumberAnimation { property: "scale";   from: 1; to: 0.92; duration: 200; easing.type: Easing.InCubic }
-        }
-    }
-
     background: Rectangle {
         radius: 20
         color: Theme.bgCard
         border.color: Theme.surface
         border.width: 1
+        transform: Translate { y: root._slideOffset }
     }
 
     Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.6) }
@@ -65,6 +53,7 @@ Popup {
         id: keyFocus
         focus: true
         implicitHeight: contentCol.implicitHeight
+        transform: Translate { y: root._slideOffset }
 
         Keys.onPressed: function(event) {
             if (event.key === Qt.Key_F1) {
