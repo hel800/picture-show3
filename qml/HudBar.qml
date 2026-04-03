@@ -49,20 +49,24 @@ Rectangle {
             color: Theme.textPrimary; font.pixelSize: Math.round(16 * hudScale); font.weight: Font.Bold
         }
 
-        // filename
+        // filename — content-sized when caption present (capped at 25 % of bar),
+        // fills all remaining space when no caption
         Text { text: "≡"; color: Theme.textSubtle; font.pixelSize: Math.round(14 * hudScale); Layout.leftMargin: Math.round(10 * hudScale) }
         Text {
+            id: fileText
             text: controller.imagePath(controller.currentIndex).split(/[/\\]/).pop()
             color: Theme.textSecondary; font.pixelSize: Math.round(13 * hudScale)
             elide: Text.ElideMiddle
-            Layout.maximumWidth: Math.round(220 * hudScale)
+            Layout.fillWidth: hudCaption.length === 0
+            Layout.maximumWidth: hudCaption.length > 0 ? Math.round(root.width * 0.25) : root.width
         }
 
-        // caption — always-present filler; text shown only when available
+        // caption — fills remaining space; hidden when empty so filename expands
         Text { text: "·"; color: Theme.textDisabled; font.pixelSize: Math.round(14 * hudScale); visible: hudCaption.length > 0 }
         Text { text: "✎"; color: Theme.textSubtle;   font.pixelSize: Math.round(13 * hudScale); visible: hudCaption.length > 0 }
         Item {
             Layout.fillWidth: true
+            visible: hudCaption.length > 0
             implicitHeight: captionText.implicitHeight
             Text {
                 id: captionText
@@ -70,7 +74,6 @@ Rectangle {
                 width: parent.width
                 text: hudCaption
                 color: Theme.textSecondary; font.pixelSize: Math.round(13 * hudScale)
-                visible: hudCaption.length > 0
                 elide: Text.ElideRight
             }
         }
