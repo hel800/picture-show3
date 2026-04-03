@@ -5,6 +5,8 @@ picture-show3 - main entry point
 Requires: Python >= 3.14  |  PySide6 >= 6.7
 """
 import sys
+import os
+import configparser
 import ctypes
 from pathlib import Path
 
@@ -43,6 +45,38 @@ if _FROZEN:
     _QML_ROOT = QUrl("qrc:/qml/main.qml")
 else:
     _QML_ROOT = QUrl.fromLocalFile(str(_base_dir() / "qml" / "main.qml"))
+
+
+def _apply_ui_scale() -> None:
+    """
+    Read uiScale from the INI file and set QT_SCALE_FACTOR before QGuiApplication
+    is created.  QT_SCALE_FACTOR must be set before the application object exists,
+    so we read the persisted value directly with configparser instead of QSettings.
+    """
+    if sys.platform == "win32":
+        base = os.environ.get("APPDATA", "")
+        if not base:
+            return
+        ini = Path(base) / "picture-show3" / "picture-show3.ini"
+    elif sys.platform == "darwin":
+        ini = Path.home() / "Library" / "Preferences" / "picture-show3" / "picture-show3.ini"
+    else:
+        xdg = os.environ.get("XDG_CONFIG_HOME", str(Path.home() / ".config"))
+        ini = Path(xdg) / "picture-show3" / "picture-show3.ini"
+
+    if not ini.exists():
+        return
+
+    cfg = configparser.ConfigParser()
+    cfg.read(str(ini), encoding="utf-8")
+    try:
+        # QSettings IniFormat lowercases keys and stores top-level keys under [General]
+        val = int(cfg.get("General", "uiscale", fallback="100"))
+    except (ValueError, configparser.Error):
+        return
+
+    if val != 100:
+        os.environ.setdefault("QT_SCALE_FACTOR", str(val / 100))
 
 
 def _install_translator(app: QGuiApplication) -> QTranslator | None:
@@ -251,6 +285,10 @@ def _parse_args() -> tuple[str | None, str | None, list[str]]:
 
 
 def main() -> None:
+    # Apply UI scale factor before QGuiApplication is created (QT_SCALE_FACTOR
+    # is read only at application startup, so it must be set here).
+    _apply_ui_scale()
+
     # Use INI file for settings so they're human-readable
     # Location: %APPDATA%\picture-show3\picture-show3.ini  (Windows)
     QSettings.setDefaultFormat(QSettings.Format.IniFormat)

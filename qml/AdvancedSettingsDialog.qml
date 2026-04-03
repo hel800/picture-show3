@@ -27,18 +27,22 @@ Popup {
         }
     }
 
-    // Capture the language at app start so we can show the restart notice
-    // when the user picks a different language during this session.
-    // Plain assignment (not a binding) so it stays fixed at the startup value.
+    // Capture the language and UI scale at app start so we can show restart
+    // notices when the user changes them during this session.
+    // Plain assignments (not bindings) so they stay fixed at the startup values.
     property string _startupLang: ""
-    Component.onCompleted: _startupLang = controller.language
+    property int    _startupUiScale: 100
+    Component.onCompleted: {
+        _startupLang    = controller.language
+        _startupUiScale = controller.uiScale
+    }
 
     property int  _section: 0       // 0 Show · 1 Controls · 2 HUD · 3 Remote · 4 Misc
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[language,updateCheck]
-    readonly property var _optionCounts: [2, 1, 2, 2, 2]
+    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[language,updateCheck,uiScale]
+    readonly property var _optionCounts: [2, 1, 2, 2, 3]
 
     // Returns false for options that are currently inactive and should be skipped
     function _optionEnabled(section, option) {
@@ -1070,6 +1074,87 @@ Popup {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+
+                    // Option 2: UI Scale ──────────────────────────────────────
+                    Item {
+                        id: misc2Item
+                        Layout.fillWidth: true
+                        implicitHeight: misc2Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(4, 2)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: misc2Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 10; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(4, 2)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("UI SCALE")
+                                    color: root._isOptionFocused(4, 2)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 10
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("Global UI scale factor"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("Scales all menus, dialogs, and controls"); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
+                                Item { Layout.fillWidth: true }
+                                Text {
+                                    text: uiScaleSlider.value + " %"
+                                    color: Theme.accentLight; font.pixelSize: 13; font.weight: Font.Medium
+                                }
+                            }
+                            Slider {
+                                id: uiScaleSlider
+                                Layout.fillWidth: true; Layout.bottomMargin: 6
+                                from: 75; to: 200; stepSize: 25
+                                value: controller.uiScale
+                                onMoved: controller.setUiScale(value)
+                                background: Rectangle {
+                                    x: uiScaleSlider.leftPadding
+                                    y: uiScaleSlider.topPadding + uiScaleSlider.availableHeight / 2 - height / 2
+                                    width: uiScaleSlider.availableWidth; height: 4; radius: 2
+                                    color: Theme.surface
+                                    Rectangle { width: uiScaleSlider.visualPosition * parent.width; height: parent.height; color: Theme.accent; radius: 2 }
+                                }
+                                handle: Rectangle {
+                                    x: uiScaleSlider.leftPadding + uiScaleSlider.visualPosition * (uiScaleSlider.availableWidth - width)
+                                    y: uiScaleSlider.topPadding + uiScaleSlider.availableHeight / 2 - height / 2
+                                    width: 22; height: 22; radius: 11
+                                    color: Theme.accentLight; border.color: Theme.accent; border.width: 2
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 4
+                                Text { text: "75 %"; color: Theme.textDisabled; font.pixelSize: 11 }
+                                Item { Layout.fillWidth: true }
+                                Text { text: "200 %"; color: Theme.textDisabled; font.pixelSize: 11 }
+                            }
+                            Text {
+                                visible: controller.uiScale !== root._startupUiScale
+                                text: qsTr("⚠  Restart the app to apply the scale change.")
+                                color: Theme.statusWarn; font.pixelSize: 11
+                                wrapMode: Text.Wrap; Layout.fillWidth: true; Layout.bottomMargin: 4
                             }
                         }
                     }
