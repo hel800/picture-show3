@@ -8,6 +8,7 @@ All tested methods are synchronous; no Qt timer or event-loop spinning needed.
 from __future__ import annotations
 
 import os
+import sys
 from datetime import datetime
 from pathlib import Path
 
@@ -687,6 +688,13 @@ class TestSettingsSetters:
     def test_set_remote_port(self, ctrl):
         ctrl.setRemotePort(9000)
         assert ctrl.remotePort == 9000
+
+    def test_set_ui_scale(self, ctrl):
+        ctrl.setUiScale(150)
+        assert ctrl.uiScale == 150
+
+    def test_set_ui_scale_default(self, ctrl):
+        assert ctrl.uiScale == 100
 
 
 # ── Available languages ───────────────────────────────────────────────────────
@@ -1622,3 +1630,64 @@ class TestKioskMode:
         ctrl_kiosk = SlideshowController(kiosk_mode=True)
         assert ctrl_kiosk.imageCount == 0
         assert ctrl_kiosk.folder == ""
+
+
+# ── _apply_ui_scale ───────────────────────────────────────────────────────────
+
+class TestApplyUiScale:
+    """Tests for main._apply_ui_scale() — reads INI and sets QT_SCALE_FACTOR."""
+
+    @pytest.fixture(autouse=True)
+    def _clean_env(self, monkeypatch):
+        """Ensure QT_SCALE_FACTOR is not inherited from the environment."""
+        monkeypatch.delenv("QT_SCALE_FACTOR", raising=False)
+
+    def _write_ini(self, path: Path, ui_scale: int) -> None:
+        """Write a minimal QSettings-compatible INI file with the given uiScale."""
+        ini = path / "picture-show3" / "picture-show3.ini"
+        ini.parent.mkdir(parents=True, exist_ok=True)
+        ini.write_text(f"[General]\nuiscale={ui_scale}\n", encoding="utf-8")
+
+    def _call(self, monkeypatch, tmp_path: Path) -> None:
+        """Point _apply_ui_scale at tmp_path and call it."""
+        from main import _apply_ui_scale
+        monkeypatch.setattr(sys, "platform", "win32")
+        monkeypatch.setenv("APPDATA", str(tmp_path))
+        _apply_ui_scale()
+
+    def test_no_ini_file_leaves_env_unset(self, monkeypatch, tmp_path):
+        self._call(monkeypatch, tmp_path)
+        assert "QT_SCALE_FACTOR" not in os.environ
+
+    def test_scale_100_leaves_env_unset(self, monkeypatch, tmp_path):
+        self._write_ini(tmp_path, 100)
+        self._call(monkeypatch, tmp_path)
+        assert "QT_SCALE_FACTOR" not in os.environ
+
+    def test_scale_150_sets_env(self, monkeypatch, tmp_path):
+        self._write_ini(tmp_path, 150)
+        self._call(monkeypatch, tmp_path)
+        assert os.environ.get("QT_SCALE_FACTOR") == "1.5"
+
+    def test_scale_75_sets_env(self, monkeypatch, tmp_path):
+        self._write_ini(tmp_path, 75)
+        self._call(monkeypatch, tmp_path)
+        assert os.environ.get("QT_SCALE_FACTOR") == "0.75"
+
+    def test_scale_200_sets_env(self, monkeypatch, tmp_path):
+        self._write_ini(tmp_path, 200)
+        self._call(monkeypatch, tmp_path)
+        assert os.environ.get("QT_SCALE_FACTOR") == "2.0"
+
+    def test_existing_env_var_not_overwritten(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("QT_SCALE_FACTOR", "1.25")
+        self._write_ini(tmp_path, 150)
+        self._call(monkeypatch, tmp_path)
+        assert os.environ.get("QT_SCALE_FACTOR") == "1.25"
+
+    def test_malformed_ini_leaves_env_unset(self, monkeypatch, tmp_path):
+        ini = tmp_path / "picture-show3" / "picture-show3.ini"
+        ini.parent.mkdir(parents=True, exist_ok=True)
+        ini.write_text("[General]\nuiscale=not_a_number\n", encoding="utf-8")
+        self._call(monkeypatch, tmp_path)
+        assert "QT_SCALE_FACTOR" not in os.environ
