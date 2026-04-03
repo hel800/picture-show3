@@ -41,7 +41,7 @@ Popup {
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[language,updateCheck,uiScale]
+    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[uiScale,language,updateCheck]
     readonly property var _optionCounts: [2, 1, 2, 2, 3]
 
     // Returns false for options that are currently inactive and should be skipped
@@ -208,13 +208,17 @@ Popup {
                         controller.setImageFill(d > 0)
 
                     } else if (root._isOptionFocused(4, 0)) {
+                        controller.setUiScale(
+                            Math.max(75, Math.min(200, controller.uiScale + d * 25)))
+
+                    } else if (root._isOptionFocused(4, 1)) {
                         var langs = controller.availableLanguages
                         var idx = 0
                         for (var i = 0; i < langs.length; i++)
                             if (langs[i].code === controller.language) { idx = i; break }
                         controller.setLanguage(langs[(idx + d + langs.length) % langs.length].code)
 
-                    } else if (root._isOptionFocused(4, 1)) {
+                    } else if (root._isOptionFocused(4, 2)) {
                         controller.setUpdateCheckEnabled(d > 0)
 
                     } else if (root._isOptionFocused(2, 0)) {
@@ -947,11 +951,10 @@ Popup {
                     width: miscScroll.availableWidth
                     spacing: 0
 
-                    // Option 0: Language ──────────────────────────────────────
+                    // Option 0: UI Scale ──────────────────────────────────────
                     Item {
                         id: misc0Item
                         Layout.fillWidth: true
-                        Layout.bottomMargin: 4
                         implicitHeight: misc0Inner.implicitHeight + 24
                         Rectangle {
                             anchors.fill: parent; radius: 8
@@ -965,147 +968,16 @@ Popup {
                             spacing: 0
 
                             RowLayout {
-                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
-                                Rectangle {
-                                    width: 3; height: 11; radius: 1.5
-                                    color: root._isOptionFocused(4, 0)
-                                           ? Theme.accent : "transparent"
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-                                Text {
-                                    text: qsTr("LANGUAGE")
-                                    color: root._isOptionFocused(4, 0)
-                                           ? Theme.accentLight : Theme.textMuted
-                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-                            }
-                            Flow {
-                                Layout.fillWidth: true; Layout.bottomMargin: 8; spacing: 8
-                                Repeater {
-                                    model: controller.availableLanguages
-                                    delegate: Rectangle {
-                                        height: 32; width: langLabel.implicitWidth + 24; radius: 10
-                                        color: controller.language === modelData.code
-                                               ? Theme.accentDeep
-                                               : (langArea.containsMouse ? Theme.surfaceHover : Theme.surface)
-                                        border.color: controller.language === modelData.code ? Theme.accent : "transparent"
-                                        border.width: 1
-                                        Behavior on color { ColorAnimation { duration: 150 } }
-                                        Text {
-                                            id: langLabel; anchors.centerIn: parent
-                                            text: modelData.code === "auto" ? qsTr("Auto") : modelData.name
-                                            font.pixelSize: 12
-                                            color: controller.language === modelData.code ? Theme.textPrimary : Theme.textMuted
-                                        }
-                                        MouseArea {
-                                            id: langArea; anchors.fill: parent; hoverEnabled: true
-                                            cursorShape: Qt.PointingHandCursor
-                                            onClicked: controller.setLanguage(modelData.code)
-                                        }
-                                    }
-                                }
-                            }
-                            Text {
-                                visible: controller.language !== root._startupLang
-                                text: qsTr("⚠  Restart the app to apply the language change.")
-                                color: Theme.statusWarn; font.pixelSize: 11
-                                wrapMode: Text.Wrap; Layout.fillWidth: true
-                            }
-                        }
-                    }
-
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
-
-                    // Option 1: Update check ──────────────────────────────────
-                    Item {
-                        id: misc1Item
-                        Layout.fillWidth: true
-                        implicitHeight: misc1Inner.implicitHeight + 24
-                        Rectangle {
-                            anchors.fill: parent; radius: 8
-                            color: root._isOptionFocused(4, 1)
-                                   ? Theme.surface : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                        }
-                        ColumnLayout {
-                            id: misc1Inner
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                            spacing: 0
-
-                            RowLayout {
-                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
-                                Rectangle {
-                                    width: 3; height: 11; radius: 1.5
-                                    color: root._isOptionFocused(4, 1)
-                                           ? Theme.accent : "transparent"
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-                                Text {
-                                    text: qsTr("UPDATES")
-                                    color: root._isOptionFocused(4, 1)
-                                           ? Theme.accentLight : Theme.textMuted
-                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
-                                    Behavior on color { ColorAnimation { duration: 100 } }
-                                }
-                            }
-                            RowLayout {
-                                Layout.fillWidth: true; Layout.bottomMargin: 4
-                                Column {
-                                    spacing: 2
-                                    Text { text: qsTr("Check for updates on startup"); color: Theme.textPrimary; font.pixelSize: 14 }
-                                    Text { text: qsTr("Checks GitHub Releases for a newer version"); color: Theme.textMuted; font.pixelSize: 11 }
-                                }
-                                Item { Layout.fillWidth: true }
-                                Switch {
-                                    id: updateCheckSwitch
-                                    checked: controller.updateCheckEnabled
-                                    onToggled: controller.setUpdateCheckEnabled(checked)
-                                    indicator: Rectangle {
-                                        implicitWidth: 44; implicitHeight: 24; radius: 12
-                                        color: updateCheckSwitch.checked ? Theme.accent : Theme.surface
-                                        Behavior on color { ColorAnimation { duration: 120 } }
-                                        Rectangle {
-                                            x: updateCheckSwitch.checked ? parent.width - width - 3 : 3
-                                            anchors.verticalCenter: parent.verticalCenter
-                                            width: 18; height: 18; radius: 9
-                                            color: updateCheckSwitch.checked ? "white" : Theme.textMuted
-                                            Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
-
-                    // Option 2: UI Scale ──────────────────────────────────────
-                    Item {
-                        id: misc2Item
-                        Layout.fillWidth: true
-                        implicitHeight: misc2Inner.implicitHeight + 24
-                        Rectangle {
-                            anchors.fill: parent; radius: 8
-                            color: root._isOptionFocused(4, 2)
-                                   ? Theme.surface : "transparent"
-                            Behavior on color { ColorAnimation { duration: 100 } }
-                        }
-                        ColumnLayout {
-                            id: misc2Inner
-                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
-                            spacing: 0
-
-                            RowLayout {
                                 Layout.fillWidth: true; Layout.bottomMargin: 10; spacing: 8
                                 Rectangle {
                                     width: 3; height: 11; radius: 1.5
-                                    color: root._isOptionFocused(4, 2)
+                                    color: root._isOptionFocused(4, 0)
                                            ? Theme.accent : "transparent"
                                     Behavior on color { ColorAnimation { duration: 100 } }
                                 }
                                 Text {
                                     text: qsTr("UI SCALE")
-                                    color: root._isOptionFocused(4, 2)
+                                    color: root._isOptionFocused(4, 0)
                                            ? Theme.accentLight : Theme.textMuted
                                     font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
                                     Behavior on color { ColorAnimation { duration: 100 } }
@@ -1155,6 +1027,139 @@ Popup {
                                 text: qsTr("⚠  Restart the app to apply the scale change.")
                                 color: Theme.statusWarn; font.pixelSize: 11
                                 wrapMode: Text.Wrap; Layout.fillWidth: true; Layout.bottomMargin: 4
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+
+                    // Option 1: Language ──────────────────────────────────────
+                    Item {
+                        id: misc1Item
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 4
+                        implicitHeight: misc1Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(4, 1)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: misc1Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(4, 1)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("LANGUAGE")
+                                    color: root._isOptionFocused(4, 1)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            Flow {
+                                Layout.fillWidth: true; Layout.bottomMargin: 8; spacing: 8
+                                Repeater {
+                                    model: controller.availableLanguages
+                                    delegate: Rectangle {
+                                        height: 32; width: langLabel.implicitWidth + 24; radius: 10
+                                        color: controller.language === modelData.code
+                                               ? Theme.accentDeep
+                                               : (langArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                        border.color: controller.language === modelData.code ? Theme.accent : "transparent"
+                                        border.width: 1
+                                        Behavior on color { ColorAnimation { duration: 150 } }
+                                        Text {
+                                            id: langLabel; anchors.centerIn: parent
+                                            text: modelData.code === "auto" ? qsTr("Auto") : modelData.name
+                                            font.pixelSize: 12
+                                            color: controller.language === modelData.code ? Theme.textPrimary : Theme.textMuted
+                                        }
+                                        MouseArea {
+                                            id: langArea; anchors.fill: parent; hoverEnabled: true
+                                            cursorShape: Qt.PointingHandCursor
+                                            onClicked: controller.setLanguage(modelData.code)
+                                        }
+                                    }
+                                }
+                            }
+                            Text {
+                                visible: controller.language !== root._startupLang
+                                text: qsTr("⚠  Restart the app to apply the language change.")
+                                color: Theme.statusWarn; font.pixelSize: 11
+                                wrapMode: Text.Wrap; Layout.fillWidth: true
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+
+                    // Option 2: Update check ──────────────────────────────────
+                    Item {
+                        id: misc2Item
+                        Layout.fillWidth: true
+                        implicitHeight: misc2Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(4, 2)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: misc2Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(4, 2)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("UPDATES")
+                                    color: root._isOptionFocused(4, 2)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 4
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("Check for updates on startup"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("Checks GitHub Releases for a newer version"); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
+                                Item { Layout.fillWidth: true }
+                                Switch {
+                                    id: updateCheckSwitch
+                                    checked: controller.updateCheckEnabled
+                                    onToggled: controller.setUpdateCheckEnabled(checked)
+                                    indicator: Rectangle {
+                                        implicitWidth: 44; implicitHeight: 24; radius: 12
+                                        color: updateCheckSwitch.checked ? Theme.accent : Theme.surface
+                                        Behavior on color { ColorAnimation { duration: 120 } }
+                                        Rectangle {
+                                            x: updateCheckSwitch.checked ? parent.width - width - 3 : 3
+                                            anchors.verticalCenter: parent.verticalCenter
+                                            width: 18; height: 18; radius: 9
+                                            color: updateCheckSwitch.checked ? "white" : Theme.textMuted
+                                            Behavior on x { NumberAnimation { duration: 120; easing.type: Easing.OutQuad } }
+                                        }
+                                    }
+                                }
                             }
                         }
                     }
