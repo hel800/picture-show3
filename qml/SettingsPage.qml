@@ -371,7 +371,7 @@ Item {
                     }
 
                     // ── Recent folders popup ───────────────────────────────────
-                    Popup {
+                    BasePopup {
                         id: recentPopup
                         anchors.centerIn: Overlay.overlay
                         width: Math.min(root.width - 64, 600)
@@ -392,6 +392,7 @@ Item {
                             color: Theme.bgCard
                             border.color: Theme.surface
                             border.width: 1
+                            transform: Translate { y: recentPopup._slideOffset }
                         }
 
                         Overlay.modal: Rectangle {
@@ -402,6 +403,7 @@ Item {
                             id: recentContentItem
                             implicitHeight: Math.min(recentOuterCol.implicitHeight + 32, root.height / 2)
                             focus: true
+                            transform: Translate { y: recentPopup._slideOffset }
 
                             Keys.onPressed: function(event) {
                                 var count = controller.folderHistory.length

@@ -20,7 +20,7 @@ Rectangle {
     // (above HUD).  Positive values shift it downward (behind/below the HUD).
     // We animate this property instead of y so that anchors can own the final
     // position — no runtime height measurement required.
-    property real _slideOffset: 20
+    property real _slideOffset: Theme.animSlideOffset
 
     width:  Math.min(parent ? parent.width * 0.875 : 385, 385)
     height: panelContent.implicitHeight + 32   // 16 px top + 16 px bottom padding
@@ -48,7 +48,7 @@ Rectangle {
         _stoppingForReopen = false
         openAnim.stop()
         root.opacity      = 0
-        root._slideOffset = 20   // start 20 px below anchored position, invisible
+        root._slideOffset = Theme.animSlideOffset   // start below anchored position, invisible
         _isOpen           = true
         openAnim.start()
     }
@@ -64,11 +64,12 @@ Rectangle {
         id: openAnim
         NumberAnimation {
             target: root; property: "opacity"
-            from: 0; to: 1; duration: 260; easing.type: Easing.OutCubic
+            from: 0; to: 1; duration: Theme.animFadeInDuration; easing.type: Easing.OutCubic
         }
         NumberAnimation {
             target: root; property: "_slideOffset"
-            from: 20; to: 0; duration: 320; easing.type: Easing.OutBack; easing.overshoot: 1.2
+            from: Theme.animSlideOffset; to: 0
+            duration: Theme.animSlideInDuration; easing.type: Easing.OutBack; easing.overshoot: Theme.animSlideOvershoot
         }
     }
 
@@ -77,11 +78,11 @@ Rectangle {
         id: closeAnim
         NumberAnimation {
             target: root; property: "opacity"
-            to: 0; duration: 200; easing.type: Easing.InCubic
+            to: 0; duration: Theme.animFadeOutDuration; easing.type: Easing.InCubic
         }
         NumberAnimation {
             target: root; property: "_slideOffset"
-            to: 20; duration: 200; easing.type: Easing.InQuad
+            to: Theme.animSlideOffset; duration: Theme.animFadeOutDuration; easing.type: Easing.InQuad
         }
         onStopped: if (!root._stoppingForReopen) root.exifData = []
     }

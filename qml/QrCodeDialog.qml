@@ -5,7 +5,7 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "."
 
-Popup {
+BasePopup {
     id: root
     anchors.centerIn: Overlay.overlay
     width: 320
@@ -19,6 +19,7 @@ Popup {
         color: Theme.bgCard
         border.color: Theme.surface
         border.width: 1
+        transform: Translate { y: root._slideOffset }
     }
 
     Overlay.modal: Rectangle {
