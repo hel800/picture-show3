@@ -174,7 +174,7 @@ Settings are grouped into five tabs:
 | **Controls** | Mouse button navigation (left = next, right = previous) |
 | **HUD** | HUD size (50–200 %) · HUD style (Bar / Floating) |
 | **Remote** | Smartphone remote enable/disable · Port |
-| **Misc** | Global UI scale factor (75–200 %) · UI language · Update check on startup |
+| **Misc** | Global UI scale factor (75–300 %) · UI language · Update check on startup |
 
 ### Keyboard navigation inside Advanced settings
 
