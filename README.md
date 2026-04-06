@@ -101,7 +101,7 @@ Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\pict
 | `R` | Cycle star rating filter |
 | `V` | Open advanced settings |
 | `F` | Toggle fullscreen |
-| `?` | Help overlay |
+| `F1` | Help overlay |
 | `Esc` | Quit dialog |
 
 ### During the picture show
@@ -121,7 +121,7 @@ Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\pict
 | `0`–`5` | Set star rating (0 = remove); ↵ to confirm, Esc to cancel |
 | `C` | Edit IPTC caption; ↵ to save, Esc to cancel; Tab Tab copies previous image's caption |
 | `P` | Panorama mode (wide images only) |
-| `?` | Help overlay |
+| `F1` | Help overlay |
 | `Esc` | Return to settings |
 | Left click | Next photo (when mouse navigation enabled) |
 | Right click | Previous photo (when mouse navigation enabled) |
@@ -166,14 +166,15 @@ Ratings can also be set or changed directly during the show with keys `0`–`5`.
 ## Advanced settings
 
 Reachable via the **Advanced settings ›** link or by pressing `V` on the settings screen.
-Settings are grouped into four tabs:
+Settings are grouped into five tabs:
 
 | Tab | Options |
 |---|---|
-| **General** | Transition duration (100–3000 ms) · UI language · Update check on startup |
+| **Show** | Transition duration (100–3000 ms) · Image scale (Fit / Fill) |
 | **Controls** | Mouse button navigation (left = next, right = previous) |
 | **HUD** | HUD size (50–200 %) · HUD style (Bar / Floating) |
 | **Remote** | Smartphone remote enable/disable · Port |
+| **Misc** | Global UI scale factor (75–200 %) · UI language · Update check on startup |
 
 ### Keyboard navigation inside Advanced settings
 
