@@ -213,7 +213,11 @@ Rectangle {
             root._panoWasPlaying = false
             var pendingNav = root._pendingNav
             root._pendingNav = 0
-            if (wasPlaying) controller.togglePlay()
+            if (wasPlaying) {
+                root._suppressPlayAnim = true
+                controller.togglePlay()
+                root._suppressPlayAnim = false
+            }
             if (pendingNav === 1)       { root.navDir = 1;  controller.nextImage() }
             else if (pendingNav === -1) { root.navDir = -1; controller.prevImage() }
             root._forceFit = false
@@ -781,7 +785,11 @@ Rectangle {
         root._panoLayer = layer
         root._panoScrollRange = scrollRange
         root._panoWasPlaying = controller.isPlaying
-        if (controller.isPlaying) controller.togglePlay()
+        if (controller.isPlaying) {
+            root._suppressPlayAnim = true
+            controller.togglePlay()
+            root._suppressPlayAnim = false
+        }
         // Setting panoramaActive = true switches imgA/imgB fillMode to PreserveAspectFit
         // (via binding) so the full image width is available for the layer to render.
         root.panoramaActive = true
