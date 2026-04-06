@@ -1679,6 +1679,11 @@ class TestApplyUiScale:
         self._call(monkeypatch, tmp_path)
         assert os.environ.get("QT_SCALE_FACTOR") == "2.0"
 
+    def test_scale_300_sets_env(self, monkeypatch, tmp_path):
+        self._write_ini(tmp_path, 300)
+        self._call(monkeypatch, tmp_path)
+        assert os.environ.get("QT_SCALE_FACTOR") == "3.0"
+
     def test_existing_env_var_not_overwritten(self, monkeypatch, tmp_path):
         monkeypatch.setenv("QT_SCALE_FACTOR", "1.25")
         self._write_ini(tmp_path, 150)
