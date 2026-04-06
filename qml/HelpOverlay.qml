@@ -9,6 +9,7 @@ BasePopup {
     id: root
     anchors.centerIn: Overlay.overlay
     width: Math.min(Overlay.overlay.width - 32, 680)
+    height: Math.min(Overlay.overlay.height - 32, contentCol.implicitHeight + topPadding + bottomPadding)
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
@@ -52,7 +53,6 @@ BasePopup {
     contentItem: Item {
         id: keyFocus
         focus: true
-        implicitHeight: contentCol.implicitHeight
         transform: Translate { y: root._slideOffset }
 
         Keys.onPressed: function(event) {
@@ -76,6 +76,7 @@ BasePopup {
             visible: root.fromSettings || !root.inFullscreen
             anchors.top: parent.top
             anchors.right: parent.right
+            z: 1
             width: 26; height: 26; radius: 13
             color: closeArea.containsMouse ? Theme.surfaceHover : "transparent"
             Behavior on color { ColorAnimation { duration: 120 } }
@@ -94,10 +95,16 @@ BasePopup {
             }
         }
 
-        ColumnLayout {
-            id: contentCol
-            width: parent.width
-            spacing: 18
+        Flickable {
+            anchors.fill: parent
+            contentWidth: width
+            contentHeight: contentCol.implicitHeight
+            clip: true
+
+            ColumnLayout {
+                id: contentCol
+                width: parent.width
+                spacing: 18
 
             // ── Title + version ───────────────────────────────────────────────
             Row {
@@ -293,6 +300,7 @@ BasePopup {
                 KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
                 Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("to close"); color: Theme.textGhost; font.pixelSize: 11 }
             }
-        }
+            } // ColumnLayout
+        } // Flickable
     }
 }
