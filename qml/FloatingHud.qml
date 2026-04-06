@@ -321,23 +321,25 @@ Item {
         }
 
         // ── Key hints (inside box, anchored to bottom — no layout shift) ──────
+        // Sizes are divided by the DPI scale factor so the hints stay the same
+        // physical size as the HUD itself, which is screen-proportional.
         Row {
             anchors.horizontalCenter: hudBox.horizontalCenter
             anchors.bottom: hudBox.bottom
-            anchors.bottomMargin: 8
-            spacing: 6
+            anchors.bottomMargin: Math.round(8 * 100 / controller.uiScale)
+            spacing: Math.round(6 * 100 / controller.uiScale)
             opacity: root.editing ? 1.0 : 0.0
             visible: opacity > 0
             Behavior on opacity { NumberAnimation { duration: 150 } }
 
-            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵" }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("save"); color: Theme.textDisabled; font.pixelSize: 11 }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
-            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc" }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("cancel"); color: Theme.textDisabled; font.pixelSize: 11 }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: "·"; color: Theme.textDisabled; font.pixelSize: 11 }
-            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Tab Tab" }
-            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("copy prev caption"); color: Theme.textDisabled; font.pixelSize: 11 }
+            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "↵";         uiScale: 100 / controller.uiScale }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("save");              color: Theme.textDisabled; font.pixelSize: Math.round(11 * 100 / controller.uiScale) }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: "·";                       color: Theme.textDisabled; font.pixelSize: Math.round(11 * 100 / controller.uiScale) }
+            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Esc";        uiScale: 100 / controller.uiScale }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("cancel");            color: Theme.textDisabled; font.pixelSize: Math.round(11 * 100 / controller.uiScale) }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: "·";                       color: Theme.textDisabled; font.pixelSize: Math.round(11 * 100 / controller.uiScale) }
+            KeyHint { anchors.verticalCenter: parent.verticalCenter; label: "Tab Tab";    uiScale: 100 / controller.uiScale }
+            Text { anchors.verticalCenter: parent.verticalCenter; text: qsTr("copy prev caption"); color: Theme.textDisabled; font.pixelSize: Math.round(11 * 100 / controller.uiScale) }
         }
     }
 }
