@@ -676,9 +676,12 @@ Rectangle {
             ratingBox._slideOffset = Theme.animSlideOffset
             ratingOpenAnim.start()
         }
+        var sameRating = ratingOverlay.visible && r === root._pendingRating
         root._pendingRating = r
-        root._starsRevealedCount = 0
-        starRevealTimer.restart()
+        if (!sameRating) {
+            root._starsRevealedCount = 0
+            starRevealTimer.restart()
+        }
     }
 
     function closeRating() {
