@@ -11,7 +11,6 @@ Requires Python >= 3.14
 from __future__ import annotations
 
 import threading
-from pathlib import Path
 
 from PySide6.QtCore import Qt, QSize
 from PySide6.QtGui import QImage, QImageReader
@@ -99,9 +98,9 @@ class SlideshowImageProvider(QQuickImageProvider):
     # ── QQuickImageProvider interface ─────────────────────────────────────────
 
     # PySide6 expects requestImage to return QImage only (size is ignored in Python bindings)
-    def requestImage(self, id: str, size: QSize, requestedSize: QSize) -> QImage:
+    def requestImage(self, image_id: str, size: QSize, requestedSize: QSize) -> QImage:
         # Strip optional cache-busting query param e.g. "42?t=1234567890"
-        index_str = id.split("?")[0]
+        index_str = image_id.split("?")[0]
 
         try:
             index = int(index_str)

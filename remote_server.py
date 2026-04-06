@@ -243,7 +243,8 @@ class RemoteServer(QObject):
             self._clients.append(sock)
 
     def _drop(self, sock: QTcpSocket) -> None:
-        self._clients.remove(sock) if sock in self._clients else None
+        if sock in self._clients:
+            self._clients.remove(sock)
 
     def _respond(
         self,
@@ -267,7 +268,7 @@ class RemoteServer(QObject):
 
     def _handle(self, sock: QTcpSocket) -> None:
         raw   = bytes(sock.readAll()).decode("utf-8", errors="ignore")
-        parts = raw.split("\r\n")[0].split(" ") if raw else []
+        parts = raw.split("\r\n", maxsplit=1)[0].split(" ") if raw else []
         path: _Path = parts[1].split("?")[0] if len(parts) > 1 else "/"
 
         ctrl = self._controller
