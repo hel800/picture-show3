@@ -96,7 +96,7 @@ class SlideshowController(QObject):
         self._transition_style   : TransitionStyle  = "fade"
         self._transition_duration: int            = 600     # milliseconds
         self._hud_size           : int            = 100     # percent (50–200)
-        self._ui_scale           : int            = 100     # percent (75–200), requires restart
+        self._ui_scale           : int            = 100     # percent (75–300), requires restart
         self._hud_visible        : bool           = False
         self._hud_style          : str            = "fundamental"
         self._sort_order         : SortOrder      = "name"

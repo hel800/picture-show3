@@ -197,7 +197,7 @@ BasePopup {
 
                     } else if (root._isOptionFocused(4, 0)) {
                         controller.setUiScale(
-                            Math.max(75, Math.min(200, controller.uiScale + d * 25)))
+                            Math.max(75, Math.min(300, controller.uiScale + d * 25)))
 
                     } else if (root._isOptionFocused(4, 1)) {
                         var langs = controller.availableLanguages
@@ -991,7 +991,7 @@ BasePopup {
                             Slider {
                                 id: uiScaleSlider
                                 Layout.fillWidth: true; Layout.bottomMargin: 6
-                                from: 75; to: 200; stepSize: 25
+                                from: 75; to: 300; stepSize: 25
                                 value: controller.uiScale
                                 onMoved: controller.setUiScale(value)
                                 background: Rectangle {
@@ -1012,7 +1012,7 @@ BasePopup {
                                 Layout.fillWidth: true; Layout.bottomMargin: 4
                                 Text { text: "75 %"; color: Theme.textDisabled; font.pixelSize: 11 }
                                 Item { Layout.fillWidth: true }
-                                Text { text: "200 %"; color: Theme.textDisabled; font.pixelSize: 11 }
+                                Text { text: "300 %"; color: Theme.textDisabled; font.pixelSize: 11 }
                             }
                             Text {
                                 visible: controller.uiScale !== root._startupUiScale
