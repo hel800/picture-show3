@@ -9,7 +9,7 @@ BasePopup {
     id: root
     anchors.centerIn: Overlay.overlay
     width: Math.min(Overlay.overlay.width - 32, 680)
-    height: 640
+    height: Math.min(Overlay.overlay.height - 32, 640)
     modal: true
     focus: true
     closePolicy: Popup.CloseOnEscape | Popup.CloseOnPressOutside
