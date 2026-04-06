@@ -76,8 +76,8 @@ Item {
     }
 
     function confirmEdit() {
-        root.editConfirmed(captionEditInput.text)
         root.editing = false
+        root.editConfirmed(captionEditInput.text)
     }
 
     function refocusEdit() {
