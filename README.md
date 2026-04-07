@@ -79,7 +79,7 @@ python -m pytest
 python -m pytest -v
 ```
 
-262 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+272 tests across controller logic, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
 
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 
@@ -174,7 +174,7 @@ Settings are grouped into five tabs:
 | **Controls** | Mouse button navigation (left = next, right = previous) |
 | **HUD** | HUD size (50–200 %) · HUD style (Bar / Floating) |
 | **Remote** | Smartphone remote enable/disable · Port |
-| **Misc** | Global UI scale factor (75–200 %) · UI language · Update check on startup |
+| **Misc** | Global UI scale factor (75–300 %) · UI language · Update check on startup |
 
 ### Keyboard navigation inside Advanced settings
 
