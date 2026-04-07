@@ -1,0 +1,3 @@
+# Build-time dependencies for the Linux AppImage build
+# Install with: pip install -r install/linux/requirements-build.txt
+pyinstaller>=6.0
