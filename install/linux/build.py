@@ -89,7 +89,7 @@ if _appdir.exists():
     shutil.rmtree(_appdir)
 
 print(f"▶ Assembling {_appdir}\n")
-shutil.copytree(_bundle, _appdir)
+shutil.copytree(_bundle, _appdir, symlinks=True)
 
 # Required AppImage metadata
 shutil.copy(LINUX / "picture-show3.desktop", _appdir / "picture-show3.desktop")

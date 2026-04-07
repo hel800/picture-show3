@@ -291,6 +291,19 @@ When running the built exe, QML and SVGs are loaded from the compiled resource b
 
 ---
 
+## Building a standalone Linux AppImage
+
+```bash
+python install/linux/build.py
+```
+
+Output: `install/linux/dist/installer/picture-show3-<version>-x86_64.AppImage`
+
+For broad distro compatibility the AppImage should be built on **Ubuntu 22.04**.
+See [docs/build-linux.md](docs/build-linux.md) for the full guide, including how to set up an Ubuntu 22.04 environment on Fedora using distrobox.
+
+---
+
 ## Command-line interface
 
 See [docs/cli.md](docs/cli.md) for the full CLI reference, including all launch modes and error handling.
