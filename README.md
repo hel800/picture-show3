@@ -299,8 +299,13 @@ python install/linux/build.py
 
 Output: `install/linux/dist/installer/picture-show3-<version>-x86_64.AppImage`
 
-For broad distro compatibility the AppImage should be built on **Ubuntu 22.04**.
-See [docs/build-linux.md](docs/build-linux.md) for the full guide, including how to set up an Ubuntu 22.04 environment on Fedora using distrobox.
+**Build on your target distro.** Because picture-show3 uses Qt Quick for
+GPU-accelerated rendering, an AppImage built on Ubuntu will not work on Fedora
+and vice versa — the OpenGL/EGL stack is too tightly coupled to the host's GPU
+drivers. For multi-distro support, build once per distro in CI.
+
+See [docs/build-linux.md](docs/build-linux.md) for the full guide, including
+distrobox setup, all required system packages, and known limitations.
 
 ---
 

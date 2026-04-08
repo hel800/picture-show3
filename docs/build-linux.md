@@ -1,7 +1,7 @@
 # Building the Linux AppImage
 
-picture-show3 ships as a self-contained [AppImage](https://appimage.org/) on Linux —
-a single executable file that runs on any modern x86-64 distribution without installation.
+picture-show3 can be packaged as an [AppImage](https://appimage.org/) on Linux —
+a self-contained executable that requires no installation.
 
 The build pipeline is:
 1. Render `img/icon.svg` → `img/icon.png` (256 × 256)
@@ -11,59 +11,115 @@ The build pipeline is:
 
 ---
 
-## Portability and the Ubuntu 22.04 requirement
+## Cross-distro portability — what works and what doesn't
 
-AppImages link against the host system's glibc. Because glibc is
-**forward-compatible but not backward-compatible**, an AppImage built on a
-newer distro will refuse to run on an older one.
+AppImages solve the **glibc** portability problem by building on an old distro
+(Ubuntu 22.04, glibc 2.35 → runs on any distro since ~2020). However,
+picture-show3 uses **Qt Quick** for GPU-accelerated rendering, which introduces
+a second problem: the OpenGL/EGL/Vulkan stack must match the host's GPU drivers.
 
-Building on **Ubuntu 22.04 LTS** (glibc 2.35) hits the sweet spot: broad
-compatibility with any distro released since ~2020, while still being able to
-install Python 3.14 and PySide6 ≥ 6.7 from upstream sources.
+In practice:
+- An AppImage built on **Ubuntu 22.04** runs correctly on Ubuntu and Debian-based distros.
+- The same AppImage **fails to initialize OpenGL** on Fedora, because the
+  Qt libraries compiled on Ubuntu cannot work with Fedora's Mesa/EGL/Vulkan
+  stack, even when the bundled GPU libs are excluded from the bundle.
+- An AppImage built **on Fedora** runs correctly on Fedora.
+
+**Recommendation:** build the AppImage on your primary target distro.
+If you need to support multiple distros, build once per distro in CI
+(e.g. one GitHub Actions job on `ubuntu-22.04`, one on `fedora`).
 
 ---
 
-## Setting up Ubuntu 22.04 on Fedora with distrobox
+## Option A: Build on Fedora (recommended for Fedora users)
+
+No distrobox needed — build directly on the host.
+
+### 1. Check Python 3.14
+
+```bash
+python3.14 --version
+```
+
+If not available:
+```bash
+sudo dnf install python3.14
+```
+
+### 2. Install build tools
+
+```bash
+sudo dnf install binutils
+```
+
+### 3. Set up virtual environment
+
+From the project root:
+
+```bash
+python3.14 -m venv .venv-linux
+source .venv-linux/bin/activate
+pip install -r requirements.txt
+pip install -r install/linux/requirements-build.txt
+```
+
+### 4. Install appimagetool
+
+```bash
+mkdir -p ~/.local/bin
+wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage \
+    -O ~/.local/bin/appimagetool
+chmod +x ~/.local/bin/appimagetool
+# ensure ~/.local/bin is on PATH
+export PATH="$HOME/.local/bin:$PATH"
+```
+
+### 5. Build
+
+```bash
+source .venv-linux/bin/activate
+python install/linux/build.py
+```
+
+---
+
+## Option B: Build on Ubuntu 22.04 via distrobox (for Ubuntu/Debian targets)
 
 [distrobox](https://distrobox.it/) runs any distro as a rootless container
 while mounting your home directory — you build inside Ubuntu but work directly
 on your normal project files.
 
+### 1. Create the distrobox
+
 ```bash
-# Install distrobox (Fedora ships it in the default repos)
 sudo dnf install distrobox
 
-# Create an Ubuntu 22.04 container (one-time, pulls ~30 MB)
 distrobox create --name ubuntu22 --image ubuntu:22.04
-
-# Enter it — your home directory is already mounted
 distrobox enter ubuntu22
 ```
 
 All following commands run **inside the distrobox shell**.
 
----
-
-## One-time setup inside the Ubuntu 22.04 box
-
-### 1. Install system packages
+### 2. Install system packages
 
 ```bash
 sudo apt update
 sudo apt install -y \
     software-properties-common \
+    binutils \
+    libfuse2 \
     libgl1 libglib2.0-0 \
     libfontconfig1 libfreetype6 \
     libx11-6 libx11-xcb1 libxcb1 libxext6 libxrender1 \
-    libxkbcommon0 libxkbcommon-x11-0 \
+    libxkbcommon0 libxkbcommon-x11-0 libxcb-cursor0 \
     libegl1 libdbus-1-3
 ```
 
-These are the runtime X11/GL/font libraries that Qt requires. They are **not
-bundled** by PyInstaller — the AppImage relies on the host providing them
-(they are universally available on any desktop Linux system).
+> **`libfuse2`** is required to run `appimagetool` inside the container
+> (appimagetool is itself an AppImage). **`binutils`** is required by PyInstaller.
+> **`libxcb-cursor0`** is required by Qt's xcb platform plugin.
 
-### 2. Install Python 3.14
+### 3. Install Python 3.14
 
 Ubuntu 22.04 ships Python 3.10. Install 3.14 from the deadsnakes PPA:
 
@@ -73,11 +129,11 @@ sudo apt update
 sudo apt install -y python3.14 python3.14-venv python3.14-dev
 ```
 
-### 3. Create a virtual environment and install deps
+### 4. Create a virtual environment and install deps
+
+From the project root (already mounted from the host):
 
 ```bash
-cd ~/dev/picture-show3        # your project directory (already mounted)
-
 python3.14 -m venv .venv-linux
 source .venv-linux/bin/activate
 
@@ -85,32 +141,31 @@ pip install -r requirements.txt
 pip install -r install/linux/requirements-build.txt
 ```
 
-### 4. Install appimagetool
+### 5. Install appimagetool
 
 ```bash
+mkdir -p ~/.local/bin
 wget -q https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage \
     -O ~/.local/bin/appimagetool
 chmod +x ~/.local/bin/appimagetool
+export PATH="$HOME/.local/bin:$PATH"
 ```
 
-> **Note:** `~/.local/bin` must be on your `PATH`. Add
-> `export PATH="$HOME/.local/bin:$PATH"` to `~/.bashrc` if it isn't.
-
----
-
-## Building
-
-With the virtual environment active and from the project root:
+### 6. Build
 
 ```bash
-source .venv-linux/bin/activate   # if not already active
+source .venv-linux/bin/activate
 python install/linux/build.py
 ```
 
-The script runs all steps automatically and prints progress. On a typical
-laptop the full build takes about 2–4 minutes.
+> **Note:** The build script passes `APPIMAGE_EXTRACT_AND_RUN=1` to appimagetool
+> automatically. This is required inside containers where FUSE is not available —
+> it makes appimagetool extract itself to a temp dir instead of mounting via FUSE.
 
-**Output:**
+---
+
+## Build output
+
 ```
 install/linux/dist/installer/picture-show3-<version>-x86_64.AppImage
 ```
@@ -130,29 +185,6 @@ automatically after a successful build.
 
 ---
 
-## Manual steps
-
-If you prefer to run each step individually:
-
-```bash
-# 1. Generate icon
-python install/linux/make_icon.py
-
-# 2. Compile resources (shared with Windows build)
-python install/windows/compile_resources.py
-
-# 3. PyInstaller
-pyinstaller install/linux/picture-show3.spec \
-    --distpath install/linux/dist \
-    --workpath install/linux/build
-
-# 4–5. Assemble AppDir and pack (run build.py from step 4 onward,
-#       or do it by hand — see build.py for the exact file layout)
-python install/linux/build.py   # safe to re-run; skips PyInstaller if dist/ exists
-```
-
----
-
 ## Testing the AppImage
 
 ```bash
@@ -160,11 +192,23 @@ chmod +x install/linux/dist/installer/picture-show3-*.AppImage
 ./install/linux/dist/installer/picture-show3-*.AppImage
 ```
 
-To test on a different distro, copy the file there or mount it inside another
-distrobox:
+Make sure FUSE is installed on the host (required to mount the AppImage):
 
 ```bash
-distrobox create --name fedora40 --image fedora:40
-distrobox enter fedora40
-~/dev/picture-show3/install/linux/dist/installer/picture-show3-*.AppImage
+sudo dnf install fuse fuse-libs   # Fedora
+sudo apt install fuse             # Ubuntu/Debian
 ```
+
+---
+
+## Known limitations
+
+- **Cross-distro GPU rendering**: A Qt Quick AppImage built on Ubuntu will fail
+  to initialize OpenGL/EGL on Fedora (and vice versa), even with GPU libraries
+  excluded from the bundle. Build on your target distro.
+- **Software rendering fallback**: Running with `QT_QUICK_BACKEND=software`
+  works everywhere but disables GPU-accelerated transitions and blur effects.
+- **Flatpak as an alternative**: Flatpak solves the GPU problem via its sandboxed
+  Mesa runtime, but restricts filesystem access to `$HOME` by default —
+  photos on `/mnt/...` or `/run/media/...` network/USB drives would require
+  additional `--filesystem` permissions.
