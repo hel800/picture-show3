@@ -9,8 +9,11 @@ Run once before building with PyInstaller:
 Requires PySide6 (already a project dependency) and Pillow.
 """
 import io
+import os
 import sys
 from pathlib import Path
+
+os.environ.setdefault("QT_QPA_PLATFORM", "offscreen")
 
 from PySide6.QtCore import QBuffer, QIODeviceBase
 from PySide6.QtGui import QImage, QPainter

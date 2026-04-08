@@ -110,7 +110,7 @@ subprocess.run(
     [appimagetool, str(_appdir), str(_appimage)],
     check=True,
     cwd=ROOT,
-    env={**os.environ, "ARCH": "x86_64"},
+    env={**os.environ, "ARCH": "x86_64", "APPIMAGE_EXTRACT_AND_RUN": "1"},
 )
 
 # ── Step 6: Clean up intermediate build artefacts ────────────────────────────

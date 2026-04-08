@@ -94,6 +94,12 @@ a = Analysis(
 # ── Strip unwanted Qt shared libraries ────────────────────────────────────────
 # On Linux, Qt libs are named libQt6XYZ.so.6 — prefixes are lowercased below.
 _REMOVE_SO_PREFIXES = [
+    # GPU / graphics stack — must ALL come from the host to match its drivers.
+    # Bundling Ubuntu's versions breaks rendering on other distros (e.g. Fedora).
+    "libegl.so", "libgl.so", "libglx.so", "libgldispatch.so", "libopengl.so",
+    "libvulkan.so",     # Vulkan loader — must find host ICD drivers
+    "libdrm.so",        # Direct Rendering Manager
+    "libgbm.so",        # Generic Buffer Manager
     # WebEngine
     "libqt6webenginecore", "libqt6webenginequick", "libqt6webenginequickdelegatesqml",
     # PDF
