@@ -1,0 +1,10 @@
+#!/bin/bash
+# AppRun — entry point for the picture-show3 AppImage.
+# PyInstaller's bootloader already sets LD_LIBRARY_PATH to _internal/.
+# We only need to help Qt find its platform plugins inside the bundle.
+SELF=$(readlink -f "$0")
+HERE=$(dirname "$SELF")
+
+export QT_QPA_PLATFORM_PLUGIN_PATH="${HERE}/_internal/PySide6/Qt/plugins/platforms"
+
+exec "${HERE}/picture-show3" "$@"
