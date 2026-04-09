@@ -3,7 +3,8 @@
 ## Synopsis
 
 ```
-python main.py [--kiosk] [<picture_dir>]
+python main.py [options] [<picture_dir>]
+python main.py --kiosk [options] <picture_dir>
 ```
 
 ## Arguments
@@ -13,6 +14,24 @@ python main.py [--kiosk] [<picture_dir>]
 | `<picture_dir>` | No | Path to a folder of images to load on startup |
 | `--kiosk` | No | Enable kiosk mode (requires `<picture_dir>`) |
 | `--help`, `-h` | No | Print a usage summary and exit |
+
+## Show options
+
+These flags override the corresponding setting and **persist to the INI file** immediately — backing out to the settings page and restarting the show will use the same values.
+
+| Option | Description |
+|---|---|
+| `--autoplay [N]` | Enable autoplay; optionally set the interval to `N` seconds (1–99). Without `N` the last saved interval is kept. |
+| `--transition T` | Set the transition style: `fade` · `slide` · `zoom` · `fadeblack` |
+| `--transition-dur MS` | Set the transition duration in milliseconds (100–3000) |
+| `--sort S` | Set the sort order: `name` · `date` · `random` |
+| `--scale MODE` | Set the image scale mode: `fit` · `fill` |
+| `--auto-panorama` | Enable automatic panorama sweep for wide images during autoplay |
+| `--no-auto-panorama` | Disable automatic panorama sweep |
+| `--recursive` | Enable recursive subfolder scanning |
+| `--loop` | Enable looping at the end of the show |
+| `--no-loop` | Disable looping |
+| `--fullscreen` | Start in fullscreen regardless of the last saved window state |
 
 ## Modes
 
@@ -30,6 +49,7 @@ Starts with the settings page. The last used folder is restored from history.
 
 ```bash
 python main.py <picture_dir>
+python main.py --autoplay 5 --transition slide --sort date <picture_dir>
 ```
 
 Loads `<picture_dir>` and launches the slideshow immediately — the settings page
@@ -48,6 +68,7 @@ restored when the settings page is displayed.
 
 ```bash
 python main.py --kiosk <picture_dir>
+python main.py --kiosk --recursive --loop --auto-panorama --autoplay 10 <picture_dir>
 ```
 
 Designed for unattended display installations. Loads `<picture_dir>` and launches
