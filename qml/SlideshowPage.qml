@@ -153,11 +153,18 @@ Rectangle {
         onStopped: root._checkPendingPanorama()
     }
 
-    // Slide
-    ParallelAnimation {
+    // Slide — zoom-out → slide → zoom-in
+    SequentialAnimation {
         id: slideAnim
-        NumberAnimation { id: slideInAnim;  property: "x"; duration: root.transDur; easing.type: Easing.InOutCubic }
-        NumberAnimation { id: slideOutAnim; property: "x"; duration: root.transDur; easing.type: Easing.InOutCubic }
+        // Phase 1: outgoing layer zooms out slightly
+        NumberAnimation { id: slideZoomOut; property: "scale"; to: 0.90; easing.type: Easing.OutCubic }
+        // Phase 2: both layers slide simultaneously
+        ParallelAnimation {
+            NumberAnimation { id: slideInAnim;  property: "x"; easing.type: Easing.InOutCubic }
+            NumberAnimation { id: slideOutAnim; property: "x"; easing.type: Easing.InOutCubic }
+        }
+        // Phase 3: incoming layer zooms back to full size
+        NumberAnimation { id: slideZoomIn; property: "scale"; to: 1.0; easing.type: Easing.OutCubic }
         onStopped: root._checkPendingPanorama()
     }
 
@@ -278,15 +285,30 @@ Rectangle {
         var style = controller.transitionStyle
 
         if (style === "slide") {
-            inc.opacity = 1; inc.x = navDir * root.width; inc.scale = 1
-            out.opacity = 1; out.x = 0;                   out.scale = 1
+            var zoomDur  = Math.round(root.transDur * 0.20)
+            var slideDur = root.transDur - 2 * zoomDur
 
-            slideInAnim.target  = inc
-            slideInAnim.from    = navDir * root.width
-            slideInAnim.to      = 0
-            slideOutAnim.target = out
-            slideOutAnim.from   = 0
-            slideOutAnim.to     = -navDir * root.width
+            // Incoming starts off-screen at the zoom-out scale so it slides in already small
+            inc.opacity = 1; inc.x = navDir * root.width; inc.scale = 0.90
+            out.opacity = 1; out.x = 0;                   out.scale = 1.0
+
+            slideZoomOut.target   = out
+            slideZoomOut.from     = 1.0
+            slideZoomOut.duration = zoomDur
+
+            slideInAnim.target    = inc
+            slideInAnim.from      = navDir * root.width
+            slideInAnim.to        = 0
+            slideInAnim.duration  = slideDur
+            slideOutAnim.target   = out
+            slideOutAnim.from     = 0
+            slideOutAnim.to       = -navDir * root.width
+            slideOutAnim.duration = slideDur
+
+            slideZoomIn.target    = inc
+            slideZoomIn.from      = 0.90
+            slideZoomIn.duration  = zoomDur
+
             slideAnim.start()
 
         } else if (style === "zoom") {
