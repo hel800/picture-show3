@@ -4,23 +4,23 @@
 <context>
     <name>AdvancedSettingsDialog</name>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="246"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="249"/>
         <source>ADVANCED SETTINGS</source>
         <translation>PARAMÈTRES AVANCÉS</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="370"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="373"/>
         <source>TRANSITION</source>
         <translation>TRANSITION</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="379"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="382"/>
         <source>Duration</source>
         <translation>Durée</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="279"/>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="619"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="282"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="697"/>
         <source>HUD</source>
         <translation>HUD</translation>
     </message>
@@ -29,187 +29,212 @@
         <translation type="vanished">Général</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="279"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="282"/>
         <source>Controls</source>
         <translation>Contrôles</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="279"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="282"/>
         <source>Remote</source>
         <translation>Télécommande</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="314"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="317"/>
         <source>sections</source>
         <translation>sections</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="318"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="321"/>
         <source>option</source>
         <translation>option</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="322"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="325"/>
         <source>change</source>
         <translation>modifier</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1123"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1201"/>
         <source>UPDATES</source>
         <translation>MISES À JOUR</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1134"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1212"/>
         <source>Check for updates on startup</source>
         <translation>Vérifier les mises à jour au démarrage</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1135"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1213"/>
         <source>Checks GitHub Releases for a newer version</source>
         <translation>Vérifie les nouvelles versions sur GitHub Releases</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="442"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="445"/>
         <source>IMAGE SCALE</source>
         <translation>MISE À L&apos;ÉCHELLE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="279"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="282"/>
         <source>Show</source>
         <translation>Show</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="279"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="282"/>
         <source>Misc</source>
         <translation>Divers</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="453"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="456"/>
         <source>Image scale</source>
         <translation>Mise à l&apos;échelle</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="454"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="457"/>
         <source>How images are scaled to fit the window</source>
         <translation>Mise à l&apos;échelle de l&apos;image dans la fenêtre</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="461"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="464"/>
         <source>Fit</source>
         <translation>Ajuster</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="462"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="465"/>
         <source>Fill</source>
         <translation>Remplir</translation>
     </message>
     <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="532"/>
+        <source>AUTO PANORAMA</source>
+        <translation>PANORAMA AUTO</translation>
+    </message>
+    <message>
         <location filename="../qml/AdvancedSettingsDialog.qml" line="543"/>
+        <source>Auto panorama</source>
+        <translation>Panorama automatique</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="544"/>
+        <source>Automatically pan wide images during autoplay</source>
+        <translation>Faire défiler automatiquement les images larges pendant le diaporama</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="551"/>
+        <source>Off</source>
+        <translation>Non</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="552"/>
+        <source>On</source>
+        <translation>Oui</translation>
+    </message>
+    <message>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="621"/>
         <source>MOUSE</source>
         <translation>SOURIS</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="554"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="632"/>
         <source>Mouse button navigation</source>
         <translation>Navigation à la souris</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="555"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="633"/>
         <source>Left click → next  ·  Right click → previous</source>
         <translation>Clic gauche → suivant  ·  Clic droit → précédent</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="630"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="708"/>
         <source>Size</source>
         <translation>Taille</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="631"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="709"/>
         <source>Applied on top of the global UI scale</source>
         <translation>Appliqué en plus de l&apos;échelle globale de l&apos;interface</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="693"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="771"/>
         <source>HUD STYLE</source>
         <translation>STYLE DU HUD</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="704"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="782"/>
         <source>HUD style</source>
         <translation>Style du HUD</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="705"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="783"/>
         <source>Bar: slim and unobtrusive. Floating: larger, more prominent.</source>
         <translation>Barre : fine et discrète. Flottant : plus grande, plus visible.</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="712"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="790"/>
         <source>Bar</source>
         <translation>Barre</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="713"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="791"/>
         <source>Floating</source>
         <translation>Flottant</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="794"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="872"/>
         <source>SMARTPHONE REMOTE</source>
         <translation>TÉLÉCOMMANDE SMARTPHONE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="803"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="881"/>
         <source>Enable remote control</source>
         <translation>Activer la télécommande</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="854"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="932"/>
         <source>PORT</source>
         <translation>PORT</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="863"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="941"/>
         <source>Port</source>
         <translation>Port</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="971"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1049"/>
         <source>UI SCALE</source>
         <translation>ÉCHELLE DE L&apos;INTERFACE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="982"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1060"/>
         <source>Global UI scale factor</source>
         <translation>Facteur d&apos;échelle global de l&apos;interface</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="983"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1061"/>
         <source>Scales all menus, dialogs, and controls</source>
         <translation>Redimensionne tous les menus, dialogues et contrôles</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1019"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1097"/>
         <source>⚠  Restart the app to apply the scale change.</source>
         <translation>⚠  Redémarrez l&apos;application pour appliquer le changement d&apos;échelle.</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1054"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1132"/>
         <source>LANGUAGE</source>
         <translation>LANGUE</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1075"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1153"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1089"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1167"/>
         <source>⚠  Restart the app to apply the language change.</source>
         <translation>⚠  Redémarrez l&apos;application pour appliquer le changement de langue.</translation>
     </message>
     <message>
-        <location filename="../qml/AdvancedSettingsDialog.qml" line="1174"/>
+        <location filename="../qml/AdvancedSettingsDialog.qml" line="1252"/>
         <source>Done</source>
         <translation>Fermer</translation>
     </message>
@@ -749,114 +774,114 @@
 <context>
     <name>SlideshowController</name>
     <message>
-        <location filename="../slideshow_controller.py" line="472"/>
+        <location filename="../slideshow_controller.py" line="477"/>
         <source>Folder not found: {}</source>
         <translation>Dossier introuvable : {}</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="893"/>
+        <location filename="../slideshow_controller.py" line="904"/>
         <source>Not defined</source>
         <translation>Non défini</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="894"/>
+        <location filename="../slideshow_controller.py" line="905"/>
         <source>Manual</source>
         <translation>Manuel</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="895"/>
+        <location filename="../slideshow_controller.py" line="906"/>
         <source>Auto</source>
         <translation>Auto</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="896"/>
+        <location filename="../slideshow_controller.py" line="907"/>
         <source>Aperture priority</source>
         <translation>Priorité ouverture</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="897"/>
+        <location filename="../slideshow_controller.py" line="908"/>
         <source>Shutter priority</source>
         <translation>Priorité vitesse</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="898"/>
+        <location filename="../slideshow_controller.py" line="909"/>
         <source>Creative</source>
         <translation>Créatif</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="899"/>
+        <location filename="../slideshow_controller.py" line="910"/>
         <source>Action</source>
         <translation>Action</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="900"/>
+        <location filename="../slideshow_controller.py" line="911"/>
         <source>Portrait</source>
         <translation>Portrait</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="901"/>
+        <location filename="../slideshow_controller.py" line="912"/>
         <source>Landscape</source>
         <translation>Paysage</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="930"/>
+        <location filename="../slideshow_controller.py" line="941"/>
         <source>Camera</source>
         <translation>Appareil</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="937"/>
+        <location filename="../slideshow_controller.py" line="948"/>
         <source>Aperture</source>
         <translation>Ouverture</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="948"/>
-        <location filename="../slideshow_controller.py" line="950"/>
+        <location filename="../slideshow_controller.py" line="959"/>
+        <location filename="../slideshow_controller.py" line="961"/>
         <source>Shutter</source>
         <translation>Vitesse</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="960"/>
+        <location filename="../slideshow_controller.py" line="971"/>
         <source>ISO</source>
         <translation>ISO</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="968"/>
+        <location filename="../slideshow_controller.py" line="979"/>
         <source>Focal length</source>
         <translation>Focale</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="975"/>
+        <location filename="../slideshow_controller.py" line="986"/>
         <source>Exposure</source>
         <translation>Programme</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="981"/>
+        <location filename="../slideshow_controller.py" line="992"/>
         <source>Flash</source>
         <translation>Flash</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="981"/>
+        <location filename="../slideshow_controller.py" line="992"/>
         <source>Fired</source>
         <translation>Déclenché</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="981"/>
+        <location filename="../slideshow_controller.py" line="992"/>
         <source>Did not fire</source>
         <translation>Non déclenché</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="989"/>
-        <location filename="../slideshow_controller.py" line="991"/>
+        <location filename="../slideshow_controller.py" line="1000"/>
+        <location filename="../slideshow_controller.py" line="1002"/>
         <source>Dimensions</source>
         <translation>Dimensions</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="1064"/>
+        <location filename="../slideshow_controller.py" line="1075"/>
         <source>Could not save rating: %1</source>
         <translation>Impossible d&apos;enregistrer la note : %1</translation>
     </message>
     <message>
-        <location filename="../slideshow_controller.py" line="1266"/>
+        <location filename="../slideshow_controller.py" line="1277"/>
         <source>Could not save caption: %1</source>
         <translation>Impossible d&apos;enregistrer la légende : %1</translation>
     </message>
@@ -880,120 +905,120 @@
         <translation type="vanished">Lecture (%1 s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1061"/>
+        <location filename="../qml/SlideshowPage.qml" line="1126"/>
         <source>Auto play</source>
         <translation>Lecture auto</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1070"/>
-        <location filename="../qml/SlideshowPage.qml" line="1072"/>
+        <location filename="../qml/SlideshowPage.qml" line="1135"/>
+        <location filename="../qml/SlideshowPage.qml" line="1137"/>
         <source>Timer: %1 s</source>
         <translation>Minuterie : %1 s</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1073"/>
+        <location filename="../qml/SlideshowPage.qml" line="1138"/>
         <source>Pause</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1073"/>
+        <location filename="../qml/SlideshowPage.qml" line="1138"/>
         <source>Last image</source>
         <translation>Dernière image</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1103"/>
+        <location filename="../qml/SlideshowPage.qml" line="1168"/>
         <source>start</source>
         <translation>démarrer</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1220"/>
+        <location filename="../qml/SlideshowPage.qml" line="1285"/>
         <source>JUMP TO IMAGE</source>
         <translation>ALLER À L&apos;IMAGE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1285"/>
+        <location filename="../qml/SlideshowPage.qml" line="1350"/>
         <source>go</source>
         <translation>aller</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1288"/>
-        <location filename="../qml/SlideshowPage.qml" line="1446"/>
-        <location filename="../qml/SlideshowPage.qml" line="1574"/>
+        <location filename="../qml/SlideshowPage.qml" line="1353"/>
+        <location filename="../qml/SlideshowPage.qml" line="1511"/>
+        <location filename="../qml/SlideshowPage.qml" line="1639"/>
         <source>cancel</source>
         <translation>annuler</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1399"/>
+        <location filename="../qml/SlideshowPage.qml" line="1464"/>
         <source>RATE IMAGE</source>
         <translation>NOTER L&apos;IMAGE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1408"/>
+        <location filename="../qml/SlideshowPage.qml" line="1473"/>
         <source>Remove rating</source>
         <translation>Supprimer la note</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1409"/>
+        <location filename="../qml/SlideshowPage.qml" line="1474"/>
         <source>%1 star(s)</source>
         <translation>%1 étoile(s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1443"/>
+        <location filename="../qml/SlideshowPage.qml" line="1508"/>
         <source>confirm</source>
         <translation>confirmer</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1448"/>
+        <location filename="../qml/SlideshowPage.qml" line="1513"/>
         <source>0–5 change</source>
         <translation>0–5 modifier</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1514"/>
+        <location filename="../qml/SlideshowPage.qml" line="1579"/>
         <source>EDIT CAPTION</source>
         <translation>MODIFIER LA LÉGENDE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1571"/>
+        <location filename="../qml/SlideshowPage.qml" line="1636"/>
         <source>save</source>
         <translation>enregistrer</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1577"/>
+        <location filename="../qml/SlideshowPage.qml" line="1642"/>
         <source>copy prev caption</source>
         <translation>Copier légende préc.</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1665"/>
+        <location filename="../qml/SlideshowPage.qml" line="1730"/>
         <source>Exit Application</source>
         <translation>Quitter l&apos;application</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1672"/>
+        <location filename="../qml/SlideshowPage.qml" line="1737"/>
         <source>Do you want to exit the application?</source>
         <translation>Voulez-vous quitter l&apos;application ?</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1698"/>
+        <location filename="../qml/SlideshowPage.qml" line="1763"/>
         <source>Yes</source>
         <translation>Oui</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1721"/>
+        <location filename="../qml/SlideshowPage.qml" line="1786"/>
         <source>No</source>
         <translation>Non</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="585"/>
+        <location filename="../qml/SlideshowPage.qml" line="630"/>
         <source>Rating</source>
         <translation>Évaluation</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="589"/>
+        <location filename="../qml/SlideshowPage.qml" line="634"/>
         <source>Date taken</source>
         <translation>Date de prise de vue</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="592"/>
+        <location filename="../qml/SlideshowPage.qml" line="637"/>
         <source>Caption</source>
         <translation>Légende</translation>
     </message>
