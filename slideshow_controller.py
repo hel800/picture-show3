@@ -152,6 +152,7 @@ class SlideshowController(QObject):
         self._update_check_enabled = s.value("updateCheckEnabled", True,  type=bool)
         self._image_fill           = s.value("imageFill",          False, type=bool)
         self._recursive            = s.value("recursive",          False, type=bool)
+        self._auto_panorama        = s.value("autoPanorama",        False, type=bool)
 
         # QSettings returns a str for single-item lists, list for multiple
         raw = s.value("folderHistory", [])
@@ -192,6 +193,7 @@ class SlideshowController(QObject):
         s.setValue("updateCheckEnabled", self._update_check_enabled)
         s.setValue("imageFill",          self._image_fill)
         s.setValue("recursive",          self._recursive)
+        s.setValue("autoPanorama",       self._auto_panorama)
         s.setValue("folderHistory",      self._folder_history)
 
     # ── Properties ───────────────────────────────────────────────────────────
@@ -263,6 +265,9 @@ class SlideshowController(QObject):
 
     @Property(bool, notify=settingsChanged)
     def imageFill(self) -> bool: return self._image_fill
+
+    @Property(bool, notify=settingsChanged)
+    def autoPanorama(self) -> bool: return self._auto_panorama
 
     @Property(bool, notify=settingsChanged)
     def recursiveSearch(self) -> bool: return self._recursive
@@ -774,6 +779,12 @@ class SlideshowController(QObject):
     @Slot(bool)
     def setImageFill(self, fill: bool) -> None:
         self._image_fill = fill
+        self._save_settings()
+        self.settingsChanged.emit()
+
+    @Slot(bool)
+    def setAutoPanorama(self, enabled: bool) -> None:
+        self._auto_panorama = enabled
         self._save_settings()
         self.settingsChanged.emit()
 

@@ -51,6 +51,8 @@ Rectangle {
     property var  _panoLayer          : null    // the layer currently being animated
     property real _panoScrollRange     : 0       // pre-computed at panorama start, stable even if image reloads
     property bool _pendingPanorama     : false   // P pressed during a transition — start panorama when transition finishes
+    property bool _autoPanoramaActive  : false   // true while auto-panorama single-sweep is running
+    property bool _autoPanoramaSkip   : false   // true after user cancels auto-panorama; reset on next image
     // When true, forces both images to PreserveAspectFit regardless of the
     // imageFill setting.  Used by fill-mode panorama so the full image width
     // is available for scrolling.  Avoids Qt.binding() closures whose
@@ -113,6 +115,7 @@ Rectangle {
             smooth: true
             mipmap: true
             cache: false
+            onStatusChanged: if (status === Image.Ready && root.showingA) root._tryAutoPanorama()
         }
     }
 
@@ -131,6 +134,7 @@ Rectangle {
             smooth: true
             mipmap: true
             cache: false
+            onStatusChanged: if (status === Image.Ready && !root.showingA) root._tryAutoPanorama()
         }
     }
 
@@ -138,6 +142,7 @@ Rectangle {
 
     function _checkPendingPanorama() {
         if (root._pendingPanorama) { root._pendingPanorama = false; startPanorama() }
+        else root._tryAutoPanorama()
     }
 
     // Fade
@@ -184,7 +189,15 @@ Rectangle {
         id: scrollRightAnim
         property: "x"
         easing.type: Easing.InOutSine
-        onStopped: if (root.panoramaActive && !root._panoCleanupPending) root._panoramaScrollLeft()
+        onStopped: {
+            if (!root.panoramaActive || root._panoCleanupPending) return
+            if (root._autoPanoramaActive) {
+                root._autoPanoramaActive = false
+                stopPanorama()
+            } else {
+                root._panoramaScrollLeft()
+            }
+        }
     }
     NumberAnimation {
         id: scrollLeftAnim
@@ -318,6 +331,10 @@ Rectangle {
                 showImage(true)
         }
         function onCurrentIndexChanged() {
+            // Only clear the skip flag for forward navigation (RIGHT key, autoplay, remote next).
+            // Backward navigation (LEFT key) keeps it set so auto panorama is suppressed.
+            // navDir is reset to 1 below so autoplay always counts as forward on the next call.
+            if (root.navDir >= 0) root._autoPanoramaSkip = false
             if (root.panoramaActive) _panoramaAbort()
             if (root._exifVisible) {
                 exifPanel.close()
@@ -338,6 +355,15 @@ Rectangle {
             }
             root._pendingPanorama = false
             showImage(true)
+            root.navDir = 1   // reset so autoplay advance always counts as forward
+        }
+        function onIsPlayingChanged() {
+            // When autoplay is toggled on while a panorama-suitable image is already
+            // displayed (e.g. Space key pressed in slideshow), trigger auto panorama.
+            // Must respect _suppressPlayAnim: panorama start/exit call togglePlay()
+            // with that flag set — firing _tryAutoPanorama() mid-sequence would
+            // immediately start a new panorama and corrupt the autoplay state.
+            if (controller.isPlaying && !root._suppressPlayAnim) root._tryAutoPanorama()
         }
         function onRatingWritten(index) {
             // Restore the binding so HUD still tracks future navigations
@@ -453,14 +479,32 @@ Rectangle {
         if (root.panoramaActive) {
             switch (event.key) {
             case Qt.Key_P:
+                root._autoPanoramaActive = false
+                root._autoPanoramaSkip = true   // don't restart on same image
+                stopPanorama()
+                break
             case Qt.Key_Escape:
+                // Cancel panorama and stay on current image (no auto-advance).
+                root._autoPanoramaActive = false
+                root._autoPanoramaSkip = true   // don't restart on same image
+                root._pendingNav = 0
                 stopPanorama()
                 break
             case Qt.Key_Right:
-                if (root._pendingNav === 0) { root._pendingNav = 1;  stopPanorama() }
+                // Always allow navigating forward even during auto panorama.
+                if (!root._panoCleanupPending) {
+                    root._autoPanoramaActive = false
+                    root._pendingNav = 1
+                    stopPanorama()
+                }
                 break
             case Qt.Key_Left:
-                if (root._pendingNav === 0) { root._pendingNav = -1; stopPanorama() }
+                // Always allow navigating backward even during auto panorama.
+                if (!root._panoCleanupPending) {
+                    root._autoPanoramaActive = false
+                    root._pendingNav = -1
+                    stopPanorama()
+                }
                 break
             case Qt.Key_I:
                 root.hudVisible = !root.hudVisible
@@ -510,6 +554,7 @@ Rectangle {
             break
         case Qt.Key_Left:
             navDir = -1
+            root._autoPanoramaSkip = true   // don't auto-pan when going backward
             controller.prevImage()
             break
         case Qt.Key_Space:
@@ -777,6 +822,25 @@ Rectangle {
         }
     }
 
+    // Called after each transition and after an image finishes loading.
+    // Starts a single-sweep auto panorama when all conditions are met.
+    function _tryAutoPanorama() {
+        if (!controller.autoPanorama) return
+        if (!controller.isPlaying) return
+        if (root._autoPanoramaSkip) return
+        if (root.panoramaActive || root._panoCleanupPending || root._autoPanoramaActive) return
+        // Bail if a transition is still in progress — _checkPendingPanorama will re-try.
+        if (fadeAnim.running || slideAnim.running || zoomAnim.running || fadeBlackAnim.running) return
+        var img = root.showingA ? imgA : imgB
+        if (img.implicitWidth <= 0 || img.implicitHeight <= 0) return
+        if (img.implicitWidth / img.implicitHeight < root.width / root.height * 1.3) return
+        root._autoPanoramaActive = true
+        startPanorama()
+        // startPanorama() resets _pendingNav to 0 and captures _panoWasPlaying.
+        // Override: always advance to next image when the sweep ends.
+        root._pendingNav = 1
+    }
+
     function startPanorama() {
         var img = showingA ? imgA : imgB
         if (img.implicitWidth <= 0 || img.implicitHeight <= 0) return
@@ -845,6 +909,7 @@ Rectangle {
 
     function _panoramaAbort() {
         root._panoCleanupPending = false
+        root._autoPanoramaActive = false
         root.panoramaActive = false      // must be first — guards onStopped from restarting scroll
         panoramaEnterAnim.stop()
         scrollRightAnim.stop()

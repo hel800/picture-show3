@@ -28,8 +28,8 @@ BasePopup {
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: Show=[duration,imageScale] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[uiScale,language,updateCheck]
-    readonly property var _optionCounts: [2, 1, 2, 2, 3]
+    // Options per section: Show=[duration,imageScale,autoPanorama] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[uiScale,language,updateCheck]
+    readonly property var _optionCounts: [3, 1, 2, 2, 3]
 
     // Returns false for options that are currently inactive and should be skipped
     function _optionEnabled(section, option) {
@@ -50,7 +50,7 @@ BasePopup {
         var item  = null
         if (root._section === 0) {
             flick = genScroll.contentItem
-            var g = [gen0Item, gen1Item]
+            var g = [gen0Item, gen1Item, gen2Item]
             item = g[root._focusedOption]
         } else if (root._section === 1) {
             flick = ctrlScroll.contentItem
@@ -194,6 +194,9 @@ BasePopup {
 
                     } else if (root._isOptionFocused(0, 1)) {
                         controller.setImageFill(d > 0)
+
+                    } else if (root._isOptionFocused(0, 2)) {
+                        controller.setAutoPanorama(d > 0)
 
                     } else if (root._isOptionFocused(4, 0)) {
                         controller.setUiScale(
@@ -491,6 +494,81 @@ BasePopup {
                                                 id: scaleArea; anchors.fill: parent; hoverEnabled: true
                                                 cursorShape: Qt.PointingHandCursor
                                                 onClicked: controller.setImageFill(modelData.fill)
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+
+                    // Option 2: Auto Panorama ────────────────────────────────
+                    Item {
+                        id: gen2Item
+                        Layout.fillWidth: true
+                        implicitHeight: gen2Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(0, 2)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: gen2Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(0, 2)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("AUTO PANORAMA")
+                                    color: root._isOptionFocused(0, 2)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 4; spacing: 12
+                                Column {
+                                    spacing: 2
+                                    Text { text: qsTr("Auto panorama"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                    Text { text: qsTr("Automatically pan wide images during autoplay"); color: Theme.textMuted; font.pixelSize: 11 }
+                                }
+                                Item { Layout.fillWidth: true }
+                                Row {
+                                    spacing: 8
+                                    Repeater {
+                                        model: [
+                                            { label: qsTr("Off"), value: false },
+                                            { label: qsTr("On"),  value: true  }
+                                        ]
+                                        delegate: Rectangle {
+                                            width: 52; height: 34; radius: 10
+                                            color: controller.autoPanorama === modelData.value
+                                                   ? Theme.accentDeep
+                                                   : (panoArea.containsMouse ? Theme.surfaceHover : Theme.surface)
+                                            border.color: controller.autoPanorama === modelData.value ? Theme.accent : "transparent"
+                                            border.width: 1
+                                            Behavior on color { ColorAnimation { duration: 150 } }
+                                            Text {
+                                                anchors.centerIn: parent
+                                                text: modelData.label; font.pixelSize: 12
+                                                color: controller.autoPanorama === modelData.value
+                                                       ? Theme.textPrimary : Theme.textMuted
+                                            }
+                                            MouseArea {
+                                                id: panoArea; anchors.fill: parent; hoverEnabled: true
+                                                cursorShape: Qt.PointingHandCursor
+                                                onClicked: controller.setAutoPanorama(modelData.value)
                                             }
                                         }
                                     }
