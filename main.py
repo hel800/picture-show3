@@ -210,18 +210,33 @@ _HELP = f"""\
 picture-show3 {APP_VERSION} - full-screen photo slideshow
 
 Usage:
-  python main.py                        Open the settings page (normal mode)
-  python main.py <picture_dir>          Jump-start: launch the show directly
-  python main.py --kiosk <picture_dir>  Kiosk mode: unattended display
+  python main.py [options] [<picture_dir>]
+  python main.py --kiosk [options] <picture_dir>
 
 Arguments:
   <picture_dir>   Path to a folder containing images to display.
                   Supported formats: jpg jpeg png gif bmp webp tiff tif heic avif
 
-Options:
+Mode options:
   --kiosk         Kiosk mode - the settings page is never shown.
                   Esc opens a quit confirmation dialog instead of going to settings.
                   Exits with an error if the folder contains no supported images.
+
+Show options (stored to settings, persist across sessions):
+  --autoplay [N]       Enable autoplay; optionally set the interval to N seconds (1–99).
+                       Without N the last saved interval is kept.
+  --transition T       Set the transition style: fade | slide | zoom | fadeblack
+  --transition-dur MS  Set the transition duration in milliseconds (100–3000).
+  --sort S             Set the sort order: name | date | random
+  --scale MODE         Set the image scale mode: fit | fill
+  --auto-panorama      Enable automatic panorama sweep for wide images during autoplay.
+  --no-auto-panorama   Disable automatic panorama sweep.
+  --recursive          Enable recursive subfolder scanning.
+  --loop               Enable looping at the end of the show.
+  --no-loop            Disable looping.
+  --fullscreen         Start in fullscreen regardless of the last saved window state.
+
+General:
   --help, -h      Show this help message and exit.
 
 Modes:
@@ -240,48 +255,84 @@ Modes:
 Examples:
   python main.py
   python main.py "C:\\Users\\me\\Pictures\\Vacation"
-  python main.py --kiosk /mnt/photos
+  python main.py --autoplay 5 --transition slide --fullscreen /mnt/photos
+  python main.py --sort date --scale fill --transition-dur 400 /mnt/photos
+  python main.py --kiosk --recursive --loop --auto-panorama /mnt/photos
 
 Full CLI reference: docs/cli.md
 """
 
 
-def _parse_args() -> tuple[str | None, str | None, list[str]]:
+def _parse_args() -> tuple[str | None, str | None, bool, dict, list[str]]:
     """
-    Parse optional flags and an optional positional <picture_dir> from sys.argv.
+    Parse CLI arguments.
 
-    Supported flags:
-      --help / -h      Print help and exit.
-      --kiosk <path>   Start in kiosk mode with the given folder (path required).
+    Returns (kiosk_folder, start_folder, force_fullscreen, overrides, qt_argv).
 
-    Positional argument (last non-flag arg after the script name):
-      <path>           Start the show directly with the given folder (normal mode).
-
-    Returns (kiosk_folder, start_folder, cleaned_argv).
-    Exactly one of kiosk_folder / start_folder is non-None when a folder is given.
+    overrides  – dict of settings to write to QSettings before the controller
+                 reads them: keys match QSettings keys ('autoplay', 'interval',
+                 'transition', 'recursive', 'loop').
+    qt_argv    – cleaned sys.argv passed to QGuiApplication (unknown flags
+                 forwarded so Qt's own flag handling still works).
     """
-    if "--help" in sys.argv or "-h" in sys.argv:
+    import argparse
+
+    parser = argparse.ArgumentParser(prog="picture-show3", add_help=False)
+    parser.add_argument("folder", nargs="?", default=None, metavar="picture_dir")
+    parser.add_argument("--kiosk",      action="store_true", default=False)
+    parser.add_argument("--help", "-h", action="store_true")
+    parser.add_argument(
+        "--autoplay", nargs="?", const=-1, type=int, metavar="SECONDS",
+        help="Enable autoplay; optionally set interval in seconds (1–99)",
+    )
+    parser.add_argument(
+        "--transition", choices=["fade", "slide", "zoom", "fadeblack"], default=None,
+    )
+    parser.add_argument(
+        "--transition-dur", type=int, metavar="MS", default=None,
+    )
+    parser.add_argument(
+        "--sort", choices=["name", "date", "random"], default=None,
+    )
+    parser.add_argument(
+        "--scale", choices=["fit", "fill"], default=None,
+    )
+    parser.add_argument("--auto-panorama", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--recursive",     action="store_true", default=False)
+    parser.add_argument("--loop",          action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument("--fullscreen",    action="store_true", default=False)
+
+    args, remaining = parser.parse_known_args(sys.argv[1:])
+
+    if args.help:
         print(_HELP, end="")
         sys.exit(0)
 
-    argv = list(sys.argv)
-    kiosk_folder: str | None = None
+    kiosk_folder: str | None = args.folder if args.kiosk else None
+    start_folder: str | None = args.folder if not args.kiosk else None
 
-    for i, arg in enumerate(argv):
-        if arg == "--kiosk" and i + 1 < len(argv):
-            kiosk_folder = argv[i + 1]
-            del argv[i:i + 2]
-            break
+    overrides: dict = {}
+    if args.autoplay is not None:
+        overrides["autoplay"] = True
+        if args.autoplay > 0:
+            overrides["interval"] = args.autoplay * 1000
+    if args.transition is not None:
+        overrides["transition"] = args.transition
+    if args.transition_dur is not None:
+        overrides["transitionDuration"] = max(100, min(3000, args.transition_dur))
+    if args.sort is not None:
+        overrides["sort"] = args.sort
+    if args.scale is not None:
+        overrides["imageFill"] = (args.scale == "fill")
+    if args.auto_panorama is not None:
+        overrides["autoPanorama"] = args.auto_panorama
+    if args.recursive:
+        overrides["recursive"] = True
+    if args.loop is not None:
+        overrides["loop"] = args.loop
 
-    start_folder: str | None = None
-    if kiosk_folder is None and len(argv) > 1:
-        # Accept the last argument as the picture directory if it doesn't look like a flag.
-        last = argv[-1]
-        if not last.startswith("-") and last != argv[0]:
-            start_folder = last
-            argv = argv[:-1]
-
-    return kiosk_folder, start_folder, argv
+    qt_argv = [sys.argv[0]] + remaining
+    return kiosk_folder, start_folder, args.fullscreen, overrides, qt_argv
 
 
 def main() -> None:
@@ -296,17 +347,28 @@ def main() -> None:
     # Force a non-native style so custom Slider background/handle work on all platforms
     QQuickStyle.setStyle("Basic")
 
-    kiosk_folder, start_folder, argv = _parse_args()
+    kiosk_folder, start_folder, force_fullscreen, overrides, argv = _parse_args()
     if kiosk_folder is not None and not Path(kiosk_folder).is_dir():
         print(f"Error: kiosk folder does not exist: {kiosk_folder}", file=sys.stderr)
         sys.exit(1)
     if start_folder is not None and not Path(start_folder).is_dir():
         print(f"Error: folder does not exist: {start_folder}", file=sys.stderr)
         sys.exit(1)
+
     QImageReader.setAllocationLimit(1024)
     app = QGuiApplication(argv)
     app.setApplicationName("picture-show3")
     app.setOrganizationName("picture-show3")
+
+    # Write CLI overrides to QSettings AFTER app name is set so QSettings() resolves
+    # to the correct INI file. This also means values persist — backing to the settings
+    # page and restarting the show will use the same CLI-specified values.
+    if overrides or force_fullscreen:
+        s = QSettings()
+        for key, value in overrides.items():
+            s.setValue(key, value)
+        if force_fullscreen:
+            s.setValue("window/fullscreen", True)
     app.translator = _install_translator(app)   # None if no matching .qm found
     if _FROZEN:
         app.setWindowIcon(QIcon(":/img/icon.svg"))
