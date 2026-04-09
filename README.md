@@ -21,7 +21,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Recursive folders** | Optional: include subfolders in the scan (toggle in settings) |
 | **Background scanning** | Folder scanning and sorting run in background threads — UI stays responsive; Start button enables when ready |
 | **Jump to image** | Instantly jump to any image by number with a live preview |
-| **Panorama mode** | Auto-detects wide images and scrolls them smoothly across the screen |
+| **Panorama mode** | Auto-detects wide images and scrolls them smoothly across the screen; optional **Auto panorama** pans wide images automatically during autoplay |
 | **Mouse navigation** | Optional left/right click to advance or go back (toggle in Advanced settings) |
 | **Phone remote** | Scan the QR code or open the URL on any phone on the same Wi-Fi |
 | **Keyboard** | Full keyboard control on both the settings screen and during the show |
@@ -138,6 +138,16 @@ The image zooms to fill the window height and then scrolls left↔right continuo
 - `←` / `→` — stop panorama and navigate to the adjacent image
 - Autoplay is paused while panorama is active and resumes when it stops
 - Fullscreen toggle and the HUD work normally during panorama
+
+### Auto panorama
+
+When **Auto panorama** is enabled (Advanced Settings → Show), wide images during autoplay
+are automatically panned in a single left-to-right sweep before advancing to the next image.
+
+- `Esc` or `P` — cancel the sweep and stay on the current image (no advance)
+- `←` — cancel the sweep and go to the previous image; auto panorama is suppressed on the destination
+- `→` — cancel the sweep and advance immediately
+- Autoplay timer is paused during the sweep and restarts fresh afterwards
 
 ---
 

@@ -171,6 +171,8 @@ Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`,
 
 **Panorama mode**: activated **P**; requires image aspect ratio ≥ 1.3× screen ratio. `startPanorama()` enables `layer.layer` at panorama resolution (capped 4096 px wide), then `panoramaEnterAnim` (1400 ms InOutCubic scales up + pans to right half). After enter, `_panoramaScrollRight()` / `_panoramaScrollLeft()` alternate via `onStopped`; speed 250 px/s. `stopPanorama()` sets `_panoCleanupPending = true`, stops scroll, runs `panoramaExitAnim` (800 ms OutCubic); `onStopped` disables layer and restores state. `_panoramaAbort()`: instant teardown on resize. Key handling while active: **P**/**Esc** → stop; **←**/**→** → `_pendingNav` then stop (navigation fires in exit `onStopped`); **I** → HUD; all other keys absorbed.
 
+**Auto panorama** (`controller.autoPanorama`, `_autoPanoramaActive`): when enabled and autoplay is running, `_tryAutoPanorama()` starts a single-sweep panorama — enter animation + one right-scroll, then `stopPanorama()` + `_pendingNav = 1` to auto-advance. Triggered from `_checkPendingPanorama()` (after each transition), imgA/imgB `onStatusChanged` (slow-loading images), and `onIsPlayingChanged` (Space starts autoplay while suitable image is already on screen). `_autoPanoramaSkip` prevents restart on the same image after **Esc**/**P**/**←** cancellation; cleared on forward navigation (`navDir >= 0` in `onCurrentIndexChanged`). `_suppressPlayAnim` is checked in `onIsPlayingChanged` to prevent `_tryAutoPanorama()` firing mid-exit-animation when `panoramaExitAnim.onStopped` calls `togglePlay()`.
+
 ---
 
 ### `Theme.qml`
