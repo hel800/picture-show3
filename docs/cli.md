@@ -17,11 +17,11 @@ python main.py --kiosk [options] <picture_dir>
 
 ## Show options
 
-These flags override the corresponding setting and **persist to the INI file** immediately — backing out to the settings page and restarting the show will use the same values.
+These flags override the corresponding setting **for the current session only** — they are never written to the INI file. The settings page always shows the last saved values. If you change a setting in the settings page, that GUI change is saved and the CLI override for that key is released.
 
 | Option | Description |
 |---|---|
-| `--autoplay [N]` | Enable autoplay; optionally set the interval to `N` seconds (1–99). Without `N` the last saved interval is kept. |
+| `--autoplay [N]` | Enable autoplay; optionally set the interval to `N` seconds. Without `N` the last saved interval is kept. Any positive integer is accepted. |
 | `--transition T` | Set the transition style: `fade` · `slide` · `zoom` · `fadeblack` |
 | `--transition-dur MS` | Set the transition duration in milliseconds (100–3000) |
 | `--sort S` | Set the sort order: `name` · `date` · `random` |

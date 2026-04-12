@@ -222,9 +222,10 @@ Mode options:
                   Esc opens a quit confirmation dialog instead of going to settings.
                   Exits with an error if the folder contains no supported images.
 
-Show options (stored to settings, persist across sessions):
-  --autoplay [N]       Enable autoplay; optionally set the interval to N seconds (1–99).
-                       Without N the last saved interval is kept.
+Show options (session-only — never written to the settings file):
+  --autoplay [N]       Enable autoplay; optionally set the interval to N seconds.
+                       Without N the last saved interval is kept. Any positive integer
+                       is accepted (e.g. --autoplay 6000 waits 6000 seconds).
   --transition T       Set the transition style: fade | slide | zoom | fadeblack
   --transition-dur MS  Set the transition duration in milliseconds (100–3000).
   --sort S             Set the sort order: name | date | random
@@ -319,7 +320,7 @@ def _parse_args() -> tuple[str | None, str | None, bool, dict, list[str]]:
     if args.transition is not None:
         overrides["transition"] = args.transition
     if args.transition_dur is not None:
-        overrides["transitionDuration"] = max(100, min(3000, args.transition_dur))
+        overrides["transitionDuration"] = args.transition_dur
     if args.sort is not None:
         overrides["sort"] = args.sort
     if args.scale is not None:
@@ -360,15 +361,6 @@ def main() -> None:
     app.setApplicationName("picture-show3")
     app.setOrganizationName("picture-show3")
 
-    # Write CLI overrides to QSettings AFTER app name is set so QSettings() resolves
-    # to the correct INI file. This also means values persist — backing to the settings
-    # page and restarting the show will use the same CLI-specified values.
-    if overrides or force_fullscreen:
-        s = QSettings()
-        for key, value in overrides.items():
-            s.setValue(key, value)
-        if force_fullscreen:
-            s.setValue("window/fullscreen", True)
     app.translator = _install_translator(app)   # None if no matching .qm found
     if _FROZEN:
         app.setWindowIcon(QIcon(":/img/icon.svg"))
@@ -384,6 +376,10 @@ def main() -> None:
                              kiosk_mode=kiosk_folder is not None,
                              jump_start=start_folder is not None,
                          )
+    # Apply CLI overrides after controller init so they shadow the saved settings
+    # for this session only — the INI file is never modified.
+    if overrides:
+        app.controller.apply_cli_overrides(overrides)
     app.provider       = SlideshowImageProvider(app.controller)
     app.qr_provider    = QrImageProvider()
     app.remote         = RemoteServer(app.controller, port=app.controller.remotePort, version=APP_VERSION)
@@ -418,7 +414,7 @@ def main() -> None:
 
     win = engine.rootObjects()[0]
     app.window_helper.set_window(win)
-    _restore_window(win)
+    _restore_window(win, force_fullscreen=force_fullscreen)
     app.aboutToQuit.connect(app.controller.cancelAll)
     app.aboutToQuit.connect(lambda: _save_window(win, app.window_helper))
 
@@ -453,7 +449,7 @@ def _find_target_screen(s: QSettings):
     return None
 
 
-def _restore_window(win) -> None:
+def _restore_window(win, force_fullscreen: bool = False) -> None:
     s = QSettings()
     if s.contains("window/width"):
         avail = QGuiApplication.primaryScreen().availableGeometry()
@@ -464,7 +460,7 @@ def _restore_window(win) -> None:
     if s.contains("window/x"):
         win.setX(int(s.value("window/x")))
         win.setY(int(s.value("window/y")))
-    if s.value("window/fullscreen", False, type=bool):
+    if force_fullscreen or s.value("window/fullscreen", False, type=bool):
         # Do NOT call saveWindowed() here - the windowed geometry in settings
         # is already correct and must not be overwritten with fullscreen dims.
         if sys.platform == "linux":

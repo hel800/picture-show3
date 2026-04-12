@@ -128,6 +128,7 @@ class SlideshowController(QObject):
         self._ratingsComplete.connect(self._on_ratings_complete)
         self._progressUpdate.connect(self._on_progress_update)
 
+        self._cli_overrides: dict[str, object] = {}  # INI key → original saved value
         self._load_settings()
 
     # ── Persistence ───────────────────────────────────────────────────────────
@@ -175,26 +176,56 @@ class SlideshowController(QObject):
 
     def _save_settings(self) -> None:
         s = QSettings()
-        s.setValue("transition",          self._transition_style)
-        s.setValue("transitionDuration",  self._transition_duration)
+        # For keys overridden by CLI, write back the original saved value so the
+        # INI is never modified by a session-only flag.  Once the user changes a
+        # setting via the GUI the setter pops its key from _cli_overrides, so the
+        # new user value is written from that point on.
+        _o = self._cli_overrides
+        s.setValue("transition",         _o.get("transition",         self._transition_style))
+        s.setValue("transitionDuration", _o.get("transitionDuration", self._transition_duration))
         s.setValue("hudSize",             self._hud_size)
         s.setValue("uiScale",             self._ui_scale)
         s.setValue("hudVisible",          self._hud_visible)
         s.setValue("hudStyle",            self._hud_style)
-        s.setValue("sort",          self._sort_order)
-        s.setValue("loop",          self._loop)
-        s.setValue("autoplay",       self._autoplay)
-        s.setValue("interval",       self._interval)
+        s.setValue("sort",     _o.get("sort",     self._sort_order))
+        s.setValue("loop",     _o.get("loop",     self._loop))
+        s.setValue("autoplay", _o.get("autoplay", self._autoplay))
+        s.setValue("interval", _o.get("interval", self._interval))
         s.setValue("remoteEnabled",   self._remote_enabled)
         s.setValue("remotePort",      self._remote_port)
         s.setValue("mouseNavEnabled",    self._mouse_nav)
         s.setValue("minRating",          self._min_rating)
         s.setValue("language",           self._language)
         s.setValue("updateCheckEnabled", self._update_check_enabled)
-        s.setValue("imageFill",          self._image_fill)
-        s.setValue("recursive",          self._recursive)
-        s.setValue("autoPanorama",       self._auto_panorama)
+        s.setValue("imageFill",   _o.get("imageFill",   self._image_fill))
+        s.setValue("recursive",   _o.get("recursive",   self._recursive))
+        s.setValue("autoPanorama",_o.get("autoPanorama",self._auto_panorama))
         s.setValue("folderHistory",      self._folder_history)
+
+    def apply_cli_overrides(self, overrides: dict) -> None:
+        """
+        Apply session-only CLI overrides without persisting them to the INI file.
+
+        Saves the current (saved) value for each overridden key so _save_settings()
+        can restore it.  Once the user changes a setting via the GUI the corresponding
+        setter clears its entry from _cli_overrides, making the new value permanent.
+        """
+        _MAP: dict[str, str] = {
+            "autoplay":           "_autoplay",
+            "interval":           "_interval",
+            "transition":         "_transition_style",
+            "transitionDuration": "_transition_duration",
+            "sort":               "_sort_order",
+            "imageFill":          "_image_fill",
+            "autoPanorama":       "_auto_panorama",
+            "recursive":          "_recursive",
+            "loop":               "_loop",
+        }
+        for key, value in overrides.items():
+            attr = _MAP.get(key)
+            if attr is not None:
+                self._cli_overrides[key] = getattr(self, attr)  # save original
+                setattr(self, attr, value)
 
     # ── Properties ───────────────────────────────────────────────────────────
     @Property(str, notify=settingsChanged)
@@ -645,6 +676,7 @@ class SlideshowController(QObject):
     # ── Settings setters (called from QML) ───────────────────────────────────
     @Slot(int)
     def setTransitionDuration(self, ms: int) -> None:
+        self._cli_overrides.pop("transitionDuration", None)
         self._transition_duration = ms
         self._save_settings()
         self.settingsChanged.emit()
@@ -679,12 +711,14 @@ class SlideshowController(QObject):
 
     @Slot(str)
     def setTransitionStyle(self, style: TransitionStyle) -> None:
+        self._cli_overrides.pop("transition", None)
         self._transition_style = style
         self._save_settings()
         self.settingsChanged.emit()
 
     @Slot(str)
     def setSortOrder(self, order: SortOrder) -> None:
+        self._cli_overrides.pop("sort", None)
         self._sort_order = order
         if self._all_images:
             # Cancel any running sort/ratings and re-sort immediately.
@@ -718,12 +752,14 @@ class SlideshowController(QObject):
 
     @Slot(bool)
     def setLoop(self, value: bool) -> None:
+        self._cli_overrides.pop("loop", None)
         self._loop = value
         self._save_settings()
         self.settingsChanged.emit()
 
     @Slot(bool)
     def setAutoplay(self, value: bool) -> None:
+        self._cli_overrides.pop("autoplay", None)
         self._autoplay = value
         self._save_settings()
         self.settingsChanged.emit()
@@ -748,6 +784,7 @@ class SlideshowController(QObject):
 
     @Slot(int)
     def setInterval(self, ms: int) -> None:
+        self._cli_overrides.pop("interval", None)
         self._interval = ms
         self._timer.setInterval(ms)
         self._save_settings()
@@ -778,12 +815,14 @@ class SlideshowController(QObject):
 
     @Slot(bool)
     def setImageFill(self, fill: bool) -> None:
+        self._cli_overrides.pop("imageFill", None)
         self._image_fill = fill
         self._save_settings()
         self.settingsChanged.emit()
 
     @Slot(bool)
     def setAutoPanorama(self, enabled: bool) -> None:
+        self._cli_overrides.pop("autoPanorama", None)
         self._auto_panorama = enabled
         self._save_settings()
         self.settingsChanged.emit()
@@ -792,6 +831,7 @@ class SlideshowController(QObject):
     def setRecursiveSearch(self, enabled: bool) -> None:
         if self._recursive == enabled:
             return
+        self._cli_overrides.pop("recursive", None)
         self._recursive = enabled
         self._save_settings()
         if self._folder:
@@ -820,8 +860,14 @@ class SlideshowController(QObject):
     def togglePlay(self) -> None:
         match self._is_playing:
             case True:
+                # User manually stops — spend the CLI autoplay override so that
+                # returning to settings and relaunching won't auto-start again.
+                self._autoplay = self._cli_overrides.pop("autoplay", self._autoplay)
                 self.stopShow()
             case False if self._images:
+                # Restore saved interval if it was overridden by CLI — the user
+                # manually restarting autoplay means the session override is spent.
+                self._interval = self._cli_overrides.pop("interval", self._interval)
                 self._timer.setInterval(self._interval)
                 self._timer.start()
                 self._is_playing = True

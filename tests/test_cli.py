@@ -93,6 +93,11 @@ class TestAutoplay:
         _, _, _, ov, _ = parse(["--autoplay", "99"])
         assert ov["interval"] == 99000
 
+    def test_autoplay_large_value_not_clamped(self):
+        # CLI values are session-only and never saved, so no clamping is applied
+        _, _, _, ov, _ = parse(["--autoplay", "6000"])
+        assert ov["interval"] == 6_000_000  # 6000 s in ms
+
     def test_no_autoplay_flag_not_in_overrides(self):
         _, _, _, ov, _ = parse([])
         assert "autoplay" not in ov
@@ -122,21 +127,13 @@ class TestTransitionDuration:
         _, _, _, ov, _ = parse(["--transition-dur", "800"])
         assert ov["transitionDuration"] == 800
 
-    def test_transition_dur_clamped_to_min(self):
+    def test_transition_dur_any_positive_value_accepted(self):
+        _, _, _, ov, _ = parse(["--transition-dur", "10000"])
+        assert ov["transitionDuration"] == 10000
+
+    def test_transition_dur_small_value_not_clamped(self):
         _, _, _, ov, _ = parse(["--transition-dur", "50"])
-        assert ov["transitionDuration"] == 100
-
-    def test_transition_dur_clamped_to_max(self):
-        _, _, _, ov, _ = parse(["--transition-dur", "9999"])
-        assert ov["transitionDuration"] == 3000
-
-    def test_transition_dur_boundary_100(self):
-        _, _, _, ov, _ = parse(["--transition-dur", "100"])
-        assert ov["transitionDuration"] == 100
-
-    def test_transition_dur_boundary_3000(self):
-        _, _, _, ov, _ = parse(["--transition-dur", "3000"])
-        assert ov["transitionDuration"] == 3000
+        assert ov["transitionDuration"] == 50
 
     def test_no_transition_dur_not_in_overrides(self):
         _, _, _, ov, _ = parse([])

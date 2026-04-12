@@ -1696,3 +1696,132 @@ class TestApplyUiScale:
         ini.write_text("[General]\nuiscale=not_a_number\n", encoding="utf-8")
         self._call(monkeypatch, tmp_path)
         assert "QT_SCALE_FACTOR" not in os.environ
+
+
+# ── CLI overrides (session-only, no INI persistence) ─────────────────────────
+
+class TestCliOverrides:
+    """
+    apply_cli_overrides() must:
+    - Apply values to in-memory state immediately
+    - Never write them to QSettings
+    - Restore original values when any other _save_settings() trigger fires
+    - Clear the override once the user changes the same setting via a setter
+    """
+
+    def test_override_is_applied_in_memory(self, ctrl):
+        original_transition = ctrl.transitionStyle
+        ctrl.apply_cli_overrides({"transition": "zoom"})
+        assert ctrl.transitionStyle == "zoom"
+        assert ctrl.transitionStyle != original_transition
+
+    def test_override_not_written_to_ini(self, ctrl):
+        from PySide6.QtCore import QSettings
+        ctrl.apply_cli_overrides({"transition": "zoom"})
+        s = QSettings()
+        # QSettings should still have the original default (never overwritten)
+        assert s.value("transition", "fade") == "fade"
+
+    def test_override_preserved_across_save(self, ctrl):
+        """A _save_settings() call triggered by an unrelated setter must not
+        persist the CLI-overridden value."""
+        from PySide6.QtCore import QSettings
+        ctrl.apply_cli_overrides({"transition": "zoom"})
+        ctrl.setLoop(False)          # triggers _save_settings()
+        s = QSettings()
+        assert s.value("transition", "fade") == "fade"   # original preserved
+        assert s.value("loop", True, type=bool) is False  # user change saved
+
+    def test_large_interval_not_clamped(self, ctrl):
+        ctrl.apply_cli_overrides({"autoplay": True, "interval": 6_000_000})
+        assert ctrl.interval == 6_000_000
+
+    def test_all_overrideable_keys(self, ctrl):
+        ctrl.apply_cli_overrides({
+            "autoplay":           True,
+            "interval":           10_000,
+            "transition":         "slide",
+            "transitionDuration": 1200,
+            "sort":               "date",
+            "imageFill":          True,
+            "autoPanorama":       True,
+            "recursive":          True,
+            "loop":               False,
+        })
+        assert ctrl.autoplay           is True
+        assert ctrl.interval           == 10_000
+        assert ctrl.transitionStyle    == "slide"
+        assert ctrl.transitionDuration == 1200
+        assert ctrl.sortOrder          == "date"
+        assert ctrl.imageFill          is True
+        assert ctrl.autoPanorama       is True
+        assert ctrl.recursiveSearch     is True
+        assert ctrl.loop               is False
+
+    def test_gui_setter_clears_override_and_saves_new_value(self, ctrl):
+        """Once the user changes a setting via the GUI, the new value must be
+        saved and the original CLI override must no longer protect it."""
+        from PySide6.QtCore import QSettings
+        ctrl.apply_cli_overrides({"transition": "zoom"})
+        assert ctrl.transitionStyle == "zoom"
+
+        ctrl.setTransitionStyle("slide")          # user changes it via GUI
+        assert ctrl.transitionStyle == "slide"
+
+        s = QSettings()
+        assert s.value("transition") == "slide"   # new user value is saved
+
+    def test_toggle_play_restores_saved_interval(self, ctrl, image_folder, load_folder):
+        """After the user manually stops and restarts autoplay, the saved interval
+        (not the CLI interval) must be used — both for the timer and the GUI popup."""
+        load_folder(ctrl, str(image_folder))
+        ctrl.apply_cli_overrides({"autoplay": True, "interval": 6_000_000})
+        ctrl.startShow()                  # initial launch uses CLI interval
+        assert ctrl.interval == 6_000_000
+
+        ctrl.togglePlay()                 # user stops
+        ctrl.togglePlay()                 # user restarts → override must be cleared
+        assert ctrl.interval == 5_000     # back to the saved default
+
+    def test_toggle_play_stop_spends_autoplay_override(self, ctrl, image_folder, load_folder):
+        """After the user manually stops the show, the CLI --autoplay override is spent
+        so that returning to settings and relaunching does not auto-start again."""
+        from PySide6.QtCore import QSettings
+        load_folder(ctrl, str(image_folder))
+        ctrl.apply_cli_overrides({"autoplay": True, "interval": 6_000_000})
+        ctrl.startShow()                  # CLI auto-starts the show
+        assert ctrl.isPlaying
+
+        ctrl.togglePlay()                 # user manually stops
+        assert not ctrl.isPlaying
+        # autoplay override spent — saved value (False) is now active
+        assert ctrl.autoplay is False
+        # and the next _save_settings() must not write True
+        s = QSettings()
+        assert s.value("autoplay", False, type=bool) is False
+
+    def test_show_end_does_not_spend_autoplay_override(self, ctrl, image_folder, load_folder):
+        """When the show ends automatically (non-loop), the autoplay CLI override
+        must NOT be spent — only a manual user stop should clear it."""
+        load_folder(ctrl, str(image_folder))
+        ctrl.apply_cli_overrides({"autoplay": True})
+        ctrl._loop = False                # disable looping so the show can end
+        ctrl.startShow()
+        # Fast-forward to last image and call nextImage to trigger auto-stop
+        ctrl._current_index = len(ctrl._images) - 1
+        ctrl.nextImage()                  # automatic end-of-show stop
+        assert not ctrl.isPlaying
+        # Override is still active — autoplay is still True in memory
+        assert ctrl.autoplay is True
+
+    def test_unknown_key_ignored(self, ctrl):
+        ctrl.apply_cli_overrides({"nonexistent_key": 42})   # must not raise
+
+    def test_partial_override_leaves_others_unchanged(self, ctrl):
+        from PySide6.QtCore import QSettings
+        original_loop = ctrl.loop
+        ctrl.apply_cli_overrides({"transition": "fadeblack"})
+        ctrl.setHudVisible(True)   # triggers _save_settings()
+        s = QSettings()
+        assert s.value("transition", "fade") == "fade"       # original preserved
+        assert s.value("loop", True, type=bool) == original_loop  # untouched
