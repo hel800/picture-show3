@@ -21,6 +21,7 @@ Context property `controller` — the single source of truth exposed to QML.
 - Navigation: `nextImage()`, `prevImage()`, `goTo(index)`
 - Metadata accessors: `imagePath(index)`, `imageDateTaken(index)`, `imageCaption(index)`, `imageRating(index)`, `imageExifInfo(index)`
 - `imageExifInfo(index)` → list of `{label, value}` dicts for the EXIF panel; labels/values wrapped in `self.tr()` for the active locale; reads Make, Model, FNumber, ExposureTime, ISO, FocalLength, ExposureProgram, Flash, PixelX/Y; exposure program strings resolved via `_exposure_program_str()`
+- `apply_cli_overrides(overrides: dict)` — applies session-only CLI flags without writing to the INI file. Saves the current saved value for each overridden key in `_cli_overrides`; `_save_settings` restores those originals so the INI is never modified. When the user changes a setting via the GUI, the corresponding setter pops its key from `_cli_overrides`, making the new value permanent. `togglePlay` spends the `autoplay`/`interval` overrides on the first manual stop so that returning to settings and relaunching does not auto-start again.
 - `scanning` (bool) — True during any pipeline phase; `scanningChanged` signal
 - `scanPhase` (str) — `"scan"` / `"sort"` / `"filter"` / `""` (idle); notified via `scanningChanged`
 - `scanProgress` (int) — files processed in current metadata phase (0 outside metadata phases); `scanProgressChanged` signal
@@ -102,6 +103,8 @@ Tracks fullscreen state independently of the OS window to avoid Qt timing issues
 - **Frozen** (built exe): `import resources_rc` registers all QML and SVG files under `qrc:/`; QML loaded from `qrc:/qml/main.qml`; SVGs read via `QFile(":/img/<name>")` in `_read_img()`
 - QML `../img/` relative paths work unchanged in both modes
 
+`_parse_args()` uses `argparse` and returns a 5-tuple `(kiosk_folder, start_folder, force_fullscreen, overrides, qt_argv)`. `overrides` is a dict of INI keys → values for show options passed on the CLI; it is passed to `controller.apply_cli_overrides()` after the controller is initialised. Unknown flags are forwarded to Qt via `qt_argv` so Qt's own flag handling still works.
+
 Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`, runs make_icon → compile_resources → PyInstaller → Inno Setup → cleanup. `a.binaries` is filtered in the spec to strip large unused Qt DLLs (e.g. `Qt6WebEngineCore.dll` at 193 MB); translations are stripped from `a.datas` the same way.
 
 ---
@@ -144,7 +147,7 @@ Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`,
 | Style | Mechanism |
 |---|---|
 | `fade` | `ParallelAnimation` on `opacity` of both layers |
-| `slide` | `ParallelAnimation` on `x` of both layers |
+| `slide` | 3-phase `SequentialAnimation`: outgoing zooms out (20 % of duration, scale 1.0→0.9), both layers slide (`x`, 60 %), incoming zooms back to full size (20 %); incoming starts already at scale 0.9 off-screen so the transition feels continuous |
 | `zoom` | Parallel fade + scale on incoming layer |
 | `fadeblack` | `SequentialAnimation`: outgoing fades out, then incoming fades in |
 
