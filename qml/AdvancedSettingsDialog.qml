@@ -111,7 +111,7 @@ BasePopup {
         transform: Translate { y: root._slideOffset }
     }
 
-    Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.5) }
+    Overlay.modal: Rectangle { color: Theme.overlayDimLight }
 
     contentItem: ColumnLayout {
         spacing: 0

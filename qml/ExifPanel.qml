@@ -25,9 +25,9 @@ Rectangle {
     width:  Math.min(parent ? parent.width * 0.875 : 385, 385)
     height: panelContent.implicitHeight + 32   // 16 px top + 16 px bottom padding
 
-    color: Qt.rgba(0, 0, 0, 0.82)
+    color: Theme.panelBg
     radius: 16
-    border.color: Qt.rgba(1, 1, 1, 0.12)
+    border.color: Theme.panelBorderSubtle
     border.width: 1
 
     opacity: 0
@@ -173,7 +173,7 @@ Rectangle {
         Rectangle {
             Layout.fillWidth: true
             height: 1
-            color: Qt.rgba(1, 1, 1, 0.07)
+            color: Theme.panelRowBg
             Layout.topMargin: 8
         }
 

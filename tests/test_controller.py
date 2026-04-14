@@ -24,6 +24,7 @@ from tests.conftest import (
     _inject_app13,
     make_jpeg_with_exif,
     make_jpeg_with_iptc_caption,
+    make_jpeg_with_malformed_xmp,
     make_jpeg_with_xmp_attr,
     make_jpeg_with_xmp_elem,
     make_plain_jpeg,
@@ -1185,6 +1186,31 @@ class TestWriteXmpRating:
     def test_raises_for_missing_file(self, tmp_path):
         with pytest.raises(OSError):
             self._write(tmp_path / "missing.jpg", 1)
+
+    # ── Malformed XMP ─────────────────────────────────────────────────────────
+
+    def test_write_on_malformed_xmp_produces_valid_jpeg(self, tmp_path):
+        """A JPEG with broken XMP XML is still writeable; output is a valid JPEG."""
+        from PIL import Image
+        p = make_jpeg_with_malformed_xmp(tmp_path / "broken.jpg")
+        self._write(p, 3)
+        with Image.open(p) as img:
+            img.verify()
+
+    def test_write_on_malformed_xmp_does_not_raise(self, tmp_path):
+        """Writing a rating over a broken XMP container must not raise.
+        The XMP wrapper is broken so the rating may not parse back, but the
+        file must remain a structurally valid JPEG."""
+        from PIL import Image
+        p = make_jpeg_with_malformed_xmp(tmp_path / "broken2.jpg")
+        self._write(p, 4)   # must not raise
+        with Image.open(p) as img:
+            img.verify()    # output is still a valid JPEG
+
+    def test_read_xmp_rating_on_malformed_xmp_returns_zero(self, tmp_path):
+        """_read_xmp_rating must not raise on broken XML — it returns 0."""
+        p = make_jpeg_with_malformed_xmp(tmp_path / "broken.jpg")
+        assert SlideshowController._read_xmp_rating(str(p)) == 0
 
 
 # ── writeImageRating slot ─────────────────────────────────────────────────────

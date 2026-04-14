@@ -17,7 +17,7 @@ Rectangle {
     anchors.right:  parent.right
     anchors.bottom: parent.bottom
     height: Math.round(52 * hudScale)
-    color: Qt.rgba(0, 0, 0, 0.65)
+    color: Theme.hudBg
     opacity: 0
     z: 10
 
@@ -36,7 +36,7 @@ Rectangle {
         anchors.left:  parent.left
         anchors.right: parent.right
         height: 1
-        color: Qt.rgba(1, 1, 1, 0.08)
+        color: Theme.panelDivider
     }
 
     RowLayout {

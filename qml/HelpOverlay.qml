@@ -24,7 +24,7 @@ BasePopup {
         transform: Translate { y: root._slideOffset }
     }
 
-    Overlay.modal: Rectangle { color: Qt.rgba(0, 0, 0, 0.6) }
+    Overlay.modal: Rectangle { color: Theme.overlayDim }
 
     property int revealStep: -1
     property bool fromSettings: true    // false when opened from the slideshow page

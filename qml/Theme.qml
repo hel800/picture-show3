@@ -41,6 +41,21 @@ QtObject {
     readonly property color statusOk:   "#34d399"  // ✓ images found
     readonly property color statusWarn: "#f59e0b"  // ⚠ no images found
 
+    // ── Semi-transparent overlays ─────────────────────────────────────────────
+    // Single source of truth for all Qt.rgba() panel and backdrop colours.
+    readonly property color overlayDim:        Qt.rgba(0, 0, 0, 0.60)  // modal backdrop: help, quit, kiosk quit
+    readonly property color overlayDimLight:   Qt.rgba(0, 0, 0, 0.50)  // lighter backdrop: QR, advanced, history popup
+    readonly property color panelBg:           Qt.rgba(0, 0, 0, 0.82)  // floating panel bg (ExifPanel, FloatingHud, HUD popups)
+    readonly property color hudBg:             Qt.rgba(0, 0, 0, 0.65)  // HUD bar background
+    readonly property color panelBorderStrong: Qt.rgba(1, 1, 1, 0.40)  // jump / rating / caption dialog border
+    readonly property color panelBorderMid:    Qt.rgba(1, 1, 1, 0.22)  // play/pause popup border; input accepted-state border
+    readonly property color panelBorderSubtle: Qt.rgba(1, 1, 1, 0.12)  // ExifPanel border
+    readonly property color panelBorderFaint:  Qt.rgba(1, 1, 1, 0.25)  // FloatingHud idle border; caption input border
+    readonly property color panelDivider:      Qt.rgba(1, 1, 1, 0.08)  // HudBar top line; dialog input background
+    readonly property color panelRowBg:        Qt.rgba(1, 1, 1, 0.07)  // ExifPanel alternating row / separator tint
+    readonly property color panelSectionBg:    Qt.rgba(1, 1, 1, 0.06)  // dialog preview container background
+    readonly property color panelSeparator:    Qt.rgba(1, 1, 1, 0.20)  // FloatingHud vertical separator lines
+
     // ── Overlay animation — popups and panels ─────────────────────────────────
     // Single source of truth for all enter/exit transitions.
     // Popups use these via BasePopup.qml; panels (ExifPanel, FloatingHud,

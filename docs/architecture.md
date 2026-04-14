@@ -29,7 +29,7 @@ Context property `controller` — the single source of truth exposed to QML.
 - Signals: `imagesChanged`, `currentIndexChanged`, `isPlayingChanged`, `settingsChanged`, `folderHistoryChanged`, `errorOccurred(str)`, `scanningChanged`, `scanProgressChanged`, `ratingWritten(int)`, `captionWritten(int)`
 
 **Metadata caches**
-- `_date_cache: dict[str, datetime]` — populated by `_parallel_date_sort`; only missing files are read on re-sort; cleared in `loadFolder` and the scan error path
+- `_date_cache: dict[str, datetime]` — populated by `_parallel_date_sort`; only missing files are read on re-sort; cleared on each successful scan result and on the scan error path
 - `_rating_cache: dict[str, int]` — populated by the ratings pipeline; `setMinRating` and `_on_sort_complete` use `len(_rating_cache) < len(_all_images)` (not `not _rating_cache`) to decide whether to re-run — a single in-show `writeImageRating` call leaves a partial cache that would otherwise cause main-thread I/O
 
 **XMP rating write — `writeImageRating(index, rating)` `@Slot(int, int, result=bool)`**
@@ -189,6 +189,8 @@ Singleton registered in `qmldir`; all QML files `import "."` and reference `Them
 | Text | `textPrimary`, `textSecondary`, `textSubtle`, `textMuted`, `textDisabled`, `textGhost` |
 | Status | `statusOk`, `statusWarn` |
 | Misc | `starInactive` |
+| Semi-transparent overlays | `overlayDim`, `overlayDimLight`, `panelBg`, `hudBg`, `panelBorderStrong`, `panelBorderMid`, `panelBorderSubtle`, `panelBorderFaint`, `panelDivider`, `panelRowBg`, `panelSectionBg`, `panelSeparator` |
+| Overlay animation | `animFadeInDuration`, `animSlideInDuration`, `animFadeOutDuration`, `animSlideOffset`, `animSlideOvershoot` |
 
 ---
 

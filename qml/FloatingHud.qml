@@ -169,8 +169,8 @@ Item {
         anchors.bottom: parent.bottom
         anchors.bottomMargin: Math.round(40 * root.hudScale)
         radius: 18
-        color:        Qt.rgba(0, 0, 0, 0.82)
-        border.color: root.editing ? Theme.accent : Qt.rgba(1, 1, 1, 0.25)
+        color:        Theme.panelBg
+        border.color: root.editing ? Theme.accent : Theme.panelBorderFaint
         border.width: 1
         Behavior on border.color { ColorAnimation { duration: 150 } }
 
@@ -194,7 +194,7 @@ Item {
 
             Rectangle {
                 width: 1; height: root._contentH
-                color: Qt.rgba(1, 1, 1, 0.2)
+                color: Theme.panelSeparator
                 Layout.alignment: Qt.AlignVCenter
             }
 
@@ -281,7 +281,7 @@ Item {
             // ── Separator before meta (hidden when no meta to show) ───────────
             Rectangle {
                 width: 1; height: root._contentH
-                color: Qt.rgba(1, 1, 1, 0.2)
+                color: Theme.panelSeparator
                 Layout.alignment: Qt.AlignVCenter
                 visible: root._displayRating > 0 || dateText.visible
             }
@@ -304,7 +304,7 @@ Item {
             // ── Separator between stars and date ─────────────────────────────
             Rectangle {
                 width: 1; height: root._contentH
-                color: Qt.rgba(1, 1, 1, 0.2)
+                color: Theme.panelSeparator
                 Layout.alignment: Qt.AlignVCenter
                 visible: root._displayRating > 0 && dateText.visible
             }

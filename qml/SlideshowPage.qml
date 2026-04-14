@@ -5,6 +5,15 @@ import QtQuick.Controls
 import QtQuick.Layouts
 import "."
 
+// ── Z-layer stack ─────────────────────────────────────────────────────────────
+//  0        layerB (background image)
+//  1        layerA (foreground image)
+//  2        (reserved for future image layers)
+//  10       HudBar (bottom bar)
+//  11       ExifPanel (above HudBar)
+//  20       playPausePopup (above all panels)
+//  30       jumpOverlay / ratingOverlay / captionOverlay / kioskQuitDialog (top tier)
+// ─────────────────────────────────────────────────────────────────────────────
 Rectangle {
     id: root
     color: "black"
@@ -1063,8 +1072,8 @@ Rectangle {
         Rectangle {
             anchors.fill: parent
             radius: 14
-            color: Qt.rgba(0, 0, 0, 0.82)
-            border.color: Qt.rgba(1, 1, 1, 0.22)
+            color: Theme.panelBg
+            border.color: Theme.panelBorderMid
             border.width: 1
 
             RowLayout {
@@ -1269,8 +1278,8 @@ Rectangle {
             y: Math.min(parent.height * 5 / 6 - height / 2,
                         parent.height - height - root._floatingHudClearance - 16)
             radius: 18
-            color: Qt.rgba(0, 0, 0, 0.82)
-            border.color: Qt.rgba(1, 1, 1, 0.4)
+            color: Theme.panelBg
+            border.color: Theme.panelBorderStrong
             border.width: 1
             opacity: 0
             property real _slideOffset: Theme.animSlideOffset
@@ -1319,8 +1328,8 @@ Rectangle {
                             Layout.fillWidth: true
                             height: 44
                             radius: 10
-                            color: Qt.rgba(1, 1, 1, 0.08)
-                            border.color: jumpInput.acceptableInput ? Qt.rgba(1, 1, 1, 0.22) : Theme.statusWarn
+                            color: Theme.panelDivider
+                            border.color: jumpInput.acceptableInput ? Theme.panelBorderMid : Theme.statusWarn
                             border.width: 1
 
                             TextInput {
@@ -1382,7 +1391,7 @@ Rectangle {
                     Layout.preferredWidth: 130
                     Layout.fillHeight: true
                     radius: 10
-                    color: Qt.rgba(1, 1, 1, 0.06)
+                    color: Theme.panelSectionBg
                     clip: true
                     opacity: 0
 
@@ -1444,8 +1453,8 @@ Rectangle {
             y: Math.min(parent.height * 5 / 6 - height / 2,
                         parent.height - height - root._floatingHudClearance - 16)
             radius: 18
-            color: Qt.rgba(0, 0, 0, 0.82)
-            border.color: Qt.rgba(1, 1, 1, 0.4)
+            color: Theme.panelBg
+            border.color: Theme.panelBorderStrong
             border.width: 1
             opacity: 0
             property real _slideOffset: Theme.animSlideOffset
@@ -1563,8 +1572,8 @@ Rectangle {
             y: Math.min(parent.height * 5 / 6 - height / 2,
                         parent.height - height - root._floatingHudClearance - 16)
             radius: 18
-            color: Qt.rgba(0, 0, 0, 0.82)
-            border.color: Qt.rgba(1, 1, 1, 0.4)
+            color: Theme.panelBg
+            border.color: Theme.panelBorderStrong
             border.width: 1
             opacity: 0
             property real _slideOffset: Theme.animSlideOffset
@@ -1612,8 +1621,8 @@ Rectangle {
                     Layout.fillWidth: true
                     height: 38
                     radius: 8
-                    color: Qt.rgba(1, 1, 1, 0.08)
-                    border.color: Qt.rgba(1, 1, 1, 0.25)
+                    color: Theme.panelDivider
+                    border.color: Theme.panelBorderFaint
                     border.width: 1
 
                     TextInput {
@@ -1685,9 +1694,7 @@ Rectangle {
             transform: Translate { y: kioskQuitDialog._slideOffset }
         }
 
-        Overlay.modal: Rectangle {
-            color: Qt.rgba(0, 0, 0, 0.6)
-        }
+        Overlay.modal: Rectangle { color: Theme.overlayDim }
 
         onOpened: kioskYesBtn.forceActiveFocus()
         onClosed: root.forceActiveFocus()

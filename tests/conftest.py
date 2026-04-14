@@ -88,6 +88,16 @@ def make_jpeg_with_xmp_attr(path: Path, rating: int) -> Path:
     return path
 
 
+def make_jpeg_with_malformed_xmp(path: Path) -> Path:
+    """JPEG with a syntactically broken XMP APP1 segment (not well-formed XML)."""
+    garbage_xmp = b"<x:xmpmeta>TRUNCATED\xff\xfe<broken"
+    ns = b"http://ns.adobe.com/xap/1.0/\x00"
+    buf = io.BytesIO()
+    Image.new("RGB", (4, 4)).save(buf, format="JPEG")
+    path.write_bytes(_inject_app1(buf.getvalue(), ns + garbage_xmp))
+    return path
+
+
 def make_jpeg_with_xmp_elem(path: Path, rating: int) -> Path:
     """JPEG whose XMP carries xmp:Rating as a child element."""
     xmp = (

@@ -395,9 +395,7 @@ Item {
                             transform: Translate { y: recentPopup._slideOffset }
                         }
 
-                        Overlay.modal: Rectangle {
-                            color: Qt.rgba(0, 0, 0, 0.5)
-                        }
+                        Overlay.modal: Rectangle { color: Theme.overlayDimLight }
 
                         contentItem: Item {
                             id: recentContentItem

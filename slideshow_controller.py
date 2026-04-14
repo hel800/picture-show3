@@ -78,7 +78,10 @@ class SlideshowController(QObject):
     captionWritten      = Signal(int)    # emitted with image index after a successful caption write
     showEnded           = Signal()       # emitted when autoplay stops at the last image (no loop)
     kioskModeChanged    = Signal()
-    # Private: background thread → main thread handoffs
+    # Private: background thread → main thread handoffs.
+    # PySide6 auto-marshals cross-thread signal emissions via Qt.QueuedConnection
+    # (the default when emitter and receiver live on different threads), so these
+    # are safe to emit from daemon threads without additional synchronisation.
     _scanComplete       = Signal(object, int)   # (result dict | None, generation)
     _sortComplete       = Signal(object, int)   # (sorted all_images list, generation)
     _ratingsComplete    = Signal(object, int)   # (rating_cache dict, generation)
@@ -516,6 +519,8 @@ class SlideshowController(QObject):
             self._apply_filter()
             return
         self._all_images = result["all"]
+        # Clear date cache so re-scanning the same folder picks up changed EXIF dates.
+        self._date_cache = {}
         # Chain into sort — don't emit signals yet, the pipeline end will.
         self._sort_in_background()
 

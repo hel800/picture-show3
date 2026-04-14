@@ -101,9 +101,7 @@ ApplicationWindow {
             transform: Translate { y: quitDialog._slideOffset }
         }
 
-        Overlay.modal: Rectangle {
-            color: Qt.rgba(0, 0, 0, 0.6)
-        }
+        Overlay.modal: Rectangle { color: Theme.overlayDim }
 
         onOpened: {
             quitYesBtn.forceActiveFocus()
