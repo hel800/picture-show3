@@ -12,6 +12,7 @@ import "."
 //  10       HudBar (bottom bar)
 //  11       ExifPanel (above HudBar)
 //  20       playPausePopup (above all panels)
+//  25       noImagesOverlay (covers everything when no images are available)
 //  30       jumpOverlay / ratingOverlay / captionOverlay / kioskQuitDialog (top tier)
 // ─────────────────────────────────────────────────────────────────────────────
 Rectangle {
@@ -982,6 +983,50 @@ Rectangle {
         scrollLeftAnim.start()
     }
 
+    // ── No-images overlay ─────────────────────────────────────────────────────
+    // Shown whenever imageCount==0 and no scan is in progress.
+    // Covers the full screen so the user gets clear feedback instead of a
+    // black frame — handles empty folders, aggressive filters, and background
+    // mode before the first /control/start.
+    Rectangle {
+        id: noImagesOverlay
+        anchors.fill: parent
+        color: Theme.bgDeep
+        z: 25
+
+        readonly property bool _active: controller.imageCount === 0 && !controller.scanning
+        visible: _active
+        opacity: _active ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 20
+
+            ThemedIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                source: "../img/icon_picture.svg"
+                size: 64
+                iconColor: Theme.textDisabled
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("No images available")
+                color: Theme.textPrimary
+                font.pixelSize: 22
+                font.weight: Font.Medium
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: qsTr("Check the folder path or filter settings.")
+                color: Theme.textSecondary
+                font.pixelSize: 14
+            }
+        }
+    }
+
     HudBar {
         id: hud
         hudScale      : root.hudScale
@@ -1035,7 +1080,8 @@ Rectangle {
     Connections {
         target: controller
         function onIsPlayingChanged() {
-            if (!root._exiting && !root._suppressPlayAnim && !root._ppEditMode) {
+            if (!root._exiting && !root._suppressPlayAnim && !root._ppEditMode
+                    && !controller.takePlayAnimSuppression()) {
                 // Set progress synchronously before restart() so the animation
                 // always starts from the correct value (binding on `from` is
                 // not reliably re-evaluated inside a ParallelAnimation group).

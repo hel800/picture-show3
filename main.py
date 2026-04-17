@@ -10,7 +10,7 @@ import configparser
 import ctypes
 from pathlib import Path
 
-from PySide6.QtCore import QLocale, QObject, QSettings, QTimer, QTranslator, QUrl, Qt, Slot
+from PySide6.QtCore import Property, QLocale, QObject, QSettings, QTimer, QTranslator, QUrl, Qt, Signal, Slot
 from PySide6.QtGui import QCursor, QGuiApplication, QIcon, QImageReader, QWindow
 from PySide6.QtQml import QQmlApplicationEngine
 from PySide6.QtQuickControls2 import QQuickStyle
@@ -114,10 +114,13 @@ class WindowHelper(QObject):
         (not needed before showNormal() - that is handled automatically).
     """
 
+    windowVisibleChanged = Signal(bool)
+
     def __init__(self, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._win = None
         self._is_fullscreen = False   # our own authoritative tracking
+        self._window_visible = False  # true whenever visibility != Hidden
         self._quitting = False        # set on quit to freeze state
         self._cursor_hidden = False   # tracks whether we pushed a BlankCursor override
 
@@ -174,9 +177,18 @@ class WindowHelper(QObject):
 
     # ── private ────────────────────────────────────────────────────────────
 
+    @Property(bool, notify=windowVisibleChanged)
+    def windowVisible(self) -> bool:
+        return self._window_visible
+
     def _on_vis_changed(self, new_vis: QWindow.Visibility) -> None:
         if self._quitting:
             return
+        # Track visible state (anything other than Hidden counts as visible)
+        now_visible = new_vis != QWindow.Visibility.Hidden
+        if now_visible != self._window_visible:
+            self._window_visible = now_visible
+            self.windowVisibleChanged.emit(now_visible)
         if new_vis == QWindow.Visibility.FullScreen:
             self._is_fullscreen = True
         elif new_vis == QWindow.Visibility.Windowed:
@@ -212,6 +224,7 @@ picture-show3 {APP_VERSION} - full-screen photo slideshow
 Usage:
   python main.py [options] [<picture_dir>]
   python main.py --kiosk [options] <picture_dir>
+  python main.py --background [options] <picture_dir>
 
 Arguments:
   <picture_dir>   Path to a folder containing images to display.
@@ -221,6 +234,12 @@ Mode options:
   --kiosk         Kiosk mode - the settings page is never shown.
                   Esc opens a quit confirmation dialog instead of going to settings.
                   Exits with an error if the folder contains no supported images.
+
+  --background    Background mode - starts the remote control server without showing
+                  the GUI. The show is started and stopped via the remote control
+                  (Picture Frame section) or the /control/ HTTP API. Requires
+                  <picture_dir>. The last show-running state is persisted so the
+                  show can resume automatically after a restart or power outage.
 
 Show options (session-only — never written to the settings file):
   --autoplay [N]       Enable autoplay; optionally set the interval to N seconds.
@@ -253,22 +272,32 @@ Modes:
                   Esc opens a quit dialog - the settings page is not accessible.
                   Folder history is not updated.
 
+  Background      Headless start: remote server runs, GUI hidden until
+                  /control/start is called. The show can be stopped (GUI hidden
+                  again) and restarted any number of times without restarting
+                  the process. Show state is persisted for auto-resume.
+
 Examples:
   python main.py
   python main.py "C:\\Users\\me\\Pictures\\Vacation"
   python main.py --autoplay 5 --transition slide --fullscreen /mnt/photos
   python main.py --sort date --scale fill --transition-dur 400 /mnt/photos
   python main.py --kiosk --recursive --loop --auto-panorama /mnt/photos
+  python main.py --background --autoplay 30 --fullscreen /mnt/photos
 
 Full CLI reference: docs/cli.md
 """
 
 
-def _parse_args() -> tuple[str | None, str | None, bool, dict, list[str]]:
+def _parse_args() -> tuple[str | None, str | None, str | None, bool, dict, list[str]]:
     """
     Parse CLI arguments.
 
-    Returns (kiosk_folder, start_folder, force_fullscreen, overrides, qt_argv).
+    Returns (kiosk_folder, start_folder, background_folder, force_fullscreen,
+             overrides, qt_argv).
+
+    Exactly one of kiosk_folder / start_folder / background_folder is non-None,
+    or all three are None (normal mode).
 
     overrides  – dict of settings to write to QSettings before the controller
                  reads them: keys match QSettings keys ('autoplay', 'interval',
@@ -281,6 +310,7 @@ def _parse_args() -> tuple[str | None, str | None, bool, dict, list[str]]:
     parser = argparse.ArgumentParser(prog="picture-show3", add_help=False)
     parser.add_argument("folder", nargs="?", default=None, metavar="picture_dir")
     parser.add_argument("--kiosk",      action="store_true", default=False)
+    parser.add_argument("--background", action="store_true", default=False)
     parser.add_argument("--help", "-h", action="store_true")
     parser.add_argument(
         "--autoplay", nargs="?", const=-1, type=int, metavar="SECONDS",
@@ -309,8 +339,19 @@ def _parse_args() -> tuple[str | None, str | None, bool, dict, list[str]]:
         print(_HELP, end="")
         sys.exit(0)
 
-    kiosk_folder: str | None = args.folder if args.kiosk else None
-    start_folder: str | None = args.folder if not args.kiosk else None
+    if args.kiosk and args.background:
+        print("Error: --kiosk and --background are mutually exclusive", file=sys.stderr)
+        sys.exit(1)
+
+    if args.background and not args.folder:
+        print("Error: --background requires a picture folder", file=sys.stderr)
+        sys.exit(1)
+
+    kiosk_folder:      str | None = args.folder if args.kiosk      else None
+    background_folder: str | None = args.folder if args.background else None
+    start_folder:      str | None = (
+        args.folder if (not args.kiosk and not args.background) else None
+    )
 
     overrides: dict = {}
     if args.autoplay is not None:
@@ -333,7 +374,7 @@ def _parse_args() -> tuple[str | None, str | None, bool, dict, list[str]]:
         overrides["loop"] = args.loop
 
     qt_argv = [sys.argv[0]] + remaining
-    return kiosk_folder, start_folder, args.fullscreen, overrides, qt_argv
+    return kiosk_folder, start_folder, background_folder, args.fullscreen, overrides, qt_argv
 
 
 def main() -> None:
@@ -348,12 +389,15 @@ def main() -> None:
     # Force a non-native style so custom Slider background/handle work on all platforms
     QQuickStyle.setStyle("Basic")
 
-    kiosk_folder, start_folder, force_fullscreen, overrides, argv = _parse_args()
+    kiosk_folder, start_folder, background_folder, force_fullscreen, overrides, argv = _parse_args()
     if kiosk_folder is not None and not Path(kiosk_folder).is_dir():
         print(f"Error: kiosk folder does not exist: {kiosk_folder}", file=sys.stderr)
         sys.exit(1)
     if start_folder is not None and not Path(start_folder).is_dir():
         print(f"Error: folder does not exist: {start_folder}", file=sys.stderr)
+        sys.exit(1)
+    if background_folder is not None and not Path(background_folder).is_dir():
+        print(f"Error: background folder does not exist: {background_folder}", file=sys.stderr)
         sys.exit(1)
 
     QImageReader.setAllocationLimit(1024)
@@ -373,8 +417,9 @@ def main() -> None:
 
     # Store on app so Python's GC never collects them while QML holds references
     app.controller     = SlideshowController(
-                             kiosk_mode=kiosk_folder is not None,
+                             kiosk_mode=kiosk_folder is not None or background_folder is not None,
                              jump_start=start_folder is not None,
+                             background_mode=background_folder is not None,
                          )
     # Apply CLI overrides after controller init so they shadow the saved settings
     # for this session only — the INI file is never modified.
@@ -382,7 +427,12 @@ def main() -> None:
         app.controller.apply_cli_overrides(overrides)
     app.provider       = SlideshowImageProvider(app.controller)
     app.qr_provider    = QrImageProvider()
-    app.remote         = RemoteServer(app.controller, port=app.controller.remotePort, version=APP_VERSION)
+    app.remote         = RemoteServer(
+                             app.controller,
+                             port=app.controller.remotePort,
+                             version=APP_VERSION,
+                             background_mode=background_folder is not None,
+                         )
     app.window_helper  = WindowHelper()
     app.update_checker = UpdateChecker()
 
@@ -406,6 +456,8 @@ def main() -> None:
         app.controller.imagesChanged.connect(_kiosk_no_images)
     elif start_folder:
         app.controller.loadFolder(start_folder)
+    elif background_folder:
+        app.controller.loadFolder(background_folder)
 
     engine.load(_QML_ROOT)
 
@@ -414,7 +466,14 @@ def main() -> None:
 
     win = engine.rootObjects()[0]
     app.window_helper.set_window(win)
-    _restore_window(win, force_fullscreen=force_fullscreen)
+
+    if background_folder:
+        # Background mode: window stays hidden until /control/start is received.
+        # Wire show/hide cycle and live-adjust slots before starting the event loop.
+        _setup_background_mode(app, win, force_fullscreen)
+    else:
+        _restore_window(win, force_fullscreen=force_fullscreen)
+
     app.aboutToQuit.connect(app.controller.cancelAll)
     app.aboutToQuit.connect(lambda: _save_window(win, app.window_helper))
 
@@ -422,6 +481,92 @@ def main() -> None:
         QTimer.singleShot(3000, lambda: app.update_checker.check(APP_VERSION))
 
     sys.exit(app.exec())
+
+
+def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
+    """
+    Wire the background-mode show/hide cycle.
+
+    The window is shown at startup so the kiosk-style splash animation plays
+    visibly while images are being scanned.  After the splash hands off to
+    SlideshowPage, main.qml hides the window automatically — unless auto-resume
+    fired first (power-outage recovery), in which case the show starts
+    immediately and the window stays visible.
+
+    The remote server is always started regardless of the remoteEnabled
+    setting, since it is the sole control channel in background mode.
+    Show state is persisted under [background_mode] in the INI so the
+    show can auto-resume after a power outage or process restart.
+    """
+    s = QSettings()
+
+    # Always start the remote server in background mode.
+    app.remote.start()
+
+    def _bg_persist(active: bool) -> None:
+        """Write and immediately flush the show-active flag to disk."""
+        s.setValue("background_mode/showActive", active)
+        s.sync()   # flush to disk now — don't rely on destructor or GC timing
+
+    def _on_start_show() -> None:
+        # Only show the window here — controller.startShow(), setShowActive(), and
+        # setCursorHidden() are all called by main.qml's onStartShow after the
+        # kiosk splash animation completes (~300 ms later).
+        app.remote.setShowStarted(True)
+        _bg_persist(True)
+        if force_fullscreen:
+            QTimer.singleShot(0, win.showFullScreen)
+        else:
+            QTimer.singleShot(0, win.show)
+
+    def _on_stop_show() -> None:
+        # Suppress the play/pause popup before stopping (SlideshowPage still visible).
+        app.controller.suppressNextPlayAnim()
+        app.controller.stopShow()
+        app.window_helper.setCursorHidden(False)
+        app.remote.setShowActive(False)
+        app.remote.setShowStarted(False)
+        _bg_persist(False)
+        # Defer hide by ~2 frames so Qt re-renders the SettingsPage + splashOverlay
+        # (triggered by the stack.pop() in QML's onStopShowRequested just below)
+        # before the window is hidden.  The window's last GPU framebuffer then
+        # contains the clean dark splash background rather than the slideshow image,
+        # preventing a flash of the old image when the window is shown again.
+        QTimer.singleShot(32, win.hide)
+
+    app.remote.startShowRequested.connect(_on_start_show)
+    app.remote.stopShowRequested.connect(_on_stop_show)
+    app.remote.intervalChangeRequested.connect(app.controller.setInterval)
+    app.remote.scaleChangeRequested.connect(
+        lambda mode: app.controller.setImageFill(mode == "fill")
+    )
+
+    # Clear the persisted active flag on clean exit so a deliberate quit
+    # does not trigger auto-resume on the next launch.
+    app.aboutToQuit.connect(lambda: _bg_persist(False))
+
+    # Auto-resume: if the show was running when the process last stopped
+    # (e.g. power outage), restart it once the initial scan has completed.
+    if s.value("background_mode/showActive", False, type=bool):
+        _resumed = [False]   # mutable flag to ensure we fire exactly once
+
+        def _maybe_resume() -> None:
+            if _resumed[0] or app.controller.scanning:
+                return
+            _resumed[0] = True
+            try:
+                app.controller.imagesChanged.disconnect(_maybe_resume)
+            except RuntimeError:
+                pass
+            try:
+                app.controller.scanningChanged.disconnect(_maybe_resume)
+            except RuntimeError:
+                pass
+            if app.controller.imageCount > 0:
+                _on_start_show()
+
+        app.controller.imagesChanged.connect(_maybe_resume)
+        app.controller.scanningChanged.connect(_maybe_resume)
 
 
 def _find_target_screen(s: QSettings):

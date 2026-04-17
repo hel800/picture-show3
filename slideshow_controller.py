@@ -88,10 +88,11 @@ class SlideshowController(QObject):
     _progressUpdate     = Signal(int)           # files processed so far
 
     # ── Init ──────────────────────────────────────────────────────────────────
-    def __init__(self, kiosk_mode: bool = False, jump_start: bool = False, parent: QObject | None = None) -> None:
+    def __init__(self, kiosk_mode: bool = False, jump_start: bool = False, background_mode: bool = False, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._kiosk_mode      : bool             = kiosk_mode
         self._jump_start      : bool             = jump_start
+        self._background_mode : bool             = background_mode
         self._folder          : str              = ""
         self._images          : list[str]        = []
         self._current_index   : int              = 0
@@ -132,6 +133,7 @@ class SlideshowController(QObject):
         self._progressUpdate.connect(self._on_progress_update)
 
         self._cli_overrides: dict[str, object] = {}  # INI key → original saved value
+        self._suppress_next_play_anim: bool = False  # consumed by takePlayAnimSuppression()
         self._load_settings()
 
     # ── Persistence ───────────────────────────────────────────────────────────
@@ -320,6 +322,9 @@ class SlideshowController(QObject):
 
     @Property(bool, constant=True)
     def jumpStart(self) -> bool: return self._jump_start
+
+    @Property(bool, constant=True)
+    def backgroundMode(self) -> bool: return self._background_mode
 
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
@@ -860,6 +865,26 @@ class SlideshowController(QObject):
         self._timer.stop()
         self._is_playing = False
         self.isPlayingChanged.emit()
+
+    @Slot()
+    def suppressNextPlayAnim(self) -> None:
+        """
+        Call from Python immediately before startShow() / stopShow() to prevent
+        the play/pause popup from appearing for that one state change.
+        Consumed and cleared by takePlayAnimSuppression() in QML.
+        """
+        self._suppress_next_play_anim = True
+
+    @Slot(result=bool)
+    def takePlayAnimSuppression(self) -> bool:
+        """
+        Called from QML's onIsPlayingChanged to check and consume the one-shot
+        suppression flag. Returns True (and clears the flag) if the next popup
+        should be skipped; False otherwise.
+        """
+        val = self._suppress_next_play_anim
+        self._suppress_next_play_anim = False
+        return val
 
     @Slot()
     def togglePlay(self) -> None:

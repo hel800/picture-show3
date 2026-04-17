@@ -25,34 +25,52 @@ def parse(args: list[str]):
 
 class TestModeDetection:
     def test_no_args_all_none(self):
-        kiosk, start, fs, ov, _ = parse([])
+        kiosk, start, bg, fs, ov, _ = parse([])
         assert kiosk is None
         assert start is None
+        assert bg is None
         assert fs is False
         assert ov == {}
 
     def test_positional_folder_is_jump_start(self):
-        kiosk, start, _, _, _ = parse(["/some/folder"])
+        kiosk, start, bg, _, _, _ = parse(["/some/folder"])
         assert kiosk is None
         assert start == "/some/folder"
+        assert bg is None
 
     def test_kiosk_flag_assigns_kiosk_folder(self):
-        kiosk, start, _, _, _ = parse(["--kiosk", "/some/folder"])
+        kiosk, start, bg, _, _, _ = parse(["--kiosk", "/some/folder"])
         assert kiosk == "/some/folder"
         assert start is None
+        assert bg is None
 
     def test_kiosk_without_folder_gives_none(self):
-        kiosk, start, _, _, _ = parse(["--kiosk"])
+        kiosk, start, bg, _, _, _ = parse(["--kiosk"])
         assert kiosk is None
         assert start is None
+        assert bg is None
+
+    def test_background_flag_assigns_background_folder(self):
+        kiosk, start, bg, _, _, _ = parse(["--background", "/some/folder"])
+        assert kiosk is None
+        assert start is None
+        assert bg == "/some/folder"
+
+    def test_background_without_folder_exits(self):
+        with pytest.raises(SystemExit):
+            parse(["--background"])
+
+    def test_kiosk_and_background_mutually_exclusive(self):
+        with pytest.raises(SystemExit):
+            parse(["--kiosk", "--background", "/some/folder"])
 
     def test_fullscreen_sets_force_flag(self):
-        _, _, fs, _, _ = parse(["--fullscreen"])
+        _, _, _, fs, _, _ = parse(["--fullscreen"])
         assert fs is True
 
     def test_fullscreen_not_in_overrides(self):
         # --fullscreen is handled separately, not via the overrides dict
-        _, _, _, ov, _ = parse(["--fullscreen"])
+        _, _, _, _, ov, _ = parse(["--fullscreen"])
         assert "window/fullscreen" not in ov
 
 
@@ -62,11 +80,11 @@ class TestQtArgvForwarding:
     def test_unknown_flag_forwarded(self):
         # parse_known_args cannot know --platform takes a value, so use = form
         # so both the flag and its value stay together as one unknown token.
-        _, _, _, _, qt_argv = parse(["--platform=offscreen"])
+        _, _, _, _, _, qt_argv = parse(["--platform=offscreen"])
         assert "--platform=offscreen" in qt_argv
 
     def test_known_flags_not_forwarded(self):
-        _, _, _, _, qt_argv = parse(["--recursive", "--loop", "/folder"])
+        _, _, _, _, _, qt_argv = parse(["--recursive", "--loop", "/folder"])
         # Only sys.argv[0] should be in qt_argv (no known flags, folder is positional)
         assert "--recursive" not in qt_argv
         assert "--loop" not in qt_argv
@@ -76,30 +94,30 @@ class TestQtArgvForwarding:
 
 class TestAutoplay:
     def test_autoplay_without_n_enables_but_keeps_interval(self):
-        _, _, _, ov, _ = parse(["--autoplay"])
+        _, _, _, _, ov, _ = parse(["--autoplay"])
         assert ov["autoplay"] is True
         assert "interval" not in ov
 
     def test_autoplay_with_n_sets_interval_ms(self):
-        _, _, _, ov, _ = parse(["--autoplay", "5"])
+        _, _, _, _, ov, _ = parse(["--autoplay", "5"])
         assert ov["autoplay"] is True
         assert ov["interval"] == 5000
 
     def test_autoplay_with_n_1(self):
-        _, _, _, ov, _ = parse(["--autoplay", "1"])
+        _, _, _, _, ov, _ = parse(["--autoplay", "1"])
         assert ov["interval"] == 1000
 
     def test_autoplay_with_n_99(self):
-        _, _, _, ov, _ = parse(["--autoplay", "99"])
+        _, _, _, _, ov, _ = parse(["--autoplay", "99"])
         assert ov["interval"] == 99000
 
     def test_autoplay_large_value_not_clamped(self):
         # CLI values are session-only and never saved, so no clamping is applied
-        _, _, _, ov, _ = parse(["--autoplay", "6000"])
+        _, _, _, _, ov, _ = parse(["--autoplay", "6000"])
         assert ov["interval"] == 6_000_000  # 6000 s in ms
 
     def test_no_autoplay_flag_not_in_overrides(self):
-        _, _, _, ov, _ = parse([])
+        _, _, _, _, ov, _ = parse([])
         assert "autoplay" not in ov
 
 
@@ -108,7 +126,7 @@ class TestAutoplay:
 class TestTransition:
     @pytest.mark.parametrize("style", ["fade", "slide", "zoom", "fadeblack"])
     def test_valid_transition_style(self, style):
-        _, _, _, ov, _ = parse(["--transition", style])
+        _, _, _, _, ov, _ = parse(["--transition", style])
         assert ov["transition"] == style
 
     def test_invalid_transition_exits(self):
@@ -116,7 +134,7 @@ class TestTransition:
             parse(["--transition", "wipe"])
 
     def test_no_transition_not_in_overrides(self):
-        _, _, _, ov, _ = parse([])
+        _, _, _, _, ov, _ = parse([])
         assert "transition" not in ov
 
 
@@ -124,19 +142,19 @@ class TestTransition:
 
 class TestTransitionDuration:
     def test_transition_dur_stored_as_ms(self):
-        _, _, _, ov, _ = parse(["--transition-dur", "800"])
+        _, _, _, _, ov, _ = parse(["--transition-dur", "800"])
         assert ov["transitionDuration"] == 800
 
     def test_transition_dur_any_positive_value_accepted(self):
-        _, _, _, ov, _ = parse(["--transition-dur", "10000"])
+        _, _, _, _, ov, _ = parse(["--transition-dur", "10000"])
         assert ov["transitionDuration"] == 10000
 
     def test_transition_dur_small_value_not_clamped(self):
-        _, _, _, ov, _ = parse(["--transition-dur", "50"])
+        _, _, _, _, ov, _ = parse(["--transition-dur", "50"])
         assert ov["transitionDuration"] == 50
 
     def test_no_transition_dur_not_in_overrides(self):
-        _, _, _, ov, _ = parse([])
+        _, _, _, _, ov, _ = parse([])
         assert "transitionDuration" not in ov
 
 
@@ -145,7 +163,7 @@ class TestTransitionDuration:
 class TestSort:
     @pytest.mark.parametrize("order", ["name", "date", "random"])
     def test_valid_sort_orders(self, order):
-        _, _, _, ov, _ = parse(["--sort", order])
+        _, _, _, _, ov, _ = parse(["--sort", order])
         assert ov["sort"] == order
 
     def test_invalid_sort_exits(self):
@@ -153,7 +171,7 @@ class TestSort:
             parse(["--sort", "size"])
 
     def test_no_sort_not_in_overrides(self):
-        _, _, _, ov, _ = parse([])
+        _, _, _, _, ov, _ = parse([])
         assert "sort" not in ov
 
 
@@ -161,11 +179,11 @@ class TestSort:
 
 class TestScale:
     def test_scale_fit_sets_image_fill_false(self):
-        _, _, _, ov, _ = parse(["--scale", "fit"])
+        _, _, _, _, ov, _ = parse(["--scale", "fit"])
         assert ov["imageFill"] is False
 
     def test_scale_fill_sets_image_fill_true(self):
-        _, _, _, ov, _ = parse(["--scale", "fill"])
+        _, _, _, _, ov, _ = parse(["--scale", "fill"])
         assert ov["imageFill"] is True
 
     def test_invalid_scale_exits(self):
@@ -173,7 +191,7 @@ class TestScale:
             parse(["--scale", "stretch"])
 
     def test_no_scale_not_in_overrides(self):
-        _, _, _, ov, _ = parse([])
+        _, _, _, _, ov, _ = parse([])
         assert "imageFill" not in ov
 
 
@@ -181,15 +199,15 @@ class TestScale:
 
 class TestAutoPanorama:
     def test_auto_panorama_enables(self):
-        _, _, _, ov, _ = parse(["--auto-panorama"])
+        _, _, _, _, ov, _ = parse(["--auto-panorama"])
         assert ov["autoPanorama"] is True
 
     def test_no_auto_panorama_disables(self):
-        _, _, _, ov, _ = parse(["--no-auto-panorama"])
+        _, _, _, _, ov, _ = parse(["--no-auto-panorama"])
         assert ov["autoPanorama"] is False
 
     def test_no_flag_not_in_overrides(self):
-        _, _, _, ov, _ = parse([])
+        _, _, _, _, ov, _ = parse([])
         assert "autoPanorama" not in ov
 
 
@@ -197,11 +215,11 @@ class TestAutoPanorama:
 
 class TestRecursive:
     def test_recursive_flag_sets_override(self):
-        _, _, _, ov, _ = parse(["--recursive"])
+        _, _, _, _, ov, _ = parse(["--recursive"])
         assert ov["recursive"] is True
 
     def test_no_recursive_not_in_overrides(self):
-        _, _, _, ov, _ = parse([])
+        _, _, _, _, ov, _ = parse([])
         assert "recursive" not in ov
 
 
@@ -209,15 +227,15 @@ class TestRecursive:
 
 class TestLoop:
     def test_loop_enables(self):
-        _, _, _, ov, _ = parse(["--loop"])
+        _, _, _, _, ov, _ = parse(["--loop"])
         assert ov["loop"] is True
 
     def test_no_loop_disables(self):
-        _, _, _, ov, _ = parse(["--no-loop"])
+        _, _, _, _, ov, _ = parse(["--no-loop"])
         assert ov["loop"] is False
 
     def test_no_flag_not_in_overrides(self):
-        _, _, _, ov, _ = parse([])
+        _, _, _, _, ov, _ = parse([])
         assert "loop" not in ov
 
 
@@ -225,7 +243,7 @@ class TestLoop:
 
 class TestCombined:
     def test_kiosk_with_all_show_options(self):
-        kiosk, start, fs, ov, _ = parse([
+        kiosk, start, bg, fs, ov, _ = parse([
             "--kiosk", "--recursive", "--fullscreen",
             "--autoplay", "3", "--loop",
             "--transition", "zoom",
@@ -237,6 +255,7 @@ class TestCombined:
         ])
         assert kiosk == "/photos"
         assert start is None
+        assert bg is None
         assert fs is True
         assert ov["autoplay"] is True
         assert ov["interval"] == 3000
@@ -249,16 +268,32 @@ class TestCombined:
         assert ov["loop"] is True
 
     def test_jump_start_with_show_options(self):
-        kiosk, start, fs, ov, _ = parse([
+        kiosk, start, bg, fs, ov, _ = parse([
             "--autoplay", "10", "--transition", "fade",
             "--sort", "random", "--no-loop",
             "/mnt/photos",
         ])
         assert kiosk is None
         assert start == "/mnt/photos"
+        assert bg is None
         assert fs is False
         assert ov["autoplay"] is True
         assert ov["interval"] == 10000
         assert ov["transition"] == "fade"
         assert ov["sort"] == "random"
         assert ov["loop"] is False
+
+    def test_background_with_show_options(self):
+        kiosk, start, bg, fs, ov, _ = parse([
+            "--background", "--autoplay", "30", "--fullscreen",
+            "--sort", "date", "--scale", "fill",
+            "/mnt/photos",
+        ])
+        assert kiosk is None
+        assert start is None
+        assert bg == "/mnt/photos"
+        assert fs is True
+        assert ov["autoplay"] is True
+        assert ov["interval"] == 30000
+        assert ov["sort"] == "date"
+        assert ov["imageFill"] is True

@@ -294,4 +294,15 @@ ApplicationWindow {
             onOpenQuitDialog: quitDialog.open()
         }
     }
+
+    // Background mode: pop SlideshowPage when End Show is pressed so SettingsPage
+    // (+ splashOverlay) is rendered into the GPU framebuffer before the window is
+    // hidden (Python defers win.hide() by ~2 frames for exactly this reason).
+    Connections {
+        target: remoteServer
+        function onStopShowRequested() {
+            if (!controller.backgroundMode) return
+            if (stack.depth > 1) stack.pop()
+        }
+    }
 }

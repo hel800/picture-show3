@@ -37,6 +37,9 @@ Item {
         target: controller
         function onScanningChanged() {
             if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
+            // Background mode: keep the window hidden until Start Show is pressed.
+            // onVisibleChanged (below) will trigger the launch once the window appears.
+            if (controller.backgroundMode && !windowHelper.windowVisible) return
             if (!controller.scanning && controller.imageCount > 0
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
@@ -53,6 +56,7 @@ Item {
         }
         function onImagesChanged() {
             if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
+            if (controller.backgroundMode && !windowHelper.windowVisible) return
             if (!controller.scanning && controller.imageCount > 0
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
@@ -65,6 +69,26 @@ Item {
                 windowHelper.setCursorHidden(false)
                 scrollSlideIn.start()
             }
+        }
+    }
+
+    // Background mode: trigger the kiosk launch animation as soon as the window
+    // is shown (i.e. when the user presses Start Show on the remote).
+    // This fires on every hide→show transition so subsequent Start Show presses
+    // also play the splash.
+    Connections {
+        target: windowHelper
+        function onWindowVisibleChanged(visible) {
+            if (!visible || !controller.backgroundMode) return
+            if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
+            if (kioskLaunchAnim.running || splashAnim.running) return
+            // Replay the full splash from the beginning:
+            //   500 ms pause → 1400 ms logo fade-in → heartbeat (if scanning) →
+            //   zoom-out launch — identical to the kiosk startup experience.
+            kioskHeartbeat.stop()
+            splashLogo.scale   = 0.88  // match splashAnim initial values
+            splashLogo.opacity = 0.0
+            splashAnim.restart()
         }
     }
 
@@ -1503,8 +1527,14 @@ Item {
                 script: {
                     if (root._autoLaunch) {
                         root._kioskSplashDone = true
+                        if (controller.backgroundMode && !windowHelper.windowVisible) {
+                            // Window is hidden — launch is deferred until the window
+                            // is shown (handled by Connections on Window.window above).
+                            // Start heartbeat only while scan is still in progress.
+                            if (controller.scanning)
+                                kioskHeartbeat.start()
                         // If scan finished before the splash did, skip heartbeat
-                        if (!controller.scanning && controller.imageCount > 0)
+                        } else if (!controller.scanning && controller.imageCount > 0)
                             kioskLaunchAnim.start()
                         else if (!controller.scanning && controller.imageCount === 0) {
                             // Scan already done, no images — fall back to settings page
