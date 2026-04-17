@@ -49,337 +49,439 @@ _REMOTE_HTML = """\
 <title>Picture Show Remote</title>
 <style>
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  /* ── Exact Theme.qml colours ───────────────────────────────── */
   :root {
-    --bg:           #111820;
-    --card:         #131e2a;
-    --btn:          #1e293a;
-    --btn-hover:    #293952;
-    --accent:       #526796;
-    --accent-press: #32405e;
-    --accent-light: #96a5c5;
-    --text:         #e2e8f0;
-    --text-sec:     #94a3b8;
-    --muted:        #64748b;
-    --border:       #252c40;
-    --warn:         #7c5c1e;
-    --warn-text:    #fcd34d;
+    --bg-deep:       #111820;
+    --bg-card:       #131e2a;
+    --surface:       #1e293a;
+    --surface-hover: #293952;
+    --accent-deep:   #20293d;
+    --accent-press:  #32405e;
+    --accent:        #526796;
+    --accent-light:  #96a5c5;
+    --text-primary:  #e2e8f0;
+    --text-sec:      #94a3b8;
+    --text-muted:    #475569;
+    --text-disabled: #6d84a5;
+    --warn:          #7c5c1e;
+    --warn-text:     #fcd34d;
   }
+
   body {
-    background: var(--bg);
-    color: var(--text);
+    background: var(--bg-deep);
+    color: var(--text-primary);
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     min-height: 100dvh;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
-    gap: 32px;
+    justify-content: flex-start;
+    gap: 20px;
     padding: 24px;
     touch-action: manipulation;
     -webkit-tap-highlight-color: transparent;
   }
+
+  /* ── Header ──────────────────────────────────────── */
   header { text-align: center; }
-  header img { width: 220px; max-width: 80vw; }
-  #status { font-size: .9rem; color: var(--muted); margin-top: 10px; min-height: 1.4em; }
-  .grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 14px;
-    width: 100%;
-    max-width: 340px;
+  header img { width: 200px; max-width: 75vw; }
+  #status {
+    font-size: .85rem;
+    color: var(--text-disabled);
+    margin-top: 8px;
+    min-height: 1.4em;
   }
-  button {
-    padding: 32px 8px;
-    border: 1px solid var(--border);
-    border-radius: 12px;
-    background: var(--btn);
-    color: var(--text);
-    cursor: pointer;
-    transition: transform .1s, background .15s, border-color .15s, opacity .2s;
+
+  /* ── Segmented control — matches AdvancedSettingsDialog exactly ─── */
+  /* QML: outer Rectangle height:36 radius:10 color:Theme.surface        */
+  /* QML: active tab color=bgCard border.color=accent border.width=1     */
+  .seg-bar {
     display: flex;
-    align-items: center;
-    justify-content: center;
+    gap: 3px;
+    background: var(--surface);
+    border-radius: 10px;
+    padding: 3px;
+    width: 100%;
+    max-width: 420px;
   }
-  button svg { width: 2em; height: 2em; pointer-events: none; }
-  button:active:not(:disabled) {
+  .seg-tab {
+    flex: 1;
+    padding: 8px;
+    border-radius: 8px;
+    background: transparent;
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background .12s, border-color .12s, color .12s;
+  }
+  .seg-tab.active {
+    background: var(--bg-card);
+    border-color: var(--accent);
+    color: var(--accent-light);
+  }
+  .seg-tab:active:not(:disabled) { transform: scale(.97); }
+
+  /* ── Section containers ───────────────────────────────── */
+  #remoteSection, #pfSection { width: 100%; max-width: 420px; }
+
+  /* ── Remote nav buttons ──────────────────────────────── */
+  .remote-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .nav-btn {
+    padding: 28px 8px;
+    border: 1px solid var(--surface);
+    border-radius: 14px;
+    background: var(--bg-card);
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    transition: transform .1s, background .12s, border-color .12s, opacity .2s;
+  }
+  .nav-btn svg { width: 2em; height: 2em; pointer-events: none; }
+  .nav-btn:active:not(:disabled) {
     transform: scale(.92);
     background: var(--accent-press);
     border-color: var(--accent);
   }
-  button:disabled { opacity: 0.25; cursor: not-allowed; }
-  .wide {
+  .nav-btn:disabled { opacity: .25; cursor: not-allowed; }
+  .play-btn {
     grid-column: 1 / -1;
-    padding: 22px;
-    gap: 10px;
-  }
-  .wide img { height: 1.6em; vertical-align: middle; pointer-events: none; }
-  .wide .label { color: var(--text-sec); font-size: .95rem; }
-  /* ── Picture Frame section ───────────────────────────────────────────── */
-  #pfSection {
-    width: 100%;
-    max-width: 340px;
-    border: 1px solid var(--border);
+    padding: 20px;
+    border: 1px solid var(--surface);
     border-radius: 14px;
-    overflow: hidden;
-  }
-  .pf-header {
-    background: var(--card);
-    padding: 12px 16px;
-    font-size: .8rem;
-    font-weight: 600;
-    letter-spacing: .08em;
-    text-transform: uppercase;
-    color: var(--text-sec);
-    border-bottom: 1px solid var(--border);
-  }
-  .pf-body {
-    background: var(--card);
-    padding: 16px;
-    display: flex;
-    flex-direction: column;
-    gap: 16px;
-  }
-  .pf-row {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 10px;
-  }
-  .pf-btn {
-    padding: 18px 8px;
-    border: 1px solid var(--border);
-    border-radius: 10px;
-    background: var(--btn);
-    color: var(--text);
-    font-size: .9rem;
+    background: var(--bg-card);
     cursor: pointer;
-    transition: transform .1s, background .15s, border-color .15s, opacity .2s;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    transition: transform .1s, background .12s, border-color .12s, opacity .2s;
   }
-  .pf-btn:active:not(:disabled) {
-    transform: scale(.95);
+  .play-btn img { height: 1.5em; pointer-events: none; }
+  .play-btn .play-lbl { color: var(--text-sec); font-size: .95rem; }
+  .play-btn:active:not(:disabled) {
+    transform: scale(.97);
     background: var(--accent-press);
     border-color: var(--accent);
   }
-  .pf-btn:disabled { opacity: 0.25; cursor: not-allowed; }
-  .pf-btn.active {
+  .play-btn:disabled { opacity: .25; cursor: not-allowed; }
+
+  /* ── Picture Frame section ──────────────────────────── */
+  .opt-item { padding: 14px 0; }
+  /* Thin divider — QML: height:1, color:Theme.surface */
+  .divider { height: 1px; background: var(--surface); }
+
+  /* Section label: 3 px accent bar + small-caps text (exact QML match) */
+  .opt-lbl {
+    display: flex; align-items: center; gap: 8px;
+    margin-bottom: 14px;
+  }
+  .opt-bar {
+    width: 3px; height: 11px; border-radius: 1.5px;
+    background: var(--accent); flex-shrink: 0;
+  }
+  .opt-lbl span {
+    font-size: 11px; font-weight: 600;
+    letter-spacing: 1.4px; text-transform: uppercase;
+    color: var(--accent-light);
+  }
+
+  /* Content row */
+  .opt-row {
+    display: flex; align-items: center;
+    justify-content: space-between; gap: 12px;
+  }
+  .opt-title { font-size: 14px; color: var(--text-primary); }
+  .opt-value {
+    font-size: 13px; font-weight: 500;
+    color: var(--accent-light);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Action buttons — styled like the dialog Done button */
+  .action-row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .action-btn {
+    display: flex; align-items: center; justify-content: center; gap: 8px;
+    padding: 15px 8px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid transparent;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    transition: transform .1s, background .12s, border-color .12s, opacity .2s;
+  }
+  .action-btn:active:not(:disabled) {
+    transform: scale(.96);
+    background: var(--accent-press);
+    border-color: var(--accent);
+  }
+  .action-btn:disabled { opacity: .25; cursor: not-allowed; }
+  .action-btn svg { width: 1em; height: 1em; flex-shrink: 0; pointer-events: none; }
+
+  /* Scale chips — matches QML image-scale selector (icon 20px + label) */
+  .chip-group { display: flex; gap: 8px; }
+  .chip {
+    flex: 1;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center; gap: 5px;
+    padding: 14px 8px;
+    min-width: 72px;
+    border-radius: 12px;
+    background: var(--surface);
+    border: 1px solid transparent;
+    color: var(--text-muted);
+    font-size: 11px;
+    cursor: pointer;
+    transition: background .15s, border-color .15s, color .15s;
+  }
+  .chip:active { transform: scale(.95); }
+  .chip.active {
+    background: var(--accent-press);
     border-color: var(--accent);
     color: var(--accent-light);
   }
-  .pf-label {
-    font-size: .8rem;
-    color: var(--text-sec);
-    margin-bottom: 4px;
-  }
-  .pf-slider-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .pf-slider-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: baseline;
-  }
-  .pf-slider-val {
-    font-size: .95rem;
-    color: var(--text);
-    font-variant-numeric: tabular-nums;
-  }
+  .chip:disabled { opacity: .25; cursor: not-allowed; }
+  .chip img { width: 20px; height: 20px; opacity: .45; pointer-events: none; }
+  .chip.active img { opacity: 1; }
+
+  /* Slider — QML: 4 px track, accent fill, 22×22 handle w/ accent border */
+  .slider-block { display: flex; flex-direction: column; gap: 8px; }
+  .slider-hdr { display: flex; justify-content: space-between; align-items: baseline; }
+  .slider-ends { display: flex; justify-content: space-between; }
+  .slider-ends span { font-size: 11px; color: var(--text-disabled); }
   input[type=range] {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 100%;
-    height: 6px;
-    border-radius: 3px;
-    background: var(--border);
-    outline: none;
-    cursor: pointer;
+    -webkit-appearance: none; appearance: none;
+    width: 100%; height: 4px; border-radius: 2px;
+    background: var(--surface);
+    outline: none; cursor: pointer;
+    margin: 12px 0 4px;  /* vertical room for the 22px thumb */
   }
   input[type=range]::-webkit-slider-thumb {
-    -webkit-appearance: none;
-    appearance: none;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
+    -webkit-appearance: none; appearance: none;
+    width: 22px; height: 22px; border-radius: 11px;
     background: var(--accent-light);
+    border: 2px solid var(--accent);
     cursor: pointer;
   }
   input[type=range]::-moz-range-thumb {
-    width: 20px;
-    height: 20px;
-    border: none;
-    border-radius: 50%;
+    width: 22px; height: 22px; border-radius: 11px;
     background: var(--accent-light);
+    border: 2px solid var(--accent);
     cursor: pointer;
   }
-  .pf-scale-row {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-  }
-  .pf-scale-btns {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-  }
+
+  /* Warning banner */
   #pfWarning {
-    background: var(--warn);
-    color: var(--warn-text);
-    border-radius: 8px;
-    padding: 10px 12px;
-    font-size: .85rem;
-    text-align: center;
-    display: none;
+    background: var(--warn); color: var(--warn-text);
+    border-radius: 8px; padding: 10px 14px;
+    font-size: .85rem; margin-bottom: 4px; display: none;
   }
-  footer { font-size: .75rem; color: var(--border); text-align: center; }
+
+  footer { font-size: .7rem; color: var(--surface); text-align: center; }
 </style>
 </head>
 <body>
+
 <header>
   <img src="/logo.svg" alt="Picture Show Remote">
-  <div id="status">Waiting for show to start\u2026</div>
+  <div id="status">Waiting for show to start…</div>
 </header>
 
-<div class="grid">
-  <button id="prevBtn" onclick="cmd('prev')" title="Previous" disabled>
-    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.5"/>
-      <path d="M 20,8 10,16 20,24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    </svg>
-  </button>
-  <button id="nextBtn" onclick="cmd('next')" title="Next" disabled>
-    <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-      <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.5"/>
-      <path d="M 12,8 22,16 12,24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-    </svg>
-  </button>
-  <button class="wide" id="playBtn" onclick="cmd('toggle')" disabled>
-    <img id="playBtnIcon" src="/icon_play.svg"><span class="label" id="playBtnLabel"> Play</span>
-  </button>
+<!-- Segmented section selector (background mode only) -->
+<div class="seg-bar" id="tabBar" style="display:none">
+  <button class="seg-tab active" id="tabRemote"   onclick="switchTab('remote')">Remote</button>
+  <button class="seg-tab"        id="tabPicframe" onclick="switchTab('picframe')">Picture Frame</button>
 </div>
 
+<!-- Remote section -->
+<div id="remoteSection">
+  <div class="remote-grid">
+    <button class="nav-btn" id="prevBtn" onclick="cmd('prev')" title="Previous" disabled>
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.5"/>
+        <path d="M 20,8 10,16 20,24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </button>
+    <button class="nav-btn" id="nextBtn" onclick="cmd('next')" title="Next" disabled>
+      <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
+        <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.5"/>
+        <path d="M 12,8 22,16 12,24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+      </svg>
+    </button>
+    <button class="play-btn" id="playBtn" onclick="cmd('toggle')" disabled>
+      <img id="playBtnIcon" src="/icon_play.svg">
+      <span class="play-lbl" id="playBtnLabel">Play</span>
+    </button>
+  </div>
+</div>
+
+<!-- Picture Frame section (background mode only) -->
 <div id="pfSection" style="display:none">
-  <div class="pf-header">Picture Frame</div>
-  <div class="pf-body">
 
-    <div id="pfWarning">No images found in the configured folder.</div>
+  <div id="pfWarning">No images found in the configured folder.</div>
 
-    <div class="pf-row">
-      <button class="pf-btn" id="pfStartBtn" onclick="pfStart()">Start Show</button>
-      <button class="pf-btn" id="pfStopBtn"  onclick="pfStop()"  disabled>End Show</button>
+  <!-- SHOW CONTROL -->
+  <div class="opt-item">
+    <div class="opt-lbl"><div class="opt-bar"></div><span>Show Control</span></div>
+    <div class="action-row">
+      <button class="action-btn" id="pfStartBtn" onclick="pfStart()">
+        <svg viewBox="0 0 16 16" fill="currentColor"><polygon points="3,1 14,8 3,15"/></svg>
+        Start Show
+      </button>
+      <button class="action-btn" id="pfStopBtn" onclick="pfStop()" disabled>
+        <svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
+        End Show
+      </button>
     </div>
+  </div>
 
-    <div class="pf-slider-row">
-      <div class="pf-slider-top">
-        <span class="pf-label">Interval</span>
-        <span class="pf-slider-val" id="pfIntervalLabel">5s</span>
+  <div class="divider"></div>
+
+  <!-- INTERVAL -->
+  <div class="opt-item">
+    <div class="opt-lbl"><div class="opt-bar"></div><span>Interval</span></div>
+    <div class="slider-block">
+      <div class="slider-hdr">
+        <span class="opt-title">Autoplay interval</span>
+        <span class="opt-value" id="pfIntervalLabel">5m</span>
       </div>
-      <input type="range" id="pfIntervalSlider" min="0" max="1000"
+      <input type="range" id="pfIntervalSlider" min="0" max="92"
              oninput="pfIntervalInput(this.value)"
              onchange="pfIntervalCommit(this.value)">
+      <div class="slider-ends"><span>10s</span><span>24h</span></div>
     </div>
+  </div>
 
-    <div class="pf-scale-row">
-      <span class="pf-label">Scale</span>
-      <div class="pf-scale-btns">
-        <button class="pf-btn" id="pfFitBtn"  onclick="pfScale('fit')">Fit</button>
-        <button class="pf-btn" id="pfFillBtn" onclick="pfScale('fill')">Fill</button>
+  <div class="divider"></div>
+
+  <!-- SCALE -->
+  <div class="opt-item">
+    <div class="opt-lbl"><div class="opt-bar"></div><span>Scale</span></div>
+    <div class="opt-row">
+      <span class="opt-title">Image scale</span>
+      <div class="chip-group">
+        <button class="chip" id="pfFitChip" onclick="pfScale('fit')">
+          <img src="/icon_scale_fit.svg" alt=""><span>Fit</span>
+        </button>
+        <button class="chip" id="pfFillChip" onclick="pfScale('fill')">
+          <img src="/icon_scale_fill.svg" alt=""><span>Fill</span>
+        </button>
       </div>
     </div>
-
   </div>
+
 </div>
 
 <footer>v__APP_VERSION__</footer>
 
 <script>
-  // ── log-scale helpers (10 s … 86 400 s = 1 day) ──────────────────────────
-  var MS_MIN  = 10000;
-  var MS_MAX  = 86400000;
-  var LOG_MIN = Math.log(MS_MIN);
-  var LOG_MAX = Math.log(MS_MAX);
+  // ── Non-linear interval steps ─────────────────────────────────────────
+  // 10s–59s: 1s  |  1m–10m: 1m  |  15m–55m: 5m  |  1h–24h: 1h
+  var STEPS = (function() {
+    var s = [];
+    for (var i = 10; i < 60; i++)       s.push(i);
+    for (var i = 1; i <= 10; i++)       s.push(i * 60);
+    for (var i = 15; i <= 55; i += 5)   s.push(i * 60);
+    for (var i = 1; i <= 24; i++)       s.push(i * 3600);
+    return s;
+  })();
+  var SLIDER_MAX = STEPS.length - 1;
+  document.getElementById('pfIntervalSlider').max = SLIDER_MAX;
 
-  function sliderToMs(v) {
-    return Math.round(Math.exp(LOG_MIN + (LOG_MAX - LOG_MIN) * v / 1000));
-  }
+  function sliderToMs(v) { return STEPS[parseInt(v)] * 1000; }
   function msToSlider(ms) {
-    ms = Math.max(MS_MIN, Math.min(MS_MAX, ms));
-    return Math.round((Math.log(ms) - LOG_MIN) / (LOG_MAX - LOG_MIN) * 1000);
-  }
-  function fmtMs(ms) {
     var s = Math.round(ms / 1000);
-    if (s < 60)  return s + 's';
-    var m = Math.floor(s / 60), rs = s % 60;
-    if (m < 60)  return rs ? m + 'm ' + rs + 's' : m + 'm';
-    var h = Math.floor(m / 60), rm = m % 60;
-    if (h < 24)  return rm ? h + 'h ' + rm + 'm' : h + 'h';
-    var d = Math.floor(h / 24), rh = h % 24;
-    return rh ? d + 'd ' + rh + 'h' : d + 'd';
+    if (s <= STEPS[0]) return 0;
+    if (s >= STEPS[SLIDER_MAX]) return SLIDER_MAX;
+    for (var i = 0; i < SLIDER_MAX; i++) {
+      if (STEPS[i] === s) return i;
+      if (STEPS[i] < s && STEPS[i + 1] > s)
+        return (s - STEPS[i] <= STEPS[i + 1] - s) ? i : i + 1;
+    }
+    return SLIDER_MAX;
+  }
+  function fmtSeconds(s) {
+    if (s < 60) return s + 's';
+    if (s < 3600) return (s / 60) + 'm';
+    return (s / 3600) + 'h';
   }
 
-  // ── debounce for slider input events ─────────────────────────────────────
-  var _intervalTimer = null;
+  // Accent-filled track (matches QML slider fill rectangle)
+  function sliderFill(el) {
+    var pct = ((parseInt(el.value) - parseInt(el.min)) /
+               (parseInt(el.max)  - parseInt(el.min)) * 100).toFixed(1);
+    el.style.background =
+      'linear-gradient(to right,#526796 ' + pct + '%,#1e293a ' + pct + '%)';
+  }
+
+  // ── Debounce for slider ─────────────────────────────────────────
+  var _itimer = null;
   function pfIntervalInput(v) {
-    document.getElementById('pfIntervalLabel').textContent = fmtMs(sliderToMs(v));
-    clearTimeout(_intervalTimer);
-    _intervalTimer = setTimeout(function() { pfIntervalCommit(v); }, 600);
+    document.getElementById('pfIntervalLabel').textContent = fmtSeconds(STEPS[parseInt(v)]);
+    sliderFill(document.getElementById('pfIntervalSlider'));
+    clearTimeout(_itimer);
+    _itimer = setTimeout(function() { pfIntervalCommit(v); }, 600);
   }
   function pfIntervalCommit(v) {
-    clearTimeout(_intervalTimer);
-    var ms = sliderToMs(v);
-    document.getElementById('pfIntervalLabel').textContent = fmtMs(ms);
-    fetch('/control/interval?value=' + ms).catch(function(){});
+    clearTimeout(_itimer);
+    document.getElementById('pfIntervalLabel').textContent = fmtSeconds(STEPS[parseInt(v)]);
+    sliderFill(document.getElementById('pfIntervalSlider'));
+    fetch('/control/interval?value=' + sliderToMs(v)).catch(function(){});
   }
 
-  // ── scale ─────────────────────────────────────────────────────────────────
+  // ── Scale chips ─────────────────────────────────────────────
   function pfScale(mode) {
     fetch('/control/scale?value=' + mode).catch(function(){});
-    updateScaleBtns(mode);
+    updateScaleChips(mode);
   }
-  function updateScaleBtns(mode) {
-    document.getElementById('pfFitBtn').classList.toggle('active',  mode === 'fit');
-    document.getElementById('pfFillBtn').classList.toggle('active', mode === 'fill');
-  }
-
-  // ── start / stop ──────────────────────────────────────────────────────────
-  function pfStart() {
-    fetch('/control/start').catch(function(){});
-    setTimeout(poll, 300);
-  }
-  function pfStop() {
-    fetch('/control/stop').catch(function(){});
-    setTimeout(poll, 300);
+  function updateScaleChips(mode) {
+    document.getElementById('pfFitChip').classList.toggle('active',  mode === 'fit');
+    document.getElementById('pfFillChip').classList.toggle('active', mode === 'fill');
   }
 
-  // ── standard remote commands ──────────────────────────────────────────────
+  // ── Start / stop ────────────────────────────────────────────
+  function pfStart() { fetch('/control/start').catch(function(){}); setTimeout(poll, 300); }
+  function pfStop()  { fetch('/control/stop').catch(function(){});  setTimeout(poll, 300); }
+
+  // ── Tab switching ───────────────────────────────────────────
+  function switchTab(tab) {
+    document.getElementById('remoteSection').style.display = tab === 'remote'   ? '' : 'none';
+    document.getElementById('pfSection').style.display     = tab === 'picframe' ? '' : 'none';
+    document.getElementById('tabRemote').classList.toggle('active',   tab === 'remote');
+    document.getElementById('tabPicframe').classList.toggle('active', tab === 'picframe');
+  }
+
+  // ── Standard remote ─────────────────────────────────────────
   function cmd(action) {
     fetch('/' + action).catch(function(){});
     setTimeout(poll, 300);
   }
 
-  // ── polling ───────────────────────────────────────────────────────────────
-  var _bgMode = __BACKGROUND_MODE__;
+  // ── Polling ───────────────────────────────────────────────
+  var _bgMode    = __BACKGROUND_MODE__;
   var _firstPoll = true;
-  var _online = true;
+  var _online    = true;
+
+  if (_bgMode) document.getElementById('tabBar').style.display = '';
 
   function setOffline() {
-    if (!_online) return;   // already offline — avoid redundant DOM writes
+    if (!_online) return;
     _online = false;
     ['prevBtn', 'nextBtn', 'playBtn'].forEach(function(id) {
       document.getElementById(id).disabled = true;
     });
     if (_bgMode) {
-      ['pfStartBtn', 'pfStopBtn', 'pfIntervalSlider', 'pfFitBtn', 'pfFillBtn'].forEach(function(id) {
-        document.getElementById(id).disabled = true;
-      });
+      ['pfStartBtn', 'pfStopBtn', 'pfIntervalSlider', 'pfFitChip', 'pfFillChip'].forEach(
+        function(id) { document.getElementById(id).disabled = true; }
+      );
     }
-    document.getElementById('status').style.color = 'var(--warn-text)';
-    document.getElementById('status').textContent = 'Picture Show is not running.';
+    document.getElementById('status').style.color = '#fcd34d';
+    document.getElementById('status').textContent  = 'Picture Show is not running.';
   }
 
   function setOnline() {
     if (_online) return;
     _online = true;
-    _firstPoll = true;   // re-initialise slider on reconnect
+    _firstPoll = true;
     document.getElementById('status').style.color = '';
   }
 
@@ -390,55 +492,50 @@ _REMOTE_HTML = """\
       .then(function(r) { clearTimeout(tid); return r.json(); })
       .then(function(d) {
         setOnline();
-        var active = d.active;
-        var playing = d.playing;
-        var total = d.total;
+        var active   = d.active;
+        var playing  = d.playing;
+        var total    = d.total;
         var scanning = d.scanning;
 
-        // standard remote buttons
-        var btns = [
-          document.getElementById('prevBtn'),
-          document.getElementById('nextBtn'),
-          document.getElementById('playBtn'),
-        ];
-        btns.forEach(function(b) { b.disabled = !active; });
+        // Remote section
+        document.getElementById('prevBtn').disabled = !active;
+        document.getElementById('nextBtn').disabled = !active;
+        document.getElementById('playBtn').disabled = !active;
         document.getElementById('status').textContent = active
-          ? 'Photo ' + (d.index + 1) + ' of ' + total + (playing ? '  (Playing)' : '  (Paused)')
+          ? 'Photo ' + (d.index + 1) + ' of ' + total +
+            (playing ? '\u2002(Playing)' : '\u2002(Paused)')
           : 'Waiting for show to start\u2026';
-        document.getElementById('playBtnIcon').src = playing ? '/icon_pause.svg' : '/icon_play.svg';
-        document.getElementById('playBtnLabel').textContent = playing ? ' Pause' : ' Play';
+        document.getElementById('playBtnIcon').src =
+          playing ? '/icon_pause.svg' : '/icon_play.svg';
+        document.getElementById('playBtnLabel').textContent =
+          playing ? 'Pause' : 'Play';
 
-        // picture frame section
+        // Picture Frame section
         if (_bgMode) {
-          document.getElementById('pfSection').style.display = '';
-
-          var showStarted = d.show_started;
-          document.getElementById('pfStartBtn').disabled = showStarted || (!scanning && total === 0);
-          document.getElementById('pfStopBtn').disabled  = !showStarted;
+          var ss = d.show_started;
+          document.getElementById('pfStartBtn').disabled =
+            ss || (!scanning && total === 0);
+          document.getElementById('pfStopBtn').disabled    = !ss;
           document.getElementById('pfIntervalSlider').disabled = false;
-          document.getElementById('pfFitBtn').disabled  = false;
-          document.getElementById('pfFillBtn').disabled = false;
+          document.getElementById('pfFitChip').disabled    = false;
+          document.getElementById('pfFillChip').disabled   = false;
 
-          // no-images warning
-          var warn = document.getElementById('pfWarning');
-          warn.style.display = (!scanning && total === 0) ? '' : 'none';
+          document.getElementById('pfWarning').style.display =
+            (!scanning && total === 0) ? '' : 'none';
 
-          // interval slider — initialise on first poll, then only update if not dragging
           var slider = document.getElementById('pfIntervalSlider');
           if (_firstPoll || !slider.matches(':active')) {
-            slider.value = msToSlider(d.interval);
-            document.getElementById('pfIntervalLabel').textContent = fmtMs(d.interval);
+            var idx = msToSlider(d.interval);
+            slider.value = idx;
+            document.getElementById('pfIntervalLabel').textContent =
+              fmtSeconds(STEPS[idx]);
+            sliderFill(slider);
           }
-
-          // scale buttons
-          updateScaleBtns(d.scale);
+          updateScaleChips(d.scale);
         }
-
         _firstPoll = false;
       })
-      .catch(function() {
-        setOffline();
-      });
+      .catch(function() { setOffline(); });
   }
 
   poll();
@@ -600,6 +697,10 @@ class RemoteServer(QObject):
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_play.svg"))
             case "/icon_pause.svg":
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_pause.svg"))
+            case "/icon_scale_fit.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_scale_fit.svg"))
+            case "/icon_scale_fill.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_scale_fill.svg"))
 
             # ── standard remote control ───────────────────────────────────
             case "/next":
