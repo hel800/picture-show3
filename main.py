@@ -585,6 +585,11 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
         def _maybe_resume() -> None:
             if _resumed[0] or app.controller.scanning:
                 return
+            # imageCount is 0 when scanningChanged fires because _apply_filter()
+            # runs AFTER scanningChanged.emit() in the pipeline.  Wait for
+            # imagesChanged (which fires inside _apply_filter) to get the real count.
+            if app.controller.imageCount == 0:
+                return
             _resumed[0] = True
             try:
                 app.controller.imagesChanged.disconnect(_maybe_resume)
@@ -594,8 +599,7 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
                 app.controller.scanningChanged.disconnect(_maybe_resume)
             except RuntimeError:
                 pass
-            if app.controller.imageCount > 0:
-                _on_start_show()
+            _on_start_show()
 
         app.controller.imagesChanged.connect(_maybe_resume)
         app.controller.scanningChanged.connect(_maybe_resume)
