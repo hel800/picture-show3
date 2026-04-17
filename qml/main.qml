@@ -290,19 +290,22 @@ ApplicationWindow {
                 stack.pop()
                 sp.triggerSlideIn()
             }
+            // Background mode: pop the stack after the leave animation finishes.
+            // Python defers win.hide() by the full animation duration so the GPU
+            // framebuffer contains the clean SettingsPage + splashOverlay before hide.
+            onLeaveAnimDone: stack.pop(null, StackView.Immediate)
             onOpenHelp: if (!controller.kioskMode) { helpOverlay.fromSettings = false; helpOverlay.open() }
             onOpenQuitDialog: quitDialog.open()
         }
     }
 
-    // Background mode: pop SlideshowPage when End Show is pressed so SettingsPage
-    // (+ splashOverlay) is rendered into the GPU framebuffer before the window is
-    // hidden (Python defers win.hide() by ~2 frames for exactly this reason).
+    // Background mode: start the leave animation on End Show.
+    // The animation signals leaveAnimDone when done (handled above in slideshowComp).
     Connections {
         target: remoteServer
         function onStopShowRequested() {
             if (!controller.backgroundMode) return
-            if (stack.depth > 1) stack.pop()
+            if (stack.depth > 1) stack.currentItem.startLeaveAnim()
         }
     }
 }

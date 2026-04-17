@@ -508,16 +508,43 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
         s.setValue("background_mode/showActive", active)
         s.sync()   # flush to disk now — don't rely on destructor or GC timing
 
+    def _show_on_saved_screen() -> None:
+        """
+        Show the window on the screen it was last on.
+
+        win.setScreen() changes the logical screen association but does NOT
+        physically move the native window on Windows (virtual desktop).
+        Setting x/y within the target screen's geometry before showFullScreen()
+        is what actually routes the native surface to the correct monitor —
+        including the very first Start Show of a fresh process where win.screen()
+        defaults to the primary display.
+        """
+        s_show = QSettings()
+        target = _find_target_screen(s_show)
+        if force_fullscreen:
+            if target is not None:
+                win.setScreen(target)
+                geo = target.geometry()
+                win.setX(geo.x())
+                win.setY(geo.y())
+            win.showFullScreen()
+        else:
+            if s_show.contains("window/x"):
+                win.setX(int(s_show.value("window/x")))
+                win.setY(int(s_show.value("window/y")))
+            elif target is not None:
+                geo = target.geometry()
+                win.setX(geo.x())
+                win.setY(geo.y())
+            win.show()
+
     def _on_start_show() -> None:
         # Only show the window here — controller.startShow(), setShowActive(), and
         # setCursorHidden() are all called by main.qml's onStartShow after the
         # kiosk splash animation completes (~300 ms later).
         app.remote.setShowStarted(True)
         _bg_persist(True)
-        if force_fullscreen:
-            QTimer.singleShot(0, win.showFullScreen)
-        else:
-            QTimer.singleShot(0, win.show)
+        QTimer.singleShot(0, _show_on_saved_screen)
 
     def _on_stop_show() -> None:
         # Suppress the play/pause popup before stopping (SlideshowPage still visible).
@@ -526,13 +553,18 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
         app.window_helper.setCursorHidden(False)
         app.remote.setShowActive(False)
         app.remote.setShowStarted(False)
+        # Persist the current screen now so the next Start Show — even after a
+        # process restart — opens on the monitor the user last placed the show on.
+        if win.screen() is not None:
+            s.setValue("window/screen", win.screen().name())
+            s.sync()
         _bg_persist(False)
-        # Defer hide by ~2 frames so Qt re-renders the SettingsPage + splashOverlay
-        # (triggered by the stack.pop() in QML's onStopShowRequested just below)
-        # before the window is hidden.  The window's last GPU framebuffer then
-        # contains the clean dark splash background rather than the slideshow image,
-        # preventing a flash of the old image when the window is shown again.
-        QTimer.singleShot(32, win.hide)
+        # Defer hide until after the leave animation completes.
+        # Animation: 600 ms fade + 2 000 ms logo pause + 1 000 ms shrink/fade = 3 600 ms.
+        # +100 ms buffer lets the QML stack.pop() (triggered by leaveAnimDone) render
+        # the clean SettingsPage + splashOverlay into the GPU framebuffer before hide,
+        # preventing a flash of the slideshow image on the next Start Show.
+        QTimer.singleShot(3700, win.hide)
 
     app.remote.startShowRequested.connect(_on_start_show)
     app.remote.stopShowRequested.connect(_on_stop_show)

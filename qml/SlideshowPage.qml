@@ -14,6 +14,7 @@ import "."
 //  20       playPausePopup (above all panels)
 //  25       noImagesOverlay (covers everything when no images are available)
 //  30       jumpOverlay / ratingOverlay / captionOverlay / kioskQuitDialog (top tier)
+//  50       leaveOverlay (background mode leave animation — above everything)
 // ─────────────────────────────────────────────────────────────────────────────
 Rectangle {
     id: root
@@ -24,6 +25,20 @@ Rectangle {
     signal exitShow()
     signal openHelp()
     signal openQuitDialog()
+    signal leaveAnimDone()   // background mode: emitted when the leave animation finishes
+
+    // ── Background mode leave animation ───────────────────────────────────────
+    // Triggered by main.qml when /control/stop is received.
+    // Sequence: image fades to dark (600 ms) → logo visible (2 000 ms) →
+    //           logo shrinks + fades (1 000 ms) → leaveAnimDone emitted.
+    function startLeaveAnim() {
+        // Reset to initial state before (re-)starting
+        leaveOverlay.opacity = 0
+        leaveLogo.opacity    = 0
+        leaveLogo.scale      = 1.0
+        leaveOverlay.visible = true
+        leaveAnim.restart()
+    }
 
     // ── State ─────────────────────────────────────────────────────────────────
     property bool showingA  : true   // which layer is currently the foreground
@@ -1900,5 +1915,61 @@ Rectangle {
         showImage(true)
         introFadeOut.start()
         root.forceActiveFocus()
+    }
+
+    // ── Background mode leave animation (z:50 — above everything) ────────────
+    Rectangle {
+        id: leaveOverlay
+        anchors.fill: parent
+        color: Theme.bgDeep
+        z: 50
+        visible: false
+        opacity: 0
+
+        Image {
+            id: leaveLogo
+            anchors.centerIn: parent
+            source: "../img/logo.svg"
+            fillMode: Image.PreserveAspectFit
+            width: 420; height: 126
+            sourceSize.width: 1000; sourceSize.height: 300
+            smooth: true; mipmap: true
+            opacity: 0
+            scale: 1.0
+        }
+
+        SequentialAnimation {
+            id: leaveAnim
+
+            // Phase 1 (600 ms): screen fades to dark while logo fades in
+            ParallelAnimation {
+                NumberAnimation {
+                    target: leaveOverlay; property: "opacity"
+                    from: 0; to: 1; duration: 600; easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    target: leaveLogo; property: "opacity"
+                    from: 0; to: 1; duration: 600; easing.type: Easing.OutCubic
+                }
+            }
+
+            // Phase 2 (2 000 ms): logo visible
+            PauseAnimation { duration: 1000 }
+
+            // Phase 3 (1 000 ms): logo shrinks and fades simultaneously
+            ParallelAnimation {
+                NumberAnimation {
+                    target: leaveLogo; property: "opacity"
+                    to: 0; duration: 1000; easing.type: Easing.InCubic
+                }
+                NumberAnimation {
+                    target: leaveLogo; property: "scale"
+                    to: 0.55; duration: 1000; easing.type: Easing.InCubic
+                }
+            }
+
+            // Signal completion — main.qml pops the stack; Python hides the window
+            ScriptAction { script: root.leaveAnimDone() }
+        }
     }
 }
