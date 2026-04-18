@@ -582,27 +582,40 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
     if s.value("background_mode/showActive", False, type=bool):
         _resumed = [False]   # mutable flag to ensure we fire exactly once
 
-        def _maybe_resume() -> None:
-            if _resumed[0] or app.controller.scanning:
-                return
-            # imageCount is 0 when scanningChanged fires because _apply_filter()
-            # runs AFTER scanningChanged.emit() in the pipeline.  Wait for
-            # imagesChanged (which fires inside _apply_filter) to get the real count.
-            if app.controller.imageCount == 0:
+        def _do_resume() -> None:
+            if _resumed[0]:
                 return
             _resumed[0] = True
             try:
-                app.controller.imagesChanged.disconnect(_maybe_resume)
+                app.controller.imagesChanged.disconnect(_on_images_changed)
             except RuntimeError:
                 pass
             try:
-                app.controller.scanningChanged.disconnect(_maybe_resume)
+                app.controller.scanningChanged.disconnect(_on_scan_changed)
             except RuntimeError:
                 pass
             _on_start_show()
 
-        app.controller.imagesChanged.connect(_maybe_resume)
-        app.controller.scanningChanged.connect(_maybe_resume)
+        def _on_images_changed() -> None:
+            if _resumed[0] or app.controller.scanning:
+                return
+            # imagesChanged fires inside _apply_filter — imageCount is final here.
+            # Resume immediately when images are available; the no-images case
+            # is handled by the deferred check queued in _on_scan_changed.
+            if app.controller.imageCount > 0:
+                _do_resume()
+
+        def _on_scan_changed() -> None:
+            if _resumed[0] or app.controller.scanning:
+                return
+            # scanningChanged fires BEFORE _apply_filter, so imageCount may still
+            # be 0 even when images exist.  Defer one event-loop tick so
+            # _apply_filter has run; if still no images, resume anyway so the
+            # show opens and displays the "no images" overlay.
+            QTimer.singleShot(0, _do_resume)
+
+        app.controller.imagesChanged.connect(_on_images_changed)
+        app.controller.scanningChanged.connect(_on_scan_changed)
 
 
 def _find_target_screen(s: QSettings):

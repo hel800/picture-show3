@@ -48,10 +48,16 @@ Item {
                 kioskLaunchAnim.start()
             } else if (!controller.scanning && controller.imageCount === 0) {
                 kioskHeartbeat.stop()
-                headerLogo.opacity = 1
-                splashOverlay.visible = false
-                windowHelper.setCursorHidden(false)
-                scrollSlideIn.start()
+                if (controller.backgroundMode) {
+                    splashLogo.scale = 1.0
+                    splashLogo.opacity = 1.0
+                    kioskLaunchAnim.start()
+                } else {
+                    headerLogo.opacity = 1
+                    splashOverlay.visible = false
+                    windowHelper.setCursorHidden(false)
+                    scrollSlideIn.start()
+                }
             }
         }
         function onImagesChanged() {
@@ -64,10 +70,16 @@ Item {
                 kioskLaunchAnim.start()
             } else if (!controller.scanning && controller.imageCount === 0) {
                 kioskHeartbeat.stop()
-                headerLogo.opacity = 1
-                splashOverlay.visible = false
-                windowHelper.setCursorHidden(false)
-                scrollSlideIn.start()
+                if (controller.backgroundMode) {
+                    splashLogo.scale = 1.0
+                    splashLogo.opacity = 1.0
+                    kioskLaunchAnim.start()
+                } else {
+                    headerLogo.opacity = 1
+                    splashOverlay.visible = false
+                    windowHelper.setCursorHidden(false)
+                    scrollSlideIn.start()
+                }
             }
         }
     }
@@ -1537,11 +1549,15 @@ Item {
                         } else if (!controller.scanning && controller.imageCount > 0)
                             kioskLaunchAnim.start()
                         else if (!controller.scanning && controller.imageCount === 0) {
-                            // Scan already done, no images — fall back to settings page
-                            headerLogo.opacity = 1
-                            splashOverlay.visible = false
-                            windowHelper.setCursorHidden(false)
-                            scrollSlideIn.start()
+                            if (controller.backgroundMode) {
+                                kioskLaunchAnim.start()
+                            } else {
+                                // Scan already done, no images — fall back to settings page
+                                headerLogo.opacity = 1
+                                splashOverlay.visible = false
+                                windowHelper.setCursorHidden(false)
+                                scrollSlideIn.start()
+                            }
                         } else
                             kioskHeartbeat.start()
                     } else {
@@ -1553,6 +1569,7 @@ Item {
                 }
             }
         }
+
     }
     // Slide the scroll content up after the splash (and after returning from show)
     ParallelAnimation {

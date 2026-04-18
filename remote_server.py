@@ -513,8 +513,7 @@ _REMOTE_HTML = """\
         // Picture Frame section
         if (_bgMode) {
           var ss = d.show_started;
-          document.getElementById('pfStartBtn').disabled =
-            ss || (!scanning && total === 0);
+          document.getElementById('pfStartBtn').disabled = ss;
           document.getElementById('pfStopBtn').disabled    = !ss;
           document.getElementById('pfIntervalSlider').disabled = false;
           document.getElementById('pfFitChip').disabled    = false;
