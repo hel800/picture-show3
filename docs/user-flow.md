@@ -24,6 +24,11 @@ stateDiagram-v2
     Slideshow --> HelpOverlay : F1
     HelpOverlay --> Settings : F1 / Esc (from settings)
     HelpOverlay --> Slideshow : F1 / Esc (from slideshow)
+
+    [*] --> Hidden : --background launch (GUI hidden, remote always on)
+    Hidden --> Slideshow : /control/start (remote)
+    Slideshow --> Hidden : /control/stop (remote) + leave animation
+    Hidden --> [*] : Qt.quit() (e.g. from Esc quit dialog while show is visible)
 ```
 
 ## Settings page keyboard map
@@ -70,8 +75,10 @@ z: 0–2   image layers (layerA / layerB)
 z: 10    HudBar
 z: 11    ExifPanel
 z: 20    play/pause popup
+z: 25    noImagesOverlay (shown when imageCount == 0 && !scanning)
 z: 30    jump dialog / rating overlay / caption overlay
 z: 50    intro fade overlay (black, shown on page open)
+         leaveOverlay (background mode End Show animation — fade to dark + logo)
 ```
 
 ## Resumed-show reset rules
