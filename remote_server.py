@@ -39,6 +39,82 @@ from PySide6.QtNetwork import QHostAddress, QTcpServer, QTcpSocket
 
 from slideshow_controller import SlideshowController
 
+# ── Remote control translations ────────────────────────────────────────────────
+_TRANSLATIONS: dict[str, dict[str, str]] = {
+    "en": {
+        "title":            "Picture Show Remote",
+        "status_waiting":   "Waiting for show to start\u2026",
+        "status_offline":   "Picture Show is not running.",
+        "status_photo":     "Photo {n} of {total}",
+        "status_playing":   "Playing",
+        "status_paused":    "Paused",
+        "tab_remote":       "Remote",
+        "tab_picframe":     "Picture Frame",
+        "btn_prev":         "Previous",
+        "btn_next":         "Next",
+        "play_play":        "Play",
+        "play_pause":       "Pause",
+        "pf_warning":       "No images found in the configured folder.",
+        "lbl_show_control": "Show Control",
+        "btn_start_show":   "Start Show",
+        "btn_end_show":     "End Show",
+        "lbl_interval":     "Interval",
+        "opt_interval":     "Autoplay interval",
+        "lbl_scale":        "Scale",
+        "opt_scale":        "Image scale",
+        "chip_fit":         "Fit",
+        "chip_fill":        "Fill",
+    },
+    "de": {
+        "title":            "Picture Show Fernbedienung",
+        "status_waiting":   "Warte auf Showstart\u2026",
+        "status_offline":   "Picture Show l\u00e4uft nicht.",
+        "status_photo":     "Foto {n} von {total}",
+        "status_playing":   "Wiedergabe",
+        "status_paused":    "Pausiert",
+        "tab_remote":       "Fernbedienung",
+        "tab_picframe":     "Bilderrahmen",
+        "btn_prev":         "Zur\u00fcck",
+        "btn_next":         "Weiter",
+        "play_play":        "Play",
+        "play_pause":       "Pause",
+        "pf_warning":       "Keine Bilder im konfigurierten Ordner gefunden.",
+        "lbl_show_control": "Show-Steuerung",
+        "btn_start_show":   "Show starten",
+        "btn_end_show":     "Show beenden",
+        "lbl_interval":     "Intervall",
+        "opt_interval":     "Autoplay-Intervall",
+        "lbl_scale":        "Skalierung",
+        "opt_scale":        "Bildskalierung",
+        "chip_fit":         "Einpassen",
+        "chip_fill":        "F\u00fcllen",
+    },
+    "fr": {
+        "title":            "T\u00e9l\u00e9commande Picture Show",
+        "status_waiting":   "En attente du d\u00e9marrage\u2026",
+        "status_offline":   "Picture Show n\u2019est pas lanc\u00e9.",
+        "status_photo":     "Photo {n} sur {total}",
+        "status_playing":   "En lecture",
+        "status_paused":    "En pause",
+        "tab_remote":       "T\u00e9l\u00e9commande",
+        "tab_picframe":     "Cadre photo",
+        "btn_prev":         "Pr\u00e9c\u00e9dent",
+        "btn_next":         "Suivant",
+        "play_play":        "Lecture",
+        "play_pause":       "Pause",
+        "pf_warning":       "Aucune image trouv\u00e9e dans le dossier configur\u00e9.",
+        "lbl_show_control": "Contr\u00f4le du diaporama",
+        "btn_start_show":   "D\u00e9marrer",
+        "btn_end_show":     "Arr\u00eater",
+        "lbl_interval":     "Intervalle",
+        "opt_interval":     "Intervalle de lecture auto",
+        "lbl_scale":        "Mise \u00e0 l\u2019\u00e9chelle",
+        "opt_scale":        "\u00c9chelle de l\u2019image",
+        "chip_fit":         "Adapter",
+        "chip_fill":        "Remplir",
+    },
+}
+
 # ── Remote control web page ────────────────────────────────────────────────────
 _REMOTE_HTML = """\
 <!DOCTYPE html>
@@ -283,25 +359,25 @@ _REMOTE_HTML = """\
 
 <header>
   <img src="/logo.svg" alt="Picture Show Remote">
-  <div id="status">Waiting for show to start…</div>
+  <div id="status" data-i18n="status_waiting">Waiting for show to start…</div>
 </header>
 
 <!-- Segmented section selector (background mode only) -->
 <div class="seg-bar" id="tabBar" style="display:none">
-  <button class="seg-tab active" id="tabRemote"   onclick="switchTab('remote')">Remote</button>
-  <button class="seg-tab"        id="tabPicframe" onclick="switchTab('picframe')">Picture Frame</button>
+  <button class="seg-tab active" id="tabRemote"   onclick="switchTab('remote')"   data-i18n="tab_remote">Remote</button>
+  <button class="seg-tab"        id="tabPicframe" onclick="switchTab('picframe')" data-i18n="tab_picframe">Picture Frame</button>
 </div>
 
 <!-- Remote section -->
 <div id="remoteSection">
   <div class="remote-grid">
-    <button class="nav-btn" id="prevBtn" onclick="cmd('prev')" title="Previous" disabled>
+    <button class="nav-btn" id="prevBtn" onclick="cmd('prev')" data-i18n-title="btn_prev" title="Previous" disabled>
       <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
         <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.5"/>
         <path d="M 20,8 10,16 20,24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
       </svg>
     </button>
-    <button class="nav-btn" id="nextBtn" onclick="cmd('next')" title="Next" disabled>
+    <button class="nav-btn" id="nextBtn" onclick="cmd('next')" data-i18n-title="btn_next" title="Next" disabled>
       <svg viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
         <rect x="1" y="1" width="30" height="30" rx="6" fill="none" stroke="#ffffff" stroke-width="1.6" opacity="0.5"/>
         <path d="M 12,8 22,16 12,24" stroke="#ffffff" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
@@ -309,7 +385,7 @@ _REMOTE_HTML = """\
     </button>
     <button class="play-btn" id="playBtn" onclick="cmd('toggle')" disabled>
       <img id="playBtnIcon" src="/icon_play.svg">
-      <span class="play-lbl" id="playBtnLabel">Play</span>
+      <span class="play-lbl" id="playBtnLabel" data-i18n="play_play">Play</span>
     </button>
   </div>
 </div>
@@ -317,19 +393,19 @@ _REMOTE_HTML = """\
 <!-- Picture Frame section (background mode only) -->
 <div id="pfSection" style="display:none">
 
-  <div id="pfWarning">No images found in the configured folder.</div>
+  <div id="pfWarning" data-i18n="pf_warning">No images found in the configured folder.</div>
 
   <!-- SHOW CONTROL -->
   <div class="opt-item">
-    <div class="opt-lbl"><div class="opt-bar"></div><span>Show Control</span></div>
+    <div class="opt-lbl"><div class="opt-bar"></div><span data-i18n="lbl_show_control">Show Control</span></div>
     <div class="action-row">
       <button class="action-btn" id="pfStartBtn" onclick="pfStart()">
         <svg viewBox="0 0 16 16" fill="currentColor"><polygon points="3,1 14,8 3,15"/></svg>
-        Start Show
+        <span data-i18n="btn_start_show">Start Show</span>
       </button>
       <button class="action-btn" id="pfStopBtn" onclick="pfStop()" disabled>
         <svg viewBox="0 0 16 16" fill="currentColor"><rect x="2" y="2" width="12" height="12" rx="2"/></svg>
-        End Show
+        <span data-i18n="btn_end_show">End Show</span>
       </button>
     </div>
   </div>
@@ -338,10 +414,10 @@ _REMOTE_HTML = """\
 
   <!-- INTERVAL -->
   <div class="opt-item">
-    <div class="opt-lbl"><div class="opt-bar"></div><span>Interval</span></div>
+    <div class="opt-lbl"><div class="opt-bar"></div><span data-i18n="lbl_interval">Interval</span></div>
     <div class="slider-block">
       <div class="slider-hdr">
-        <span class="opt-title">Autoplay interval</span>
+        <span class="opt-title" data-i18n="opt_interval">Autoplay interval</span>
         <span class="opt-value" id="pfIntervalLabel">5m</span>
       </div>
       <input type="range" id="pfIntervalSlider" min="0" max="92"
@@ -355,15 +431,15 @@ _REMOTE_HTML = """\
 
   <!-- SCALE -->
   <div class="opt-item">
-    <div class="opt-lbl"><div class="opt-bar"></div><span>Scale</span></div>
+    <div class="opt-lbl"><div class="opt-bar"></div><span data-i18n="lbl_scale">Scale</span></div>
     <div class="opt-row">
-      <span class="opt-title">Image scale</span>
+      <span class="opt-title" data-i18n="opt_scale">Image scale</span>
       <div class="chip-group">
         <button class="chip" id="pfFitChip" onclick="pfScale('fit')">
-          <img src="/icon_scale_fit.svg" alt=""><span>Fit</span>
+          <img src="/icon_scale_fit.svg" alt=""><span data-i18n="chip_fit">Fit</span>
         </button>
         <button class="chip" id="pfFillChip" onclick="pfScale('fill')">
-          <img src="/icon_scale_fill.svg" alt=""><span>Fill</span>
+          <img src="/icon_scale_fill.svg" alt=""><span data-i18n="chip_fill">Fill</span>
         </button>
       </div>
     </div>
@@ -374,6 +450,24 @@ _REMOTE_HTML = """\
 <footer>v__APP_VERSION__</footer>
 
 <script>
+  // ── i18n ─────────────────────────────────────────────────────────────
+  var TRANS = __TRANSLATIONS_JSON__;
+  function _t(key) {
+    var lang = (navigator.language || 'en').slice(0, 2);
+    var dict = TRANS[lang] || TRANS['en'];
+    return (dict && dict[key]) || TRANS['en'][key] || key;
+  }
+  function _applyI18n() {
+    document.title = _t('title');
+    document.querySelectorAll('[data-i18n]').forEach(function(el) {
+      el.textContent = _t(el.getAttribute('data-i18n'));
+    });
+    document.querySelectorAll('[data-i18n-title]').forEach(function(el) {
+      el.title = _t(el.getAttribute('data-i18n-title'));
+    });
+  }
+  _applyI18n();
+
   // ── Non-linear interval steps ─────────────────────────────────────────
   // 10s–59s: 1s  |  1m–10m: 1m  |  15m–55m: 5m  |  1h–24h: 1h
   var STEPS = (function() {
@@ -475,7 +569,7 @@ _REMOTE_HTML = """\
       );
     }
     document.getElementById('status').style.color = '#fcd34d';
-    document.getElementById('status').textContent  = 'Picture Show is not running.';
+    document.getElementById('status').textContent  = _t('status_offline');
   }
 
   function setOnline() {
@@ -502,13 +596,13 @@ _REMOTE_HTML = """\
         document.getElementById('nextBtn').disabled = !active;
         document.getElementById('playBtn').disabled = !active;
         document.getElementById('status').textContent = active
-          ? 'Photo ' + (d.index + 1) + ' of ' + total +
-            (playing ? '\u2002(Playing)' : '\u2002(Paused)')
-          : 'Waiting for show to start\u2026';
+          ? _t('status_photo').replace('{n}', d.index + 1).replace('{total}', total) +
+            '\u2002(' + (playing ? _t('status_playing') : _t('status_paused')) + ')'
+          : _t('status_waiting');
         document.getElementById('playBtnIcon').src =
           playing ? '/icon_pause.svg' : '/icon_play.svg';
         document.getElementById('playBtnLabel').textContent =
-          playing ? 'Pause' : 'Play';
+          playing ? _t('play_pause') : _t('play_play');
 
         // Picture Frame section
         if (_bgMode) {
@@ -683,11 +777,13 @@ class RemoteServer(QObject):
         match path:
             # ── static assets ─────────────────────────────────────────────
             case "/":
-                bg_js = "true" if self._background_mode else "false"
-                html  = (
+                bg_js    = "true" if self._background_mode else "false"
+                trans_js = json.dumps(_TRANSLATIONS, ensure_ascii=False)
+                html     = (
                     _REMOTE_HTML
                     .replace("__APP_VERSION__", self._version)
                     .replace("__BACKGROUND_MODE__", bg_js)
+                    .replace("__TRANSLATIONS_JSON__", trans_js)
                 )
                 self._respond(sock, "200 OK", "text/html; charset=utf-8", html)
             case "/logo.svg":
