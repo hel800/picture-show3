@@ -54,7 +54,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Next",
         "play_play":        "Play",
         "play_pause":       "Pause",
-        "pf_warning":       "No images found in the configured folder.",
+        "pf_warn_title":    "No images available",
+        "pf_warn_sub":      "Check the folder path or filter settings.",
         "lbl_show_control": "Show Control",
         "btn_start_show":   "Start Show",
         "btn_end_show":     "End Show",
@@ -78,7 +79,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Weiter",
         "play_play":        "Play",
         "play_pause":       "Pause",
-        "pf_warning":       "Keine Bilder im konfigurierten Ordner gefunden.",
+        "pf_warn_title":    "Keine Bilder verf\u00fcgbar",
+        "pf_warn_sub":      "Ordnerpfad oder Filtereinstellungen pr\u00fcfen.",
         "lbl_show_control": "Show-Steuerung",
         "btn_start_show":   "Show starten",
         "btn_end_show":     "Show beenden",
@@ -102,7 +104,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Suivant",
         "play_play":        "Lecture",
         "play_pause":       "Pause",
-        "pf_warning":       "Aucune image trouv\u00e9e dans le dossier configur\u00e9.",
+        "pf_warn_title":    "Aucune image disponible",
+        "pf_warn_sub":      "V\u00e9rifiez le dossier ou les param\u00e8tres de filtre.",
         "lbl_show_control": "Contr\u00f4le du diaporama",
         "btn_start_show":   "D\u00e9marrer",
         "btn_end_show":     "Arr\u00eater",
@@ -347,10 +350,18 @@ _REMOTE_HTML = """\
 
   /* Warning banner */
   #pfWarning {
-    background: var(--warn); color: var(--warn-text);
-    border-radius: 8px; padding: 10px 14px;
-    font-size: .85rem; margin-bottom: 4px; display: none;
+    display: none;
+    align-items: flex-start;
+    gap: 12px;
+    background: rgba(124, 92, 30, 0.25);
+    border: 1px solid rgba(252, 211, 77, 0.3);
+    border-radius: 10px;
+    padding: 14px 16px;
+    margin-bottom: 8px;
   }
+  .warn-icon { color: var(--warn-text); flex-shrink: 0; margin-top: 1px; }
+  .warn-title { font-size: .88rem; font-weight: 600; color: var(--warn-text); margin-bottom: 3px; }
+  .warn-sub { font-size: .78rem; color: rgba(252, 211, 77, 0.6); line-height: 1.4; }
 
   footer { font-size: .7rem; color: var(--surface); text-align: center; }
 </style>
@@ -393,7 +404,16 @@ _REMOTE_HTML = """\
 <!-- Picture Frame section (background mode only) -->
 <div id="pfSection" style="display:none">
 
-  <div id="pfWarning" data-i18n="pf_warning">No images found in the configured folder.</div>
+  <div id="pfWarning">
+    <svg class="warn-icon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/>
+      <line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17" stroke-width="3"/>
+    </svg>
+    <div>
+      <div class="warn-title" data-i18n="pf_warn_title">No images available</div>
+      <div class="warn-sub" data-i18n="pf_warn_sub">Check the folder path or filter settings.</div>
+    </div>
+  </div>
 
   <!-- SHOW CONTROL -->
   <div class="opt-item">
@@ -595,10 +615,11 @@ _REMOTE_HTML = """\
         var scanning = d.scanning;
 
         // Remote section
-        document.getElementById('prevBtn').disabled = !active;
-        document.getElementById('nextBtn').disabled = !active;
-        document.getElementById('playBtn').disabled = !active;
-        document.getElementById('status').textContent = active
+        var navEnabled = active && total > 0;
+        document.getElementById('prevBtn').disabled = !navEnabled;
+        document.getElementById('nextBtn').disabled = !navEnabled;
+        document.getElementById('playBtn').disabled = !navEnabled;
+        document.getElementById('status').textContent = active && total > 0
           ? _t('status_photo').replace('{n}', d.index + 1).replace('{total}', total) +
             '\u2002(' + (playing ? _t('status_playing') : _t('status_paused')) + ')'
           : _t('status_waiting');
@@ -617,7 +638,7 @@ _REMOTE_HTML = """\
           document.getElementById('pfFillChip').disabled   = false;
 
           document.getElementById('pfWarning').style.display =
-            (!scanning && total === 0) ? '' : 'none';
+            (!scanning && total === 0) ? 'flex' : 'none';
 
           var slider = document.getElementById('pfIntervalSlider');
           if (_firstPoll || !slider.matches(':active')) {
