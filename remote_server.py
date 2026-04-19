@@ -452,8 +452,11 @@ _REMOTE_HTML = """\
 <script>
   // ── i18n ─────────────────────────────────────────────────────────────
   var TRANS = __TRANSLATIONS_JSON__;
+  var _appLang = '__LANGUAGE__';
   function _t(key) {
-    var lang = (navigator.language || 'en').slice(0, 2);
+    var lang = _appLang === 'auto'
+      ? (navigator.language || 'en').slice(0, 2)
+      : _appLang;
     var dict = TRANS[lang] || TRANS['en'];
     return (dict && dict[key]) || TRANS['en'][key] || key;
   }
@@ -779,11 +782,13 @@ class RemoteServer(QObject):
             case "/":
                 bg_js    = "true" if self._background_mode else "false"
                 trans_js = json.dumps(_TRANSLATIONS, ensure_ascii=False)
+                lang     = self._controller.language
                 html     = (
                     _REMOTE_HTML
                     .replace("__APP_VERSION__", self._version)
                     .replace("__BACKGROUND_MODE__", bg_js)
                     .replace("__TRANSLATIONS_JSON__", trans_js)
+                    .replace("__LANGUAGE__", lang)
                 )
                 self._respond(sock, "200 OK", "text/html; charset=utf-8", html)
             case "/logo.svg":
