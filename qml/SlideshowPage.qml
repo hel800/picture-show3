@@ -286,6 +286,7 @@ Rectangle {
     }
 
     function showImage(withTransition) {
+        if (controller.imageCount === 0) return
         stopAll()
         resetLayers()
 
