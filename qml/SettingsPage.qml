@@ -45,18 +45,10 @@ Item {
                 kioskHeartbeat.stop()
                 splashScanLabel.opacity = 0
                 kioskLaunchAnim.start()
-            } else if (!controller.scanning && controller.imageCount === 0) {
-                kioskHeartbeat.stop()
-                splashScanLabel.opacity = 0
-                if (controller.backgroundMode) {
-                    kioskLaunchAnim.start()
-                } else {
-                    headerLogo.opacity = 1
-                    splashOverlay.visible = false
-                    windowHelper.setCursorHidden(false)
-                    scrollSlideIn.start()
-                }
             }
+            // imageCount === 0 is NOT handled here: scanningChanged fires before
+            // _apply_filter() updates imageCount, so 0 may just mean "not yet filtered".
+            // onImagesChanged (which fires after _apply_filter) handles that case.
         }
         function onImagesChanged() {
             if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
@@ -1547,11 +1539,6 @@ Item {
             ScriptAction {
                 script: {
                     if (root._autoLaunch) {
-                        // Restore the y binding broken by the preceding NumberAnimation so the
-                        // logo stays truly centred if the window is resized during heartbeat.
-                        splashLogo.y = Qt.binding(function() {
-                            return splashLogo.parent.height / 2 - splashLogo.height / 2
-                        })
                         root._kioskSplashDone = true
                         if (controller.backgroundMode && !windowHelper.windowVisible) {
                             // Window is hidden — launch is deferred until the window
