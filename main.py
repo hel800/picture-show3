@@ -552,19 +552,26 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
         app.controller.stopShow()
         app.window_helper.setCursorHidden(False)
         app.remote.setShowActive(False)
-        app.remote.setShowStarted(False)
+        # Keep showStarted=True during the leave animation so the Start Show button
+        # stays disabled — prevents a race if the user taps Start before the
+        # animation finishes.  setShowStarted(False) is called in _finish_stop below.
         # Persist the current screen now so the next Start Show — even after a
         # process restart — opens on the monitor the user last placed the show on.
         if win.screen() is not None:
             s.setValue("window/screen", win.screen().name())
             s.sync()
         _bg_persist(False)
+
+        def _finish_stop() -> None:
+            app.remote.setShowStarted(False)
+            win.hide()
+
         # Defer hide until after the leave animation completes.
         # Animation: 600 ms fade + 2 000 ms logo pause + 1 000 ms shrink/fade = 3 600 ms.
         # +100 ms buffer lets the QML stack.pop() (triggered by leaveAnimDone) render
         # the clean SettingsPage + splashOverlay into the GPU framebuffer before hide,
         # preventing a flash of the slideshow image on the next Start Show.
-        QTimer.singleShot(3700, win.hide)
+        QTimer.singleShot(3700, _finish_stop)
 
     app.remote.startShowRequested.connect(_on_start_show)
     app.remote.stopShowRequested.connect(_on_stop_show)
