@@ -550,7 +550,6 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
         # Suppress the play/pause popup before stopping (SlideshowPage still visible).
         app.controller.suppressNextPlayAnim()
         app.controller.stopShow()
-        app.window_helper.setCursorHidden(False)
         app.remote.setShowActive(False)
         # Keep showStarted=True during the leave animation so the Start Show button
         # stays disabled — prevents a race if the user taps Start before the
