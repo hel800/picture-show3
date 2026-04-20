@@ -758,6 +758,7 @@ class RemoteServer(QObject):
     def _drop(self, sock: QTcpSocket) -> None:
         if sock in self._clients:
             self._clients.remove(sock)
+        sock.deleteLater()
 
     def _respond(
         self,
@@ -777,7 +778,7 @@ class RemoteServer(QObject):
         )
         sock.write(header.encode() + body)
         sock.flush()
-        sock.disconnectFromHost()
+        sock.abort()  # hard close — avoids TIME_WAIT accumulation under high poll rate
 
     def _json_ok(self, sock: QTcpSocket) -> None:
         self._respond(sock, "200 OK", "application/json", '{"ok":true}')
