@@ -43,14 +43,12 @@ Item {
             if (!controller.scanning && controller.imageCount > 0
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
-                splashLogo.scale = 1.0   // breathing may have stopped mid-cycle
-                splashLogo.opacity = 1.0
+                splashScanLabel.opacity = 0
                 kioskLaunchAnim.start()
             } else if (!controller.scanning && controller.imageCount === 0) {
                 kioskHeartbeat.stop()
+                splashScanLabel.opacity = 0
                 if (controller.backgroundMode) {
-                    splashLogo.scale = 1.0
-                    splashLogo.opacity = 1.0
                     kioskLaunchAnim.start()
                 } else {
                     headerLogo.opacity = 1
@@ -66,13 +64,12 @@ Item {
             if (!controller.scanning && controller.imageCount > 0
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
-                splashLogo.scale = 1.0
+                splashScanLabel.opacity = 0
                 kioskLaunchAnim.start()
             } else if (!controller.scanning && controller.imageCount === 0) {
                 kioskHeartbeat.stop()
+                splashScanLabel.opacity = 0
                 if (controller.backgroundMode) {
-                    splashLogo.scale = 1.0
-                    splashLogo.opacity = 1.0
                     kioskLaunchAnim.start()
                 } else {
                     headerLogo.opacity = 1
@@ -98,6 +95,7 @@ Item {
             //   500 ms pause → 1400 ms logo fade-in → heartbeat (if scanning) →
             //   zoom-out launch — identical to the kiosk startup experience.
             kioskHeartbeat.stop()
+            splashScanLabel.opacity = 0
             splashLogo.scale   = 0.88  // match splashAnim initial values
             splashLogo.opacity = 0.0
             splashAnim.restart()
@@ -1504,6 +1502,17 @@ Item {
             scale: 0.88
         }
 
+        Text {
+            id: splashScanLabel
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: splashLogo.y + splashLogo.height + 24
+            text: qsTr("Scanning…")
+            color: Theme.textSecondary
+            font.pixelSize: 14
+            opacity: 0
+            Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
+        }
+
         SequentialAnimation {
             id: splashAnim
             running: true
@@ -1538,13 +1547,20 @@ Item {
             ScriptAction {
                 script: {
                     if (root._autoLaunch) {
+                        // Restore the y binding broken by the preceding NumberAnimation so the
+                        // logo stays truly centred if the window is resized during heartbeat.
+                        splashLogo.y = Qt.binding(function() {
+                            return splashLogo.parent.height / 2 - splashLogo.height / 2
+                        })
                         root._kioskSplashDone = true
                         if (controller.backgroundMode && !windowHelper.windowVisible) {
                             // Window is hidden — launch is deferred until the window
                             // is shown (handled by Connections on Window.window above).
                             // Start heartbeat only while scan is still in progress.
-                            if (controller.scanning)
+                            if (controller.scanning) {
+                                splashScanLabel.opacity = 0.8
                                 kioskHeartbeat.start()
+                            }
                         // If scan finished before the splash did, skip heartbeat
                         } else if (!controller.scanning && controller.imageCount > 0)
                             kioskLaunchAnim.start()
@@ -1558,8 +1574,10 @@ Item {
                                 windowHelper.setCursorHidden(false)
                                 scrollSlideIn.start()
                             }
-                        } else
+                        } else {
+                            splashScanLabel.opacity = 0.8
                             kioskHeartbeat.start()
+                        }
                     } else {
                         headerLogo.opacity = 1
                         splashOverlay.visible = false
@@ -1608,8 +1626,8 @@ Item {
     SequentialAnimation {
         id: kioskLaunchAnim
         ParallelAnimation {
-            NumberAnimation { target: splashLogo; property: "scale";   to: 4.5; duration: 300; easing.type: Easing.InQuart }
-            NumberAnimation { target: splashLogo; property: "opacity"; to: 0;   duration: 300; easing.type: Easing.InQuart }
+            NumberAnimation { target: splashLogo; property: "scale";   to: 4.5; duration: 400; easing.type: Easing.OutCubic }
+            NumberAnimation { target: splashLogo; property: "opacity"; to: 0;   duration: 400; easing.type: Easing.OutCubic }
         }
         ScriptAction { script: root.startShow() }
     }
