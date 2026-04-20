@@ -32,6 +32,7 @@ Rectangle {
     // Sequence: image fades to dark (600 ms) → logo visible (2 000 ms) →
     //           logo shrinks + fades (1 000 ms) → leaveAnimDone emitted.
     function startLeaveAnim() {
+        windowHelper.setCursorHidden(true)
         // Reset to initial state before (re-)starting
         leaveOverlay.opacity = 0
         leaveLogo.opacity    = 0
