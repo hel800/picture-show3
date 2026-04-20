@@ -60,7 +60,7 @@ ApplicationWindow {
         target: controller
         function onSettingsChanged() {
             remoteServer.setPort(controller.remotePort)
-            if (controller.remoteEnabled)
+            if (controller.remoteEnabled || controller.backgroundMode)
                 remoteServer.start()
             else
                 remoteServer.stop()
