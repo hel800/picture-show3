@@ -18,7 +18,7 @@ import "."
 // ─────────────────────────────────────────────────────────────────────────────
 Rectangle {
     id: root
-    color: "black"
+    color: Theme.bgDeep
     focus: true
     clip: true   // keep sliding layers from painting outside the window
 
@@ -131,7 +131,7 @@ Rectangle {
         width: parent.width; height: parent.height
         opacity: 1; z: 1
 
-        Rectangle { anchors.fill: parent; color: "black" }   // prevents bleed-through
+        Rectangle { anchors.fill: parent; color: Theme.bgDeep }   // prevents bleed-through
         Image {
             id: imgA
             anchors.fill: parent
@@ -150,7 +150,7 @@ Rectangle {
         width: parent.width; height: parent.height
         opacity: 0; z: 0
 
-        Rectangle { anchors.fill: parent; color: "black" }
+        Rectangle { anchors.fill: parent; color: Theme.bgDeep }
         Image {
             id: imgB
             anchors.fill: parent
@@ -1893,7 +1893,7 @@ Rectangle {
     Rectangle {
         id: introOverlay
         anchors.fill: parent
-        color: "black"
+        color: Theme.bgDeep
         z: 50
         opacity: 1
 
