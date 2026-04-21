@@ -103,6 +103,7 @@ entirely via the remote control web page or the `/control/` HTTP API.
     process keeps running)
   - **Interval** log-scale slider (10 s – 1 day) with live adaptation
   - **Scale** toggle (Fit / Fill) with live adaptation
+  - **Rescan in Background** dropdown (Off / 5 min / 10 min / 30 min / 1 h / 3 h / 6 h / 9 h / 12 h / 24 h) and a manual **Scan Now** button — rescans the folder while the show is in standby to pick up new or removed images; interval is persisted across restarts
 - Show options supplied on the command line (`--autoplay`, `--sort`, `--scale`, …)
   take effect when the show is started.
 - Show state is persisted under `[background_mode]` in the INI file so the show
@@ -126,6 +127,8 @@ schedule runner.
 | `GET /control/stop` | Stop the show and hide the window | `{"ok":true}` · 409 if not started |
 | `GET /control/interval?value=N` | Set autoplay interval to `N` ms (10 000–86 400 000) | `{"ok":true}` · 400 on invalid value |
 | `GET /control/scale?value=V` | Set scale mode (`fit` or `fill`) | `{"ok":true}` · 400 on invalid value |
+| `GET /control/rescan` | Trigger an immediate folder rescan (standby only) | `{"ok":true}` · 409 if show is running |
+| `GET /control/rescan-interval?value=N` | Set auto-rescan interval in seconds (`0` = off; valid: 0, 300, 600, 1800, 3600, 10800, 21600, 32400, 43200, 86400) | `{"ok":true}` · 400 on invalid value |
 
 The `/status` endpoint returns extended fields in background mode:
 
@@ -139,7 +142,8 @@ The `/status` endpoint returns extended fields in background mode:
   "background_mode": true,
   "show_started": true,
   "interval": 30000,
-  "scale": "fit"
+  "scale": "fit",
+  "rescan_interval": 1800
 }
 ```
 

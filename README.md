@@ -31,7 +31,7 @@ Hardware-accelerated transitions · Smartphone remote · Panorama mode · Star-R
 | **Update check** | Checks GitHub Releases for a newer version on startup — opt-out in Advanced settings |
 | **Jump-start mode** | `python main.py <folder>` — skips the settings page and launches the show immediately; Esc returns to settings |
 | **Kiosk mode** | `python main.py --kiosk <folder>` — unattended display mode; Esc shows a quit confirmation dialog instead of going to settings |
-| **Background mode** | `python main.py --background <folder>` — digital picture frame mode; GUI starts hidden, remote control always running; Start/Stop show via web page or HTTP API; auto-resumes after power outage |
+| **Background mode** | `python main.py --background <folder>` — digital picture frame mode; GUI starts hidden, remote control always running; Start/Stop show via web page or HTTP API; auto-resumes after power outage; configurable periodic rescan keeps the image list fresh |
 
 ---
 
@@ -163,6 +163,7 @@ The remote buttons are disabled until the picture show is started, then activate
 
 - ◀ Previous · ▶ Next · Play/Pause
 - Live status (current photo, total, playing state)
+- **Picture Frame tab** (background mode only): Start/End Show · interval slider (10 s–24 h) · Fit/Fill scale · Rescan in Background (periodic auto-rescan dropdown + manual Scan Now button)
 
 ---
 

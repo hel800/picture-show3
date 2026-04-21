@@ -80,13 +80,13 @@ Custom `QQuickImageProvider` at `image://qr/<url-encoded-text>`.
 Built-in HTTP server (Qt `QTcpServer`, no extra dependencies) — context property `remoteServer`.
 - Serves a touch-friendly web page at the machine's LAN IP on a configurable port (default 8765)
 - Standard endpoints: `GET /` (UI), `/next`, `/prev`, `/toggle`, `/status` (JSON), SVG assets
-- `/status` returns `{ index, total, playing, active }` — `active` drives button enable/disable in the browser; extended in background mode with `background_mode`, `show_started`, `scanning`, `interval`, `scale`
-- Background mode adds: `/control/start`, `/control/stop`, `/control/interval?value=N` (10 000–86 400 000 ms), `/control/scale?value=V` (`fit`/`fill`); `/control/schedule/*` reserved (501)
-- Signals: `startShowRequested`, `stopShowRequested`, `intervalChangeRequested(int)`, `scaleChangeRequested(str)`, `showStartedChanged`
-- `setShowActive(bool)` enables/disables browser nav buttons; `setShowStarted(bool)` / `showStarted` property track whether the show window is currently visible
+- Background mode adds: `/control/start`, `/control/stop`, `/control/interval?value=N` (10 000–86 400 000 ms), `/control/scale?value=V` (`fit`/`fill`), `/control/rescan` (409 if show running), `/control/rescan-interval?value=N` (seconds; valid set: {0, 300, 600, 1800, 3600, 10800, 21600, 32400, 43200, 86400}); `/control/schedule/*` reserved (501)
+- `/status` returns `{ index, total, playing, active }` — `active` drives button enable/disable in the browser; extended in background mode with `background_mode`, `show_started`, `scanning`, `interval`, `scale`, `rescan_interval`
+- Signals: `startShowRequested`, `stopShowRequested`, `intervalChangeRequested(int)`, `scaleChangeRequested(str)`, `rescanRequested`, `rescanIntervalChangeRequested(int)`, `showStartedChanged`
+- `setShowActive(bool)` enables/disables browser nav buttons; `setShowStarted(bool)` / `showStarted` property track whether the show window is currently visible; `setRescanInterval(int)` syncs the current auto-rescan interval into server state for `/status` reporting
 - `setPort(int)` allows dynamic port changes; `setShowActive(bool)` slot controls button state
 - In background mode the server always starts regardless of the `remoteEnabled` setting
-- The web UI shows two tabs: **Remote** (standard nav controls) and **Picture Frame** (Start/Stop Show buttons, non-linear interval slider 10 s–24 h, Fit/Fill scale chips); the browser detects an offline server via `AbortController` 2.5 s timeout and disables all buttons
+- The web UI shows two tabs: **Remote** (standard nav controls) and **Picture Frame** (Start/Stop Show buttons, non-linear interval slider 10 s–24 h, Fit/Fill scale chips, **Rescan in Background** section: interval dropdown Off/5 min…24 h + manual **Scan Now** button — rescan disabled while show is running or scan is in progress); the browser detects an offline server via `AbortController` 2.5 s timeout and disables all buttons
 - SVG files served via `_read_img(filename)`: reads from `qrc:/img/` (frozen) or `img/` folder (dev)
 
 ---
@@ -173,7 +173,7 @@ Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`,
 
 **Play/pause popup** (`z: 20`): fixed 300×88 px overlay; triggered by `isPlayingChanged`; fades in 120 ms, holds 3 s (with depleting countdown border on the icon), fades out 400 ms. While the **play** popup is visible, `↑`/`↓` or `1`–`9` pause autoplay and enter interval edit mode (`_ppEditMode`); `↵` confirms the new interval and restarts autoplay; `Esc` cancels and leaves autoplay stopped. `0`–`9` and `↑`/`↓` are blocked during the **pause** popup. The autoplay timer is frozen via `controller.pauseInterval()` when the popup appears and restarted via `controller.restartInterval()` in `playPauseAnim.onFinished`.
 
-**No-images overlay** (`z: 25`): shown when `controller.imageCount === 0 && !controller.scanning` — displays `icon_picture.svg` + "No images available" message on `Theme.bgDeep` background. Used in background mode when the folder is empty or filtered to zero so the show window has a meaningful state.
+**No-images overlay** (`z: 25`): shown when `controller.imageCount === 0 && !controller.scanning` **or when the currently displayed image file is missing/unreadable** (`_activeImgError: (showingA ? imgA : imgB).status === Image.Error`). In the error case the icon turns amber (`Theme.statusWarn`), the title reads "Image not available", a filename line is shown, and the subtitle reads "The file may have been moved or deleted." The `_listLocked` property (set in `Component.onCompleted` after the first `showImage`) prevents `onImagesChanged` from refreshing the image list during an active show — the list is frozen after first display.
 
 **Jump dialog** (`z: 30`): opened **J**; `IntValidator` (1–imageCount); pauses autoplay; Enter to jump, Esc to cancel.
 

@@ -75,7 +75,7 @@ z: 0–2   image layers (layerA / layerB)
 z: 10    HudBar
 z: 11    ExifPanel
 z: 20    play/pause popup
-z: 25    noImagesOverlay (shown when imageCount == 0 && !scanning)
+z: 25    noImagesOverlay (shown when imageCount == 0 && !scanning, OR when current file is missing/unreadable)
 z: 30    jump dialog / rating overlay / caption overlay
 z: 50    intro fade overlay (black, shown on page open)
          leaveOverlay (background mode End Show animation — fade to dark + logo)
