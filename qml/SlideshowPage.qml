@@ -12,7 +12,7 @@ import "."
 //  10       HudBar (bottom bar)
 //  11       ExifPanel (above HudBar)
 //  20       playPausePopup (above all panels)
-//  25       noImagesOverlay (covers everything when no images are available)
+//  25       noImagesOverlay (covers everything when no images available or current file missing)
 //  30       jumpOverlay / ratingOverlay / captionOverlay / kioskQuitDialog (top tier)
 //  50       leaveOverlay (background mode leave animation — above everything)
 // ─────────────────────────────────────────────────────────────────────────────
@@ -59,6 +59,10 @@ Rectangle {
     property bool   _exifVisible     : false
     property bool   _exiting         : false   // set on exit to suppress the play/pause popup
     property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
+    property bool   _listLocked      : false   // true after first image shown; blocks onImagesChanged
+
+    // True when the frontmost image layer failed to load (file missing/unreadable).
+    readonly property bool _activeImgError: (showingA ? imgA : imgB).status === Image.Error
 
     // ── Interval edit state (play/pause popup in edit mode) ───────────────────
     property bool _ppEditMode      : false
@@ -372,10 +376,11 @@ Rectangle {
     Connections {
         target: controller
         function onImagesChanged() {
-            // Covers kiosk-mode (show started before images available) and any
-            // sort/filter completing while the show is active.  _apply_filter also
-            // emits currentIndexChanged right after, so showImage may be called
-            // twice in quick succession — that is harmless (stopAll/resetLayers first).
+            // Covers kiosk-mode (show started before images available).
+            // Once the list is locked (_listLocked = true after first image shown),
+            // ignore further imagesChanged signals so re-scans or re-sorts during
+            // the show don't reset the current image.
+            if (root._listLocked) return
             if (controller.imageCount > 0)
                 showImage(true)
         }
@@ -624,14 +629,16 @@ Rectangle {
             break
         case Qt.Key_0: case Qt.Key_1: case Qt.Key_2:
         case Qt.Key_3: case Qt.Key_4: case Qt.Key_5:
-            if (!playPauseAnim.running || controller.isPlaying)
+            if (!root._activeImgError && (!playPauseAnim.running || controller.isPlaying))
                 openRating(event.key - Qt.Key_0)
             break
         case Qt.Key_C:
-            if (root.hudStyle === "floating" && root.hudVisible)
-                floatingHud.openEdit()
-            else
-                openCaption()
+            if (!root._activeImgError) {
+                if (root.hudStyle === "floating" && root.hudVisible)
+                    floatingHud.openEdit()
+                else
+                    openCaption()
+            }
             break
         case Qt.Key_Q:
             root.openQuitDialog()
@@ -1000,18 +1007,17 @@ Rectangle {
         scrollLeftAnim.start()
     }
 
-    // ── No-images overlay ─────────────────────────────────────────────────────
-    // Shown whenever imageCount==0 and no scan is in progress.
-    // Covers the full screen so the user gets clear feedback instead of a
-    // black frame — handles empty folders, aggressive filters, and background
-    // mode before the first /control/start.
+    // ── No-images / missing-image overlay ────────────────────────────────────
+    // Shown when imageCount==0 (empty folder, aggressive filter, background mode
+    // before first start) or when the current image file is missing/unreadable.
     Rectangle {
         id: noImagesOverlay
         anchors.fill: parent
         color: Theme.bgDeep
         z: 25
 
-        readonly property bool _active: controller.imageCount === 0 && !controller.scanning
+        readonly property bool _active: (controller.imageCount === 0 && !controller.scanning)
+                                        || root._activeImgError
         visible: _active
         opacity: _active ? 1.0 : 0.0
         Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
@@ -1024,12 +1030,13 @@ Rectangle {
                 anchors.horizontalCenter: parent.horizontalCenter
                 source: "../img/icon_picture.svg"
                 size: 64
-                iconColor: Theme.textDisabled
+                iconColor: root._activeImgError ? Theme.statusWarn : Theme.textDisabled
             }
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("No images available")
+                text: root._activeImgError ? qsTr("Image not available")
+                                           : qsTr("No images available")
                 color: Theme.textPrimary
                 font.pixelSize: 22
                 font.weight: Font.Medium
@@ -1037,7 +1044,16 @@ Rectangle {
 
             Text {
                 anchors.horizontalCenter: parent.horizontalCenter
-                text: qsTr("Check the folder path or filter settings.")
+                text: controller.imagePath(controller.currentIndex).split(/[/\\]/).pop()
+                color: Theme.textSecondary
+                font.pixelSize: 13
+                visible: root._activeImgError
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root._activeImgError ? qsTr("The file may have been moved or deleted.")
+                                           : qsTr("Check the folder path or filter settings.")
                 color: Theme.textSecondary
                 font.pixelSize: 14
             }
@@ -1915,6 +1931,7 @@ Rectangle {
         // windowed mode the cursor should remain visible.
         windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
         showImage(true)
+        root._listLocked = true
         introFadeOut.start()
         root.forceActiveFocus()
     }

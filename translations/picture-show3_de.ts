@@ -915,6 +915,16 @@
         <translation>Ordnerpfad oder Filtereinstellungen prüfen.</translation>
     </message>
     <message>
+        <location filename="../qml/SlideshowPage.qml" line="1036"/>
+        <source>Image not available</source>
+        <translation>Bild nicht verfügbar</translation>
+    </message>
+    <message>
+        <location filename="../qml/SlideshowPage.qml" line="1053"/>
+        <source>The file may have been moved or deleted.</source>
+        <translation>Die Datei wurde möglicherweise verschoben oder gelöscht.</translation>
+    </message>
+    <message>
         <location filename="../qml/SlideshowPage.qml" line="1218"/>
         <source>Auto play</source>
         <translation>Autoplay</translation>
