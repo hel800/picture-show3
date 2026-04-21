@@ -65,6 +65,10 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "Image scale",
         "chip_fit":         "Fit",
         "chip_fill":        "Fill",
+        "btn_rescan":       "Scan Now",
+        "btn_rescan_lbl":   "Rescan:",
+        "lbl_rescan_bg":    "Rescan in Background",
+        "chip_off":         "Off",
     },
     "de": {
         "title":            "Picture Show Fernbedienung",
@@ -90,6 +94,10 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "Bildskalierung",
         "chip_fit":         "Einpassen",
         "chip_fill":        "F\u00fcllen",
+        "btn_rescan":       "Jetzt scannen",
+        "btn_rescan_lbl":   "Rescan:",
+        "lbl_rescan_bg":    "Hintergrundscan",
+        "chip_off":         "Aus",
     },
     "fr": {
         "title":            "T\u00e9l\u00e9commande Picture Show",
@@ -115,6 +123,10 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "\u00c9chelle de l\u2019image",
         "chip_fit":         "Adapter",
         "chip_fill":        "Remplir",
+        "btn_rescan":       "Scanner maintenant",
+        "btn_rescan_lbl":   "Rescan\u00a0:",
+        "lbl_rescan_bg":    "Rescan en arri\u00e8re-plan",
+        "chip_off":         "D\u00e9sactiv\u00e9",
     },
 }
 
@@ -296,6 +308,27 @@ _REMOTE_HTML = """\
   .action-btn:disabled { opacity: .25; cursor: not-allowed; }
   .action-btn svg { width: 1em; height: 1em; flex-shrink: 0; pointer-events: none; }
 
+  /* Rescan interval select */
+  select {
+    width: 100%;
+    padding: 10px 12px;
+    border-radius: 10px;
+    background: var(--surface);
+    border: 1px solid transparent;
+    color: var(--text-primary);
+    font-size: 14px;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%2394a3b8' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 12px center;
+    padding-right: 32px;
+    outline: none;
+  }
+  select:disabled { opacity: .25; cursor: not-allowed; }
+  select option { background: var(--bg-card); }
+
   /* Scale chips — matches QML image-scale selector (icon 20px + label) */
   .chip-group { display: flex; gap: 8px; }
   .chip {
@@ -465,6 +498,35 @@ _REMOTE_HTML = """\
     </div>
   </div>
 
+  <div class="divider"></div>
+
+  <!-- RESCAN IN BACKGROUND -->
+  <div class="opt-item">
+    <div class="opt-lbl"><div class="opt-bar"></div><span data-i18n="lbl_rescan_bg">Rescan in Background</span></div>
+    <div style="display:flex;gap:10px;align-items:center">
+      <span class="opt-title" style="white-space:nowrap" data-i18n="btn_rescan_lbl">Rescan:</span>
+      <select id="pfRescanSelect" onchange="pfRescanInterval(parseInt(this.value))" style="flex:1;margin-bottom:0">
+        <option value="0"     data-i18n="chip_off">Off</option>
+        <option value="300"  >5 min</option>
+        <option value="600"  >10 min</option>
+        <option value="1800" >30 min</option>
+        <option value="3600" >1 h</option>
+        <option value="10800">3 h</option>
+        <option value="21600">6 h</option>
+        <option value="32400">9 h</option>
+        <option value="43200">12 h</option>
+        <option value="86400">24 h</option>
+      </select>
+      <button class="action-btn" id="pfRescanBtn" onclick="pfRescan()" disabled style="flex:0 0 auto;padding:10px 16px">
+        <svg viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M13.5 8A5.5 5.5 0 1 1 8 2.5"/>
+          <polyline points="11,1 14,4 11,7"/>
+        </svg>
+        <span data-i18n="btn_rescan">Scan Now</span>
+      </button>
+    </div>
+  </div>
+
 </div>
 
 <footer>v__APP_VERSION__</footer>
@@ -555,9 +617,19 @@ _REMOTE_HTML = """\
     document.getElementById('pfFillChip').classList.toggle('active', mode === 'fill');
   }
 
-  // ── Start / stop ────────────────────────────────────────────
-  function pfStart() { fetch('/control/start').catch(function(){}); setTimeout(poll, 300); }
-  function pfStop()  { fetch('/control/stop').catch(function(){});  setTimeout(poll, 300); }
+  // ── Start / stop / rescan ───────────────────────────────────
+  function pfStart()  { fetch('/control/start').catch(function(){}); setTimeout(poll, 300); }
+  function pfStop()   { fetch('/control/stop').catch(function(){});  setTimeout(poll, 300); }
+  function pfRescan() { fetch('/control/rescan').catch(function(){}); setTimeout(poll, 300); }
+
+  // ── Rescan interval select ──────────────────────────────────
+  function pfRescanInterval(secs) {
+    fetch('/control/rescan-interval?value=' + secs).catch(function(){});
+    document.getElementById('pfRescanSelect').value = secs;
+  }
+  function updateRescanSelect(secs) {
+    document.getElementById('pfRescanSelect').value = secs;
+  }
 
   // ── Tab switching ───────────────────────────────────────────
   function switchTab(tab) {
@@ -587,7 +659,8 @@ _REMOTE_HTML = """\
       document.getElementById(id).disabled = true;
     });
     if (_bgMode) {
-      ['pfStartBtn', 'pfStopBtn', 'pfIntervalSlider', 'pfFitChip', 'pfFillChip'].forEach(
+      ['pfStartBtn', 'pfStopBtn', 'pfRescanBtn',
+       'pfIntervalSlider', 'pfFitChip', 'pfFillChip', 'pfRescanSelect'].forEach(
         function(id) { document.getElementById(id).disabled = true; }
       );
     }
@@ -631,11 +704,14 @@ _REMOTE_HTML = """\
         // Picture Frame section
         if (_bgMode) {
           var ss = d.show_started;
-          document.getElementById('pfStartBtn').disabled = ss;
-          document.getElementById('pfStopBtn').disabled    = !ss;
+          document.getElementById('pfStartBtn').disabled  = ss;
+          document.getElementById('pfStopBtn').disabled   = !ss;
+          // Rescan only available in standby (not while show runs or scan in progress)
+          document.getElementById('pfRescanBtn').disabled    = ss || scanning;
+          document.getElementById('pfRescanSelect').disabled = ss;
           document.getElementById('pfIntervalSlider').disabled = false;
-          document.getElementById('pfFitChip').disabled    = false;
-          document.getElementById('pfFillChip').disabled   = false;
+          document.getElementById('pfFitChip').disabled   = false;
+          document.getElementById('pfFillChip').disabled  = false;
 
           document.getElementById('pfWarning').style.display =
             (!scanning && total === 0) ? 'flex' : 'none';
@@ -649,6 +725,7 @@ _REMOTE_HTML = """\
             sliderFill(slider);
           }
           updateScaleChips(d.scale);
+          if (_firstPoll) updateRescanSelect(d.rescan_interval || 0);
         }
         _firstPoll = false;
       })
@@ -669,11 +746,13 @@ class RemoteServer(QObject):
     serverStarted = Signal(str)     # emits the URL when listening begins
 
     # ── Background mode signals ────────────────────────────────────────────────
-    startShowRequested      = Signal()     # /control/start received
-    stopShowRequested       = Signal()     # /control/stop received
-    intervalChangeRequested = Signal(int)  # /control/interval — ms value
-    scaleChangeRequested    = Signal(str)  # /control/scale — "fit" | "fill"
-    showStartedChanged      = Signal()     # show_started flag changed (QML binding)
+    startShowRequested           = Signal()     # /control/start received
+    stopShowRequested            = Signal()     # /control/stop received
+    intervalChangeRequested      = Signal(int)  # /control/interval — ms value
+    scaleChangeRequested         = Signal(str)  # /control/scale — "fit" | "fill"
+    rescanRequested              = Signal()     # /control/rescan received
+    rescanIntervalChangeRequested = Signal(int) # /control/rescan-interval — seconds (0=off)
+    showStartedChanged           = Signal()     # show_started flag changed (QML binding)
 
     def __init__(
         self,
@@ -690,6 +769,7 @@ class RemoteServer(QObject):
         self._background_mode = background_mode
         self._show_active     = False
         self._show_started    = False   # background mode: window has been shown
+        self._rescan_interval = 0       # auto-rescan interval in seconds (0 = off)
         self._server          = QTcpServer(self)
         self._clients: list[QTcpSocket] = []
         self._server.newConnection.connect(self._on_new_connection)
@@ -737,6 +817,10 @@ class RemoteServer(QObject):
             return
         self._show_started = started
         self.showStartedChanged.emit()
+
+    @Slot(int)
+    def setRescanInterval(self, secs: int) -> None:
+        self._rescan_interval = secs
 
     # ── Internals ──────────────────────────────────────────────────────────────
     @staticmethod
@@ -842,10 +926,11 @@ class RemoteServer(QObject):
                     "active":       self._show_active,
                     "scanning":     ctrl.scanning,
                     # background mode fields (always present for simplicity)
-                    "background_mode": self._background_mode,
-                    "show_started": self._show_started,
-                    "interval":     ctrl.interval,
-                    "scale":        "fill" if ctrl.imageFill else "fit",
+                    "background_mode":  self._background_mode,
+                    "show_started":     self._show_started,
+                    "interval":         ctrl.interval,
+                    "scale":            "fill" if ctrl.imageFill else "fit",
+                    "rescan_interval":  self._rescan_interval,
                 })
                 self._respond(sock, "200 OK", "application/json", body)
 
@@ -893,6 +978,31 @@ class RemoteServer(QObject):
                         self._json_error(sock, "value must be 'fit' or 'fill'")
                         return
                     self.scaleChangeRequested.emit(value)
+                    self._json_ok(sock)
+
+            case "/control/rescan":
+                if not self._background_mode:
+                    self._json_error(sock, "not in background mode", "404 Not Found")
+                elif self._show_started:
+                    self._json_error(sock, "cannot rescan while show is running", "409 Conflict")
+                else:
+                    self.rescanRequested.emit()
+                    self._json_ok(sock)
+
+            case "/control/rescan-interval":
+                if not self._background_mode:
+                    self._json_error(sock, "not in background mode", "404 Not Found")
+                else:
+                    try:
+                        secs = int(qs.get("value", [""])[0])
+                    except (ValueError, IndexError):
+                        self._json_error(sock, "missing or invalid 'value' parameter")
+                        return
+                    valid = {0, 300, 600, 1800, 3600, 10800, 21600, 32400, 43200, 86400}
+                    if secs not in valid:
+                        self._json_error(sock, "value must be one of: " + ", ".join(str(v) for v in sorted(valid)))
+                        return
+                    self.rescanIntervalChangeRequested.emit(secs)
                     self._json_ok(sock)
 
             # ── reserved for future schedule API ─────────────────────────

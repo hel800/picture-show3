@@ -542,6 +542,7 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
         # Only show the window here — controller.startShow(), setShowActive(), and
         # setCursorHidden() are all called by main.qml's onStartShow after the
         # kiosk splash animation completes (~300 ms later).
+        _rescan_timer.stop()
         app.remote.setShowStarted(True)
         _bg_persist(True)
         QTimer.singleShot(0, _show_on_saved_screen)
@@ -564,6 +565,8 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
         def _finish_stop() -> None:
             app.remote.setShowStarted(False)
             win.hide()
+            if _rescan_secs[0] > 0:
+                _rescan_timer.start(_rescan_secs[0] * 1000)
 
         # Defer hide until after the leave animation completes.
         # Animation: 600 ms fade + 2 000 ms logo pause + 1 000 ms shrink/fade = 3 600 ms.
@@ -572,16 +575,54 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
         # preventing a flash of the slideshow image on the next Start Show.
         QTimer.singleShot(3700, _finish_stop)
 
+    # ── Periodic rescan timer (standby only) ──────────────────────────────────
+    _rescan_secs: list[int] = [s.value("background_mode/rescanInterval", 0, type=int)]
+    app.remote.setRescanInterval(_rescan_secs[0])
+
+    _rescan_timer = QTimer(app)
+    _rescan_timer.setSingleShot(False)
+
+    def _do_rescan() -> None:
+        folder = app.controller.folder
+        if folder and not app.remote.showStarted and not app.controller.scanning:
+            app.controller.loadFolder(folder)
+
+    _rescan_timer.timeout.connect(_do_rescan)
+    # Don't start timer if auto-resume will immediately fire — it calls
+    # _on_start_show which stops the timer anyway, but skipping is cleaner.
+    _auto_resuming = s.value("background_mode/showActive", False, type=bool)
+    if _rescan_secs[0] > 0 and not _auto_resuming:
+        _rescan_timer.start(_rescan_secs[0] * 1000)
+
+    def _on_rescan_requested() -> None:
+        folder = app.controller.folder
+        if folder and not app.remote.showStarted and not app.controller.scanning:
+            app.controller.loadFolder(folder)
+
+    def _on_rescan_interval_changed(secs: int) -> None:
+        _rescan_secs[0] = secs
+        s.setValue("background_mode/rescanInterval", secs)
+        s.sync()
+        app.remote.setRescanInterval(secs)
+        _rescan_timer.stop()
+        if secs > 0 and not app.remote.showStarted:
+            _rescan_timer.start(secs * 1000)
+
     app.remote.startShowRequested.connect(_on_start_show)
     app.remote.stopShowRequested.connect(_on_stop_show)
     app.remote.intervalChangeRequested.connect(app.controller.setInterval)
     app.remote.scaleChangeRequested.connect(
         lambda mode: app.controller.setImageFill(mode == "fill")
     )
+    app.remote.rescanRequested.connect(_on_rescan_requested)
+    app.remote.rescanIntervalChangeRequested.connect(_on_rescan_interval_changed)
 
     # Clear the persisted active flag on clean exit so a deliberate quit
     # does not trigger auto-resume on the next launch.
-    app.aboutToQuit.connect(lambda: _bg_persist(False))
+    def _on_quit() -> None:
+        _rescan_timer.stop()
+        _bg_persist(False)
+    app.aboutToQuit.connect(_on_quit)
 
     # Auto-resume: if the show was running when the process last stopped
     # (e.g. power outage), restart it once the initial scan has completed.
