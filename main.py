@@ -571,21 +571,30 @@ def _setup_background_mode(
                 win.setY(geo.y())
             win.show()
 
+    _start_pending: list[bool] = [False]  # True while on_show_start command is running
+
     def _on_start_show() -> None:
+        if app.remote.showStarted or _start_pending[0]:
+            return
         _rescan_timer.stop()
 
         def _do_show() -> None:
             # Only show the window here — controller.startShow(), setShowActive(),
             # and setCursorHidden() are all called by main.qml's onStartShow after
             # the kiosk splash animation completes (~300 ms later).
+            _start_pending[0] = False
             app.remote.setShowStarted(True)
             _bg_persist(True)
             QTimer.singleShot(0, _show_on_saved_screen)
 
         if on_show_start:
+            _start_pending[0] = True
             def _run() -> None:
                 subprocess.run(on_show_start, shell=True)
-                QTimer.singleShot(0, _do_show)   # hand back to the Qt main thread
+                # Pass `app` as context so Qt marshals _do_show onto the main
+                # thread's event loop — QTimer.singleShot without a context object
+                # fires in the calling thread, which has no event loop here.
+                QTimer.singleShot(0, app, _do_show)
             threading.Thread(target=_run, daemon=True).start()
         else:
             _do_show()
