@@ -92,6 +92,7 @@ the slideshow immediately. The settings page is never accessible.
 ```bash
 python main.py --background <picture_dir>
 python main.py --background --autoplay 30 --fullscreen /mnt/photos
+python main.py --background --on-show-start display_on.sh --on-show-stop display_off.sh /mnt/photos
 ```
 
 Designed for digital picture frame installations. The process starts with the GUI
@@ -104,6 +105,14 @@ entirely via the remote control web page or the `/control/` HTTP API.
   - **Interval** log-scale slider (10 s – 1 day) with live adaptation
   - **Scale** toggle (Fit / Fill) with live adaptation
   - **Rescan in Background** dropdown (Off / 5 min / 10 min / 30 min / 1 h / 3 h / 6 h / 9 h / 12 h / 24 h) and a manual **Scan Now** button — rescans the folder while the show is in standby to pick up new or removed images; interval is persisted across restarts
+- Two optional hook commands can be passed to coordinate external hardware:
+  - **`--on-show-start CMD`** — shell command run (in a background thread, so Qt stays
+    responsive) **before** the show window appears. picture-show3 waits for `CMD` to
+    exit before showing the window, ensuring the display is ready for the splash
+    animation. Typical use: power on the display and wait for it to initialise.
+  - **`--on-show-stop CMD`** — shell command run (fire-and-forget) **after** the show
+    window hides (i.e. after the leave animation completes). Typical use: power off
+    the display.
 - Show options supplied on the command line (`--autoplay`, `--sort`, `--scale`, …)
   take effect when the show is started.
 - Show state is persisted under `[background_mode]` in the INI file so the show

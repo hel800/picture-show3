@@ -6,6 +6,8 @@ Requires: Python >= 3.14  |  PySide6 >= 6.7
 """
 import sys
 import os
+import subprocess
+import threading
 import configparser
 import ctypes
 from pathlib import Path
@@ -241,6 +243,18 @@ Mode options:
                   <picture_dir>. The last show-running state is persisted so the
                   show can resume automatically after a restart or power outage.
 
+Background mode options (only effective with --background):
+  --on-show-start CMD  Shell command run before the show window appears.
+                       picture-show3 waits for CMD to finish before showing
+                       the window, so the display is fully ready for the splash
+                       animation. Runs in a background thread — Qt stays
+                       responsive during the wait.
+                       Example: --on-show-start display_on.sh
+  --on-show-stop CMD   Shell command run after the show window hides (i.e.
+                       after the leave animation completes). Runs in the
+                       background; picture-show3 does not wait for it.
+                       Example: --on-show-stop display_off.sh
+
 Show options (session-only — never written to the settings file):
   --autoplay [N]       Enable autoplay; optionally set the interval to N seconds.
                        Without N the last saved interval is kept. Any positive integer
@@ -284,26 +298,31 @@ Examples:
   python main.py --sort date --scale fill --transition-dur 400 /mnt/photos
   python main.py --kiosk --recursive --loop --auto-panorama /mnt/photos
   python main.py --background --autoplay 30 --fullscreen /mnt/photos
+  python main.py --background --on-show-start display_on.sh --on-show-stop display_off.sh /mnt/photos
 
 Full CLI reference: docs/cli.md
 """
 
 
-def _parse_args() -> tuple[str | None, str | None, str | None, bool, dict, list[str]]:
+def _parse_args() -> tuple[str | None, str | None, str | None, bool, dict, list[str], str | None, str | None]:
     """
     Parse CLI arguments.
 
     Returns (kiosk_folder, start_folder, background_folder, force_fullscreen,
-             overrides, qt_argv).
+             overrides, qt_argv, on_show_start, on_show_stop).
 
     Exactly one of kiosk_folder / start_folder / background_folder is non-None,
     or all three are None (normal mode).
 
-    overrides  – dict of settings to write to QSettings before the controller
-                 reads them: keys match QSettings keys ('autoplay', 'interval',
-                 'transition', 'recursive', 'loop').
-    qt_argv    – cleaned sys.argv passed to QGuiApplication (unknown flags
-                 forwarded so Qt's own flag handling still works).
+    overrides      – dict of settings to write to QSettings before the controller
+                     reads them: keys match QSettings keys ('autoplay', 'interval',
+                     'transition', 'recursive', 'loop').
+    qt_argv        – cleaned sys.argv passed to QGuiApplication (unknown flags
+                     forwarded so Qt's own flag handling still works).
+    on_show_start  – shell command run (blocking, in a thread) before the show
+                     window appears; None if not supplied.
+    on_show_stop   – shell command run (fire-and-forget) after the show window
+                     hides; None if not supplied.
     """
     import argparse
 
@@ -332,6 +351,8 @@ def _parse_args() -> tuple[str | None, str | None, str | None, bool, dict, list[
     parser.add_argument("--recursive",     action="store_true", default=False)
     parser.add_argument("--loop",          action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--fullscreen",    action="store_true", default=False)
+    parser.add_argument("--on-show-start", default=None, metavar="CMD")
+    parser.add_argument("--on-show-stop",  default=None, metavar="CMD")
 
     args, remaining = parser.parse_known_args(sys.argv[1:])
 
@@ -373,8 +394,14 @@ def _parse_args() -> tuple[str | None, str | None, str | None, bool, dict, list[
     if args.loop is not None:
         overrides["loop"] = args.loop
 
+    on_show_start: str | None = args.on_show_start
+    on_show_stop:  str | None = args.on_show_stop
+    if (on_show_start or on_show_stop) and not args.background:
+        print("Warning: --on-show-start / --on-show-stop have no effect without --background",
+              file=sys.stderr)
+
     qt_argv = [sys.argv[0]] + remaining
-    return kiosk_folder, start_folder, background_folder, args.fullscreen, overrides, qt_argv
+    return kiosk_folder, start_folder, background_folder, args.fullscreen, overrides, qt_argv, on_show_start, on_show_stop
 
 
 def main() -> None:
@@ -389,7 +416,7 @@ def main() -> None:
     # Force a non-native style so custom Slider background/handle work on all platforms
     QQuickStyle.setStyle("Basic")
 
-    kiosk_folder, start_folder, background_folder, force_fullscreen, overrides, argv = _parse_args()
+    kiosk_folder, start_folder, background_folder, force_fullscreen, overrides, argv, on_show_start, on_show_stop = _parse_args()
     if kiosk_folder is not None and not Path(kiosk_folder).is_dir():
         print(f"Error: kiosk folder does not exist: {kiosk_folder}", file=sys.stderr)
         sys.exit(1)
@@ -470,7 +497,7 @@ def main() -> None:
     if background_folder:
         # Background mode: window stays hidden until /control/start is received.
         # Wire show/hide cycle and live-adjust slots before starting the event loop.
-        _setup_background_mode(app, win, force_fullscreen)
+        _setup_background_mode(app, win, force_fullscreen, on_show_start, on_show_stop)
     else:
         _restore_window(win, force_fullscreen=force_fullscreen)
 
@@ -483,7 +510,13 @@ def main() -> None:
     sys.exit(app.exec())
 
 
-def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
+def _setup_background_mode(
+    app,
+    win,
+    force_fullscreen: bool,
+    on_show_start: str | None = None,
+    on_show_stop:  str | None = None,
+) -> None:
     """
     Wire the background-mode show/hide cycle.
 
@@ -539,13 +572,23 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
             win.show()
 
     def _on_start_show() -> None:
-        # Only show the window here — controller.startShow(), setShowActive(), and
-        # setCursorHidden() are all called by main.qml's onStartShow after the
-        # kiosk splash animation completes (~300 ms later).
         _rescan_timer.stop()
-        app.remote.setShowStarted(True)
-        _bg_persist(True)
-        QTimer.singleShot(0, _show_on_saved_screen)
+
+        def _do_show() -> None:
+            # Only show the window here — controller.startShow(), setShowActive(),
+            # and setCursorHidden() are all called by main.qml's onStartShow after
+            # the kiosk splash animation completes (~300 ms later).
+            app.remote.setShowStarted(True)
+            _bg_persist(True)
+            QTimer.singleShot(0, _show_on_saved_screen)
+
+        if on_show_start:
+            def _run() -> None:
+                subprocess.run(on_show_start, shell=True)
+                QTimer.singleShot(0, _do_show)   # hand back to the Qt main thread
+            threading.Thread(target=_run, daemon=True).start()
+        else:
+            _do_show()
 
     def _on_stop_show() -> None:
         # Suppress the play/pause popup before stopping (SlideshowPage still visible).
@@ -567,6 +610,11 @@ def _setup_background_mode(app, win, force_fullscreen: bool) -> None:
             win.hide()
             if _rescan_secs[0] > 0:
                 _rescan_timer.start(_rescan_secs[0] * 1000)
+            if on_show_stop:
+                threading.Thread(
+                    target=lambda: subprocess.run(on_show_stop, shell=True),
+                    daemon=True,
+                ).start()
 
         # Defer hide until after the leave animation completes.
         # Animation: 600 ms fade + 2 000 ms logo pause + 1 000 ms shrink/fade = 3 600 ms.
