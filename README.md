@@ -83,7 +83,7 @@ python -m pytest
 python -m pytest -v
 ```
 
-333 tests across controller logic, CLI argument parsing, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
+360 tests across controller logic, CLI argument parsing, HTTP endpoints, and image providers. Tests require no display and create all fixture images at runtime — no test assets are committed to the repo.
 
 Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\picture-show3.ini` (Windows).
 
