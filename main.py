@@ -720,6 +720,15 @@ def _setup_background_mode(
 
         app.controller.imagesChanged.connect(_on_images_changed)
         app.controller.scanningChanged.connect(_on_scan_changed)
+    else:
+        # Not auto-resuming — display is on (e.g. terminal visible on boot).
+        # Fire the stop hook immediately so the display is powered off while the
+        # process idles in background standby.
+        if on_show_stop:
+            threading.Thread(
+                target=lambda: subprocess.run(on_show_stop, shell=True),
+                daemon=True,
+            ).start()
 
 
 def _find_target_screen(s: QSettings):
