@@ -95,6 +95,10 @@ class SlideshowImageProvider(QQuickImageProvider):
             if not image.isNull():
                 self._cache[index] = image
 
+    def warmup(self) -> None:
+        """Pre-populate the cache around the current index (call during standby)."""
+        self._schedule_preload()
+
     # ── QQuickImageProvider interface ─────────────────────────────────────────
 
     # PySide6 expects requestImage to return QImage only (size is ignored in Python bindings)

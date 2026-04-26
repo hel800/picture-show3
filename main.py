@@ -674,6 +674,16 @@ def _setup_background_mode(
     app.remote.rescanRequested.connect(_on_rescan_requested)
     app.remote.rescanIntervalChangeRequested.connect(_on_rescan_interval_changed)
 
+    # Warm the image cache during standby so the first image appears instantly.
+    # imagesChanged already clears the cache (connected in SlideshowImageProvider.__init__)
+    # before this fires, so the order is always: clear → re-warm.
+    def _do_standby_preload() -> None:
+        if app.remote.showStarted or app.controller.scanning or app.controller.imageCount == 0:
+            return
+        app.provider.warmup()
+
+    app.controller.imagesChanged.connect(_do_standby_preload)
+
     # Clear the persisted active flag on clean exit so a deliberate quit
     # does not trigger auto-resume on the next launch.
     def _on_quit() -> None:
