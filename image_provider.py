@@ -13,7 +13,7 @@ from __future__ import annotations
 import threading
 
 from PySide6.QtCore import Qt, QSize
-from PySide6.QtGui import QImage, QImageReader
+from PySide6.QtGui import QGuiApplication, QImage, QImageReader
 from PySide6.QtQuick import QQuickImageProvider
 
 # Register HEIC/HEIF support into Pillow if pillow-heif is installed
@@ -81,12 +81,17 @@ class SlideshowImageProvider(QQuickImageProvider):
             threading.Thread(target=self._load_into_cache, args=(i,),
                              daemon=True).start()
 
-    def _load_into_cache(self, index: int) -> None:
+    def _load_into_cache(self, index: int, target_size: QSize = QSize()) -> None:
         path = self._controller.imagePath(index)
         image = QImage()
         if path:
             reader = QImageReader(path)
             reader.setAutoTransform(True)
+            if target_size.isValid() and target_size.width() > 0:
+                native = reader.size()
+                if native.isValid():
+                    scaled = native.scaled(target_size, Qt.AspectRatioMode.KeepAspectRatio)
+                    reader.setScaledSize(scaled)
             image = reader.read()
             if image.isNull():
                 image = _pillow_to_qimage(path)
@@ -96,8 +101,32 @@ class SlideshowImageProvider(QQuickImageProvider):
                 self._cache[index] = image
 
     def warmup(self) -> None:
-        """Pre-populate the cache around the current index (call during standby)."""
-        self._schedule_preload()
+        """Pre-populate the cache at display resolution during standby.
+
+        Unlike _schedule_preload (full-res, used during the show), this loads
+        at screen size so the first image can be texture-uploaded instantly on
+        slow GPU hardware (e.g. Raspberry Pi).  Called from the main thread.
+        """
+        screen = QGuiApplication.primaryScreen()
+        display_size = screen.size() if screen else QSize()
+
+        idx   = self._controller.currentIndex
+        total = self._controller.imageCount
+        if total == 0:
+            return
+        window = set(range(max(0, idx - _BEHIND), min(total, idx + _AHEAD + 1)))
+
+        with self._lock:
+            needed = window - self._cache.keys() - self._loading
+            for i in needed:
+                self._loading.add(i)
+
+        for i in needed:
+            threading.Thread(
+                target=self._load_into_cache,
+                args=(i, display_size),
+                daemon=True,
+            ).start()
 
     # ── QQuickImageProvider interface ─────────────────────────────────────────
 
