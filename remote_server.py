@@ -12,9 +12,11 @@ Requires Python >= 3.14
 """
 from __future__ import annotations
 
+import io
 import json
 import socket
 import sys
+import threading
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -56,6 +58,9 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "play_pause":       "Pause",
         "btn_hud_show":     "Show Info Bar",
         "btn_hud_hide":     "Hide Info Bar",
+        "preview_none":     "No preview available",
+        "caption_prefix":   "Caption:",
+        "caption_empty":    "<no caption>",
         "pf_warn_title":    "No images available",
         "pf_warn_sub":      "Check the folder path or filter settings.",
         "lbl_show_control": "Show Control",
@@ -92,6 +97,9 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "play_pause":       "Pause",
         "btn_hud_show":     "Info-Leiste zeigen",
         "btn_hud_hide":     "Info-Leiste verbergen",
+        "preview_none":     "Keine Vorschau verf\u00fcgbar",
+        "caption_prefix":   "Beschriftung:",
+        "caption_empty":    "<keine Beschriftung>",
         "pf_warn_title":    "Keine Bilder verf\u00fcgbar",
         "pf_warn_sub":      "Ordnerpfad oder Filtereinstellungen pr\u00fcfen.",
         "lbl_show_control": "Show-Steuerung",
@@ -128,6 +136,9 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "play_pause":       "Pause",
         "btn_hud_show":     "Afficher la barre d’infos",
         "btn_hud_hide":     "Masquer la barre d’infos",
+        "preview_none":     "Aucun aperçu disponible",
+        "caption_prefix":   "Légende :",
+        "caption_empty":    "<aucune légende>",
         "pf_warn_title":    "Aucune image disponible",
         "pf_warn_sub":      "V\u00e9rifiez le dossier ou les param\u00e8tres de filtre.",
         "lbl_show_control": "Contr\u00f4le du diaporama",
@@ -417,6 +428,59 @@ _REMOTE_HTML = """\
   .warn-title { font-size: .88rem; font-weight: 600; color: var(--warn-text); margin-bottom: 3px; }
   .warn-sub { font-size: .78rem; color: rgba(252, 211, 77, 0.6); line-height: 1.4; }
 
+  /* Image preview */
+  #previewWrap { grid-column: 1 / -1; }
+  #previewBox {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    background: var(--surface);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  #previewBox img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity .7s ease;
+  }
+  #previewBox img.loaded { opacity: 1; }
+  #previewPlaceholder {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: .85rem;
+  }
+  #previewPlaceholder svg { width: 48px; height: 48px; opacity: .6; }
+  #previewBox.active #previewPlaceholder { display: none; }
+  #previewCounter {
+    position: absolute;
+    left: 50%; bottom: 8px;
+    transform: translateX(-50%);
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.55);
+    color: var(--text-primary);
+    font-size: .8rem;
+    font-variant-numeric: tabular-nums;
+    pointer-events: none;
+    display: none;
+  }
+  #previewBox.active #previewCounter { display: block; }
+  #previewCaption {
+    margin-top: 8px;
+    font-size: .82rem;
+    color: var(--text-sec);
+    text-align: center;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
   footer { font-size: .7rem; color: var(--surface); text-align: center; }
 </style>
 </head>
@@ -452,6 +516,23 @@ _REMOTE_HTML = """\
       <img id="playBtnIcon" src="/icon_play.svg">
       <span class="play-lbl" id="playBtnLabel" data-i18n="play_play">Play</span>
     </button>
+    <div id="previewWrap">
+      <div id="previewBox">
+        <img id="previewImgA" src="" alt="">
+        <img id="previewImgB" src="" alt="">
+        <div id="previewPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+            <line x1="3" y1="3" x2="21" y2="21"/>
+          </svg>
+          <span data-i18n="preview_none">No preview available</span>
+        </div>
+        <div id="previewCounter">0 / 0</div>
+      </div>
+      <div id="previewCaption"></div>
+    </div>
     <button class="play-btn" id="hudBtn" onclick="cmd('toggle-hud')" disabled>
       <img src="/icon_hud.svg">
       <span class="play-lbl" id="hudBtnLabel" data-i18n="btn_hud_show">Show Info Bar</span>
@@ -710,9 +791,10 @@ _REMOTE_HTML = """\
   }
 
   // ── Polling ───────────────────────────────────────────────
-  var _bgMode    = __BACKGROUND_MODE__;
-  var _firstPoll = true;
-  var _online    = true;
+  var _bgMode     = __BACKGROUND_MODE__;
+  var _firstPoll  = true;
+  var _online     = true;
+  var _lastIndex  = -1;
 
   if (_bgMode) {
     document.getElementById('tabBar').style.display = '';
@@ -728,6 +810,14 @@ _REMOTE_HTML = """\
     ['prevBtn', 'nextBtn', 'playBtn', 'hudBtn'].forEach(function(id) {
       document.getElementById(id).disabled = true;
     });
+    ['previewImgA', 'previewImgB'].forEach(function(id) {
+      var im = document.getElementById(id);
+      im.classList.remove('loaded');
+      im.removeAttribute('src');
+    });
+    document.getElementById('previewBox').classList.remove('active');
+    document.getElementById('previewCaption').textContent = '';
+    _lastIndex = -1;
     if (_bgMode) {
       ['pfStartBtn', 'pfStopBtn', 'pfRescanBtn',
        'pfIntervalSlider', 'pfFitChip', 'pfFillChip',
@@ -764,6 +854,41 @@ _REMOTE_HTML = """\
         document.getElementById('prevBtn').disabled = !navEnabled;
         document.getElementById('nextBtn').disabled = !navEnabled;
         document.getElementById('playBtn').disabled = !navEnabled;
+        var previewBox = document.getElementById('previewBox');
+        var imgA = document.getElementById('previewImgA');
+        var imgB = document.getElementById('previewImgB');
+        if (navEnabled) {
+          if (d.index !== _lastIndex) {
+            // Cross-fade: load into whichever <img> is currently hidden,
+            // then swap .loaded classes when the new image is ready so both
+            // fades run in lockstep for a clean, fixed-duration 700 ms swap.
+            var next = imgA.classList.contains('loaded') ? imgB : imgA;
+            var curr = imgA.classList.contains('loaded') ? imgA : imgB;
+            next.onload = function() {
+              next.classList.add('loaded');
+              curr.classList.remove('loaded');
+              previewBox.classList.add('active');
+            };
+            next.onerror = function() {};
+            next.src = '/preview?t=' + Date.now();
+            _lastIndex = d.index;
+          }
+          document.getElementById('previewCounter').textContent =
+            (d.index + 1) + ' / ' + total;
+          var capText = (d.caption && d.caption.length > 0)
+            ? d.caption
+            : _t('caption_empty');
+          document.getElementById('previewCaption').textContent =
+            _t('caption_prefix') + ' ' + capText;
+        } else {
+          imgA.classList.remove('loaded');
+          imgA.removeAttribute('src');
+          imgB.classList.remove('loaded');
+          imgB.removeAttribute('src');
+          previewBox.classList.remove('active');
+          document.getElementById('previewCaption').textContent = '';
+          _lastIndex = -1;
+        }
         document.getElementById('status').textContent = active && total > 0
           ? _t('status_photo').replace('{n}', d.index + 1).replace('{total}', total) +
             '\u2002(' + (playing ? _t('status_playing') : _t('status_paused')) + ')'
@@ -835,6 +960,14 @@ class RemoteServer(QObject):
     rescanIntervalChangeRequested = Signal(int) # /control/rescan-interval — seconds (0=off)
     showStartedChanged           = Signal()     # show_started flag changed (QML binding)
 
+    # ── Internal cross-thread signals (preview generation) ─────────────────────
+    # Worker threads emit these; the connected slots run on the main Qt thread
+    # (Qt.QueuedConnection auto-marshalling) so QTcpSocket writes stay on the
+    # thread that owns the socket. This keeps Pillow off the UI thread, so the
+    # slideshow's own fade animations don't stutter while generating previews.
+    _previewReady   = Signal(object, bytes)     # (sock, jpeg_bytes)
+    _previewFailed  = Signal(object)            # (sock,)
+
     def __init__(
         self,
         controller: SlideshowController,
@@ -854,6 +987,15 @@ class RemoteServer(QObject):
         self._server          = QTcpServer(self)
         self._clients: list[QTcpSocket] = []
         self._server.newConnection.connect(self._on_new_connection)
+
+        # Preview cache (bytes for the most recently generated thumbnail).
+        # Keyed by absolute file path so the same image is never re-encoded
+        # across multiple /preview hits.
+        self._preview_lock         = threading.Lock()
+        self._preview_cache_path   = ""
+        self._preview_cache_data: bytes | None = None
+        self._previewReady.connect(self._send_preview_ok)
+        self._previewFailed.connect(self._send_preview_err)
 
     # ── Public API ─────────────────────────────────────────────────────────────
     @Property(str, notify=serverStarted)
@@ -952,6 +1094,49 @@ class RemoteServer(QObject):
         body = json.dumps({"error": msg})
         self._respond(sock, status, "application/json", body)
 
+    # ── Preview generation (worker thread + signal back to main thread) ────────
+    def _gen_preview_async(self, sock: QTcpSocket, path: str) -> None:
+        """Worker-thread entry: produce a JPEG thumbnail, then emit a signal."""
+        with self._preview_lock:
+            if self._preview_cache_path == path and self._preview_cache_data:
+                self._previewReady.emit(sock, self._preview_cache_data)
+                return
+        try:
+            from PIL import Image, ImageOps
+            img = Image.open(path)
+            img = ImageOps.exif_transpose(img)
+            if img.mode not in ("RGB", "L"):
+                img = img.convert("RGB")
+            img.thumbnail((800, 800), Image.LANCZOS)
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=75, optimize=True)
+            data = buf.getvalue()
+        except Exception:
+            self._previewFailed.emit(sock)
+            return
+        with self._preview_lock:
+            self._preview_cache_path = path
+            self._preview_cache_data = data
+        self._previewReady.emit(sock, data)
+
+    @Slot(object, bytes)
+    def _send_preview_ok(self, sock: QTcpSocket, data: bytes) -> None:
+        if sock not in self._clients:
+            return  # client disconnected before we finished encoding
+        try:
+            self._respond(sock, "200 OK", "image/jpeg", data)
+        except RuntimeError:
+            pass  # underlying C++ socket was deleted
+
+    @Slot(object)
+    def _send_preview_err(self, sock: QTcpSocket) -> None:
+        if sock not in self._clients:
+            return
+        try:
+            self._respond(sock, "500 Internal Server Error", "text/plain", "preview unavailable")
+        except RuntimeError:
+            pass
+
     def _handle(self, sock: QTcpSocket) -> None:
         raw   = bytes(sock.readAll()).decode("utf-8", errors="ignore")
         parts = raw.split("\r\n", maxsplit=1)[0].split(" ") if raw else []
@@ -1012,6 +1197,20 @@ class RemoteServer(QObject):
             case "/toggle-hud":
                 ctrl.setHudVisible(not ctrl.hudVisible)
                 self._respond(sock, "200 OK", "text/plain", "ok")
+            case "/preview":
+                path = ctrl.currentImagePath()
+                if not path:
+                    self._respond(sock, "404 Not Found", "text/plain", "no image")
+                    return
+                # Off-thread: heavy Pillow work would otherwise block the Qt
+                # event loop and stutter the slideshow's own fade animations.
+                threading.Thread(
+                    target=self._gen_preview_async,
+                    args=(sock, path),
+                    daemon=True,
+                ).start()
+                # No response here — the worker emits a signal which the slot
+                # delivers on the main thread.
             case "/status":
                 body = json.dumps({
                     "index":        ctrl.currentIndex,
@@ -1020,6 +1219,7 @@ class RemoteServer(QObject):
                     "active":       self._show_active,
                     "scanning":     ctrl.scanning,
                     "hud_visible":  ctrl.hudVisible,
+                    "caption":      ctrl.imageCaption(ctrl.currentIndex) if ctrl.imageCount > 0 else "",
                     # background mode fields (always present for simplicity)
                     "background_mode":  self._background_mode,
                     "show_started":     self._show_started,

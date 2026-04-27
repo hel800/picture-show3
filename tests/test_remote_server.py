@@ -193,6 +193,22 @@ class TestHttpEndpoints:
         assert "hud_visible" in data
         assert data["hud_visible"] == ctrl.hudVisible
 
+    def test_preview_returns_404_when_no_images(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/preview") == 404
+
+    def test_preview_returns_jpeg_when_image_loaded(self, server_and_ctrl, tmp_path, qtbot):
+        ctrl, _, port = server_and_ctrl
+        d = tmp_path / "imgs"
+        d.mkdir()
+        make_plain_jpeg(d / "a.jpg")
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        status, body = _http_get(qtbot, f"http://127.0.0.1:{port}/preview")
+        assert status == 200
+        assert len(body) > 0
+
     def test_unknown_path_returns_404(self, server_and_ctrl, qtbot):
         _, _, port = server_and_ctrl
         try:
