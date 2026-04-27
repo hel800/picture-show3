@@ -193,6 +193,23 @@ class TestHttpEndpoints:
         assert "hud_visible" in data
         assert data["hud_visible"] == ctrl.hudVisible
 
+    def test_interval_endpoint_sets_value(self, server_and_ctrl, qtbot):
+        ctrl, _, port = server_and_ctrl
+        status, _ = _http_get(qtbot, f"http://127.0.0.1:{port}/interval?value=12000")
+        assert status == 200
+        assert ctrl.interval == 12000
+
+    def test_interval_rejects_out_of_range(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        # Below minimum
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/interval?value=500")  == 400
+        # Above maximum
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/interval?value=200000") == 400
+
+    def test_interval_rejects_missing_value(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/interval") == 400
+
     def test_toggle_exif_emits_signal(self, server_and_ctrl, qtbot):
         _, srv, port = server_and_ctrl
         received = []

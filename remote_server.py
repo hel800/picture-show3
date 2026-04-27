@@ -301,6 +301,20 @@ _REMOTE_HTML = """\
     gap: 12px;
   }
   .btn-row .play-btn { grid-column: auto; }
+  /* Interval slider on the Remote tab */
+  #intervalWrap { grid-column: 1 / -1; padding: 4px 4px 0; }
+  #intervalWrap.disabled .interval-row { opacity: .45; }
+  .interval-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px;
+  }
+  .interval-row span:first-child { color: var(--text-sec); }
+  #intervalLabel {
+    color: var(--accent-light);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Divider used inside the Remote grid (spans both columns) */
+  .remote-grid .divider { grid-column: 1 / -1; }
 
   /* ── Picture Frame section ──────────────────────────── */
   .opt-item { padding: 14px 0; }
@@ -427,6 +441,20 @@ _REMOTE_HTML = """\
     border: 2px solid var(--accent);
     cursor: pointer;
   }
+  input[type=range]:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+  }
+  input[type=range]:disabled::-webkit-slider-thumb {
+    background: var(--text-muted);
+    border-color: var(--text-disabled);
+    cursor: not-allowed;
+  }
+  input[type=range]:disabled::-moz-range-thumb {
+    background: var(--text-muted);
+    border-color: var(--text-disabled);
+    cursor: not-allowed;
+  }
 
   /* Warning banner */
   #pfWarning {
@@ -534,6 +562,15 @@ _REMOTE_HTML = """\
       <img id="playBtnIcon" src="/icon_play.svg">
       <span class="play-lbl" id="playBtnLabel" data-i18n="play_play">Play</span>
     </button>
+    <div id="intervalWrap">
+      <div class="interval-row">
+        <span data-i18n="lbl_interval">Interval</span>
+        <span id="intervalLabel">5s</span>
+      </div>
+      <input type="range" id="intervalSlider" min="1" max="99" value="5"
+             oninput="intervalInput(this.value)" onchange="intervalCommit(this.value)" disabled>
+    </div>
+    <div class="divider"></div>
     <div id="previewWrap">
       <div id="previewBox">
         <img id="previewImgA" src="" alt="">
@@ -813,6 +850,19 @@ _REMOTE_HTML = """\
     try { localStorage.setItem('ps_tab', tab); } catch(e) {}
   }
 
+  // ── Remote-tab interval slider (1–99 s) ─────────────────────
+  var _ivCommitTimer = null;
+  function intervalInput(v) {
+    document.getElementById('intervalLabel').textContent = v + 's';
+    sliderFill(document.getElementById('intervalSlider'));
+    clearTimeout(_ivCommitTimer);
+    _ivCommitTimer = setTimeout(function() { intervalCommit(v); }, 600);
+  }
+  function intervalCommit(v) {
+    clearTimeout(_ivCommitTimer);
+    fetch('/interval?value=' + (parseInt(v) * 1000)).catch(function(){});
+  }
+
   // ── Standard remote ─────────────────────────────────────────
   function cmd(action) {
     fetch('/' + action).catch(function(){});
@@ -836,9 +886,10 @@ _REMOTE_HTML = """\
   function setOffline() {
     if (!_online) return;
     _online = false;
-    ['prevBtn', 'nextBtn', 'playBtn', 'hudBtn', 'exifBtn'].forEach(function(id) {
+    ['prevBtn', 'nextBtn', 'playBtn', 'hudBtn', 'exifBtn', 'intervalSlider'].forEach(function(id) {
       document.getElementById(id).disabled = true;
     });
+    document.getElementById('intervalWrap').classList.add('disabled');
     ['previewImgA', 'previewImgB'].forEach(function(id) {
       var im = document.getElementById(id);
       im.classList.remove('loaded');
@@ -938,6 +989,19 @@ _REMOTE_HTML = """\
         document.getElementById('exifBtn').disabled = !active;
         document.getElementById('exifBtnLabel').textContent =
           d.exif_visible ? _t('btn_exif_hide') : _t('btn_exif_show');
+
+        // Interval slider — only changeable while autoplay is OFF
+        var ivSlider = document.getElementById('intervalSlider');
+        ivSlider.disabled = !active || playing;
+        document.getElementById('intervalWrap').classList.toggle('disabled', ivSlider.disabled);
+        if (!ivSlider.matches(':active')) {
+          var s = Math.max(1, Math.min(99, Math.round(d.interval / 1000)));
+          if (parseInt(ivSlider.value) !== s) {
+            ivSlider.value = s;
+            document.getElementById('intervalLabel').textContent = s + 's';
+          }
+          sliderFill(ivSlider);
+        }
 
         // Picture Frame section
         if (_bgMode) {
@@ -1249,6 +1313,17 @@ class RemoteServer(QObject):
             case "/toggle-hud":
                 ctrl.setHudVisible(not ctrl.hudVisible)
                 self._respond(sock, "200 OK", "text/plain", "ok")
+            case "/interval":
+                try:
+                    ms = int(qs.get("value", [""])[0])
+                except (ValueError, IndexError):
+                    self._json_error(sock, "missing or invalid 'value' parameter")
+                    return
+                if not (1_000 <= ms <= 99_000):
+                    self._json_error(sock, "value out of range (1000–99000 ms)")
+                    return
+                ctrl.setInterval(ms)
+                self._json_ok(sock)
             case "/toggle-exif":
                 self.toggleExifRequested.emit()
                 self._respond(sock, "200 OK", "text/plain", "ok")
