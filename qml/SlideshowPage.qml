@@ -1973,7 +1973,7 @@ Rectangle {
             }
 
             // Phase 2 (2 000 ms): logo visible
-            PauseAnimation { duration: 2000 }
+            PauseAnimation { duration: 1000 }
 
             // Phase 3 (1 000 ms): logo shrinks and fades simultaneously
             ParallelAnimation {
