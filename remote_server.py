@@ -54,6 +54,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Next",
         "play_play":        "Play",
         "play_pause":       "Pause",
+        "btn_hud_show":     "Show Info Bar",
+        "btn_hud_hide":     "Hide Info Bar",
         "pf_warn_title":    "No images available",
         "pf_warn_sub":      "Check the folder path or filter settings.",
         "lbl_show_control": "Show Control",
@@ -88,6 +90,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Weiter",
         "play_play":        "Play",
         "play_pause":       "Pause",
+        "btn_hud_show":     "Info-Leiste zeigen",
+        "btn_hud_hide":     "Info-Leiste verbergen",
         "pf_warn_title":    "Keine Bilder verf\u00fcgbar",
         "pf_warn_sub":      "Ordnerpfad oder Filtereinstellungen pr\u00fcfen.",
         "lbl_show_control": "Show-Steuerung",
@@ -122,6 +126,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Suivant",
         "play_play":        "Lecture",
         "play_pause":       "Pause",
+        "btn_hud_show":     "Afficher la barre d’infos",
+        "btn_hud_hide":     "Masquer la barre d’infos",
         "pf_warn_title":    "Aucune image disponible",
         "pf_warn_sub":      "V\u00e9rifiez le dossier ou les param\u00e8tres de filtre.",
         "lbl_show_control": "Contr\u00f4le du diaporama",
@@ -446,6 +452,10 @@ _REMOTE_HTML = """\
       <img id="playBtnIcon" src="/icon_play.svg">
       <span class="play-lbl" id="playBtnLabel" data-i18n="play_play">Play</span>
     </button>
+    <button class="play-btn" id="hudBtn" onclick="cmd('toggle-hud')" disabled>
+      <img src="/icon_hud.svg">
+      <span class="play-lbl" id="hudBtnLabel" data-i18n="btn_hud_show">Show Info Bar</span>
+    </button>
   </div>
 </div>
 
@@ -690,6 +700,7 @@ _REMOTE_HTML = """\
     document.getElementById('pfSection').style.display     = tab === 'picframe' ? '' : 'none';
     document.getElementById('tabRemote').classList.toggle('active',   tab === 'remote');
     document.getElementById('tabPicframe').classList.toggle('active', tab === 'picframe');
+    try { localStorage.setItem('ps_tab', tab); } catch(e) {}
   }
 
   // ── Standard remote ─────────────────────────────────────────
@@ -703,12 +714,18 @@ _REMOTE_HTML = """\
   var _firstPoll = true;
   var _online    = true;
 
-  if (_bgMode) document.getElementById('tabBar').style.display = '';
+  if (_bgMode) {
+    document.getElementById('tabBar').style.display = '';
+    try {
+      var _savedTab = localStorage.getItem('ps_tab');
+      if (_savedTab === 'picframe') switchTab('picframe');
+    } catch(e) {}
+  }
 
   function setOffline() {
     if (!_online) return;
     _online = false;
-    ['prevBtn', 'nextBtn', 'playBtn'].forEach(function(id) {
+    ['prevBtn', 'nextBtn', 'playBtn', 'hudBtn'].forEach(function(id) {
       document.getElementById(id).disabled = true;
     });
     if (_bgMode) {
@@ -755,6 +772,9 @@ _REMOTE_HTML = """\
           playing ? '/icon_pause.svg' : '/icon_play.svg';
         document.getElementById('playBtnLabel').textContent =
           playing ? _t('play_pause') : _t('play_play');
+        document.getElementById('hudBtn').disabled = !active;
+        document.getElementById('hudBtnLabel').textContent =
+          d.hud_visible ? _t('btn_hud_hide') : _t('btn_hud_show');
 
         // Picture Frame section
         if (_bgMode) {
@@ -964,6 +984,8 @@ class RemoteServer(QObject):
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_play.svg"))
             case "/icon_pause.svg":
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_pause.svg"))
+            case "/icon_hud.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_hud_fundamental.svg"))
             case "/icon_scale_fit.svg":
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_scale_fit.svg"))
             case "/icon_scale_fill.svg":
@@ -987,6 +1009,9 @@ class RemoteServer(QObject):
             case "/toggle":
                 ctrl.togglePlay()
                 self._respond(sock, "200 OK", "text/plain", "ok")
+            case "/toggle-hud":
+                ctrl.setHudVisible(not ctrl.hudVisible)
+                self._respond(sock, "200 OK", "text/plain", "ok")
             case "/status":
                 body = json.dumps({
                     "index":        ctrl.currentIndex,
@@ -994,6 +1019,7 @@ class RemoteServer(QObject):
                     "playing":      ctrl.isPlaying,
                     "active":       self._show_active,
                     "scanning":     ctrl.scanning,
+                    "hud_visible":  ctrl.hudVisible,
                     # background mode fields (always present for simplicity)
                     "background_mode":  self._background_mode,
                     "show_started":     self._show_started,

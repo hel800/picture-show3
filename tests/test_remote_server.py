@@ -176,6 +176,23 @@ class TestHttpEndpoints:
         assert ctrl.isPlaying is True
         ctrl.stopShow()
 
+    def test_toggle_hud_endpoint(self, server_and_ctrl, qtbot):
+        ctrl, _, port = server_and_ctrl
+        initial = ctrl.hudVisible
+        status, _ = _http_get(qtbot, f"http://127.0.0.1:{port}/toggle-hud")
+        assert status == 200
+        assert ctrl.hudVisible is not initial
+        # Toggle back
+        _http_get(qtbot, f"http://127.0.0.1:{port}/toggle-hud")
+        assert ctrl.hudVisible is initial
+
+    def test_status_includes_hud_visible(self, server_and_ctrl, qtbot):
+        ctrl, _, port = server_and_ctrl
+        _, body = _http_get(qtbot, f"http://127.0.0.1:{port}/status")
+        data = json.loads(body)
+        assert "hud_visible" in data
+        assert data["hud_visible"] == ctrl.hudVisible
+
     def test_unknown_path_returns_404(self, server_and_ctrl, qtbot):
         _, _, port = server_and_ctrl
         try:
