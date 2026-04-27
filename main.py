@@ -600,9 +600,15 @@ def _setup_background_mode(
             _do_show()
 
     def _on_stop_show() -> None:
+        # Persist autoplay state before stopShow() clears _is_playing.
+        # togglePlay() may have spent a --autoplay CLI override, reverting _autoplay
+        # to the original INI value even if the user re-enabled autoplay mid-show.
+        # Capturing the live state here ensures the next StartShow respects it.
+        was_playing = app.controller.isPlaying
         # Suppress the play/pause popup before stopping (SlideshowPage still visible).
         app.controller.suppressNextPlayAnim()
         app.controller.stopShow()
+        app.controller.setAutoplay(was_playing)
         app.remote.setShowActive(False)
         # Keep showStarted=True during the leave animation so the Start Show button
         # stays disabled — prevents a race if the user taps Start before the

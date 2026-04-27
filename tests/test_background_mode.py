@@ -47,6 +47,40 @@ def bg_app(qapp):
     srv.stop()
 
 
+class TestAutoplayPersistenceOnStop:
+    """_on_stop_show syncs _autoplay from _is_playing so next StartShow restores it."""
+
+    def _win_mock(self):
+        win = MagicMock()
+        win.screen.return_value = None  # skip the screen-name QSettings write
+        return win
+
+    def test_autoplay_preserved_when_playing_at_stop(self, bg_app, qtbot):
+        # Precondition: _autoplay False (e.g. CLI override already spent), but show
+        # is currently playing.  _on_stop_show must persist the live play state.
+        ctrl = bg_app.controller
+        ctrl._autoplay = False
+        ctrl._is_playing = True
+        _setup_background_mode(bg_app, self._win_mock(), False)
+
+        bg_app.remote.stopShowRequested.emit()
+        qtbot.wait(50)
+
+        assert ctrl._autoplay is True
+
+    def test_autoplay_false_when_paused_at_stop(self, bg_app, qtbot):
+        # If the show was paused when stopped, next StartShow should not autoplay.
+        ctrl = bg_app.controller
+        ctrl._autoplay = True
+        ctrl._is_playing = False
+        _setup_background_mode(bg_app, self._win_mock(), False)
+
+        bg_app.remote.stopShowRequested.emit()
+        qtbot.wait(50)
+
+        assert ctrl._autoplay is False
+
+
 class TestStartupStopHook:
     """on_show_stop fires at startup when the show is NOT auto-resuming."""
 
