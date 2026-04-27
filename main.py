@@ -677,6 +677,7 @@ def _setup_background_mode(
     app.remote.scaleChangeRequested.connect(
         lambda mode: app.controller.setImageFill(mode == "fill")
     )
+    app.remote.transitionChangeRequested.connect(app.controller.setTransitionStyle)
     app.remote.rescanRequested.connect(_on_rescan_requested)
     app.remote.rescanIntervalChangeRequested.connect(_on_rescan_interval_changed)
 

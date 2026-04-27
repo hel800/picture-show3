@@ -303,6 +303,44 @@ class TestRescanIntervalEndpoint:
         assert received[0] == 0
 
 
+# ── /control/transition ────────────────────────────────────────────────────────
+
+class TestTransitionEndpoint:
+    def test_transition_returns_404_in_normal_mode(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/transition?value=fade"
+        ) == 404
+
+    def test_transition_rejects_invalid_value(self, bg_server, qtbot):
+        _, _, port = bg_server
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/transition?value=dissolve"
+        ) == 400
+
+    def test_transition_rejects_missing_value(self, bg_server, qtbot):
+        _, _, port = bg_server
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/transition"
+        ) == 400
+
+    @pytest.mark.parametrize("style", ["fade", "slide", "zoom", "fadeblack"])
+    def test_transition_emits_signal_for_valid_style(self, bg_server, qtbot, style):
+        _, srv, port = bg_server
+        received = []
+        srv.transitionChangeRequested.connect(lambda s: received.append(s))
+        _http_status(qtbot, f"http://127.0.0.1:{port}/control/transition?value={style}")
+        qtbot.waitUntil(lambda: len(received) > 0, timeout=3000)
+        assert received[0] == style
+
+    def test_status_includes_transition(self, bg_server, qtbot):
+        ctrl, _, port = bg_server
+        _, body = _http_get(qtbot, f"http://127.0.0.1:{port}/status")
+        data = json.loads(body)
+        assert "transition" in data
+        assert data["transition"] == ctrl.transitionStyle
+
+
 # ── setPort ────────────────────────────────────────────────────────────────────
 
 class TestSetPort:

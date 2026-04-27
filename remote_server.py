@@ -65,6 +65,11 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "Image scale",
         "chip_fit":         "Fit",
         "chip_fill":        "Fill",
+        "lbl_transition":   "Transition",
+        "chip_fade":        "Fade",
+        "chip_slide":       "Slide",
+        "chip_zoom":        "Zoom",
+        "chip_fadeblack":   "Fade/Black",
         "btn_rescan":       "Scan Now",
         "btn_rescan_lbl":   "Rescan:",
         "lbl_rescan_bg":    "Rescan in Background",
@@ -94,6 +99,11 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "Bildskalierung",
         "chip_fit":         "Einpassen",
         "chip_fill":        "F\u00fcllen",
+        "lbl_transition":   "\u00dcbergang",
+        "chip_fade":        "Einblenden",
+        "chip_slide":       "Schieben",
+        "chip_zoom":        "Zoomen",
+        "chip_fadeblack":   "Schwarz",
         "btn_rescan":       "Jetzt scannen",
         "btn_rescan_lbl":   "Rescan:",
         "lbl_rescan_bg":    "Hintergrundscan",
@@ -123,6 +133,11 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "\u00c9chelle de l\u2019image",
         "chip_fit":         "Adapter",
         "chip_fill":        "Remplir",
+        "lbl_transition":   "Transition",
+        "chip_fade":        "Fondu",
+        "chip_slide":       "Glissement",
+        "chip_zoom":        "Zoom",
+        "chip_fadeblack":   "Fondu noir",
         "btn_rescan":       "Scanner maintenant",
         "btn_rescan_lbl":   "Rescan\u00a0:",
         "lbl_rescan_bg":    "Rescan en arri\u00e8re-plan",
@@ -500,6 +515,27 @@ _REMOTE_HTML = """\
 
   <div class="divider"></div>
 
+  <!-- TRANSITION -->
+  <div class="opt-item">
+    <div class="opt-lbl"><div class="opt-bar"></div><span data-i18n="lbl_transition">Transition</span></div>
+    <div class="chip-group">
+      <button class="chip" id="pfTransFadeChip" onclick="pfTransition('fade')">
+        <img src="/icon_trans_fade.svg" alt=""><span data-i18n="chip_fade">Fade</span>
+      </button>
+      <button class="chip" id="pfTransSlideChip" onclick="pfTransition('slide')">
+        <img src="/icon_trans_slide.svg" alt=""><span data-i18n="chip_slide">Slide</span>
+      </button>
+      <button class="chip" id="pfTransZoomChip" onclick="pfTransition('zoom')">
+        <img src="/icon_trans_zoom.svg" alt=""><span data-i18n="chip_zoom">Zoom</span>
+      </button>
+      <button class="chip" id="pfTransFadeblackChip" onclick="pfTransition('fadeblack')">
+        <img src="/icon_trans_fadeblack.svg" alt=""><span data-i18n="chip_fadeblack">Fade/Black</span>
+      </button>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
   <!-- RESCAN IN BACKGROUND -->
   <div class="opt-item">
     <div class="opt-lbl"><div class="opt-bar"></div><span data-i18n="lbl_rescan_bg">Rescan in Background</span></div>
@@ -617,6 +653,23 @@ _REMOTE_HTML = """\
     document.getElementById('pfFillChip').classList.toggle('active', mode === 'fill');
   }
 
+  // ── Transition chips ────────────────────────────────────────
+  function pfTransition(mode) {
+    fetch('/control/transition?value=' + mode).catch(function(){});
+    updateTransitionChips(mode);
+  }
+  function updateTransitionChips(mode) {
+    var map = {
+      'fade':      'pfTransFadeChip',
+      'slide':     'pfTransSlideChip',
+      'zoom':      'pfTransZoomChip',
+      'fadeblack': 'pfTransFadeblackChip',
+    };
+    Object.keys(map).forEach(function(m) {
+      document.getElementById(map[m]).classList.toggle('active', mode === m);
+    });
+  }
+
   // ── Start / stop / rescan ───────────────────────────────────
   function pfStart()  { fetch('/control/start').catch(function(){}); setTimeout(poll, 300); }
   function pfStop()   { fetch('/control/stop').catch(function(){});  setTimeout(poll, 300); }
@@ -660,7 +713,9 @@ _REMOTE_HTML = """\
     });
     if (_bgMode) {
       ['pfStartBtn', 'pfStopBtn', 'pfRescanBtn',
-       'pfIntervalSlider', 'pfFitChip', 'pfFillChip', 'pfRescanSelect'].forEach(
+       'pfIntervalSlider', 'pfFitChip', 'pfFillChip',
+       'pfTransFadeChip', 'pfTransSlideChip', 'pfTransZoomChip', 'pfTransFadeblackChip',
+       'pfRescanSelect'].forEach(
         function(id) { document.getElementById(id).disabled = true; }
       );
     }
@@ -712,6 +767,10 @@ _REMOTE_HTML = """\
           document.getElementById('pfIntervalSlider').disabled = false;
           document.getElementById('pfFitChip').disabled   = false;
           document.getElementById('pfFillChip').disabled  = false;
+          document.getElementById('pfTransFadeChip').disabled      = false;
+          document.getElementById('pfTransSlideChip').disabled     = false;
+          document.getElementById('pfTransZoomChip').disabled      = false;
+          document.getElementById('pfTransFadeblackChip').disabled = false;
 
           document.getElementById('pfWarning').style.display =
             (!scanning && total === 0) ? 'flex' : 'none';
@@ -725,6 +784,7 @@ _REMOTE_HTML = """\
             sliderFill(slider);
           }
           updateScaleChips(d.scale);
+          updateTransitionChips(d.transition);
           if (_firstPoll) updateRescanSelect(d.rescan_interval || 0);
         }
         _firstPoll = false;
@@ -750,6 +810,7 @@ class RemoteServer(QObject):
     stopShowRequested            = Signal()     # /control/stop received
     intervalChangeRequested      = Signal(int)  # /control/interval — ms value
     scaleChangeRequested         = Signal(str)  # /control/scale — "fit" | "fill"
+    transitionChangeRequested    = Signal(str)  # /control/transition — "fade"|"slide"|"zoom"|"fadeblack"
     rescanRequested              = Signal()     # /control/rescan received
     rescanIntervalChangeRequested = Signal(int) # /control/rescan-interval — seconds (0=off)
     showStartedChanged           = Signal()     # show_started flag changed (QML binding)
@@ -907,6 +968,14 @@ class RemoteServer(QObject):
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_scale_fit.svg"))
             case "/icon_scale_fill.svg":
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_scale_fill.svg"))
+            case "/icon_trans_fade.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_trans_fade.svg"))
+            case "/icon_trans_slide.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_trans_slide.svg"))
+            case "/icon_trans_zoom.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_trans_zoom.svg"))
+            case "/icon_trans_fadeblack.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_trans_fadeblack.svg"))
 
             # ── standard remote control ───────────────────────────────────
             case "/next":
@@ -930,6 +999,7 @@ class RemoteServer(QObject):
                     "show_started":     self._show_started,
                     "interval":         ctrl.interval,
                     "scale":            "fill" if ctrl.imageFill else "fit",
+                    "transition":       ctrl.transitionStyle,
                     "rescan_interval":  self._rescan_interval,
                 })
                 self._respond(sock, "200 OK", "application/json", body)
@@ -978,6 +1048,17 @@ class RemoteServer(QObject):
                         self._json_error(sock, "value must be 'fit' or 'fill'")
                         return
                     self.scaleChangeRequested.emit(value)
+                    self._json_ok(sock)
+
+            case "/control/transition":
+                if not self._background_mode:
+                    self._json_error(sock, "not in background mode", "404 Not Found")
+                else:
+                    value = qs.get("value", [""])[0]
+                    if value not in ("fade", "slide", "zoom", "fadeblack"):
+                        self._json_error(sock, "value must be one of: fade, slide, zoom, fadeblack")
+                        return
+                    self.transitionChangeRequested.emit(value)
                     self._json_ok(sock)
 
             case "/control/rescan":
