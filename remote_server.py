@@ -58,6 +58,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "play_pause":       "Pause",
         "btn_hud_show":     "Show Info Bar",
         "btn_hud_hide":     "Hide Info Bar",
+        "btn_exif_show":    "Show Details",
+        "btn_exif_hide":    "Hide Details",
         "preview_none":     "No preview available",
         "caption_prefix":   "Caption:",
         "caption_empty":    "<no caption>",
@@ -97,6 +99,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "play_pause":       "Pause",
         "btn_hud_show":     "Info-Leiste zeigen",
         "btn_hud_hide":     "Info-Leiste verbergen",
+        "btn_exif_show":    "Details zeigen",
+        "btn_exif_hide":    "Details verbergen",
         "preview_none":     "Keine Vorschau verf\u00fcgbar",
         "caption_prefix":   "Beschriftung:",
         "caption_empty":    "<keine Beschriftung>",
@@ -136,6 +140,8 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "play_pause":       "Pause",
         "btn_hud_show":     "Afficher la barre d’infos",
         "btn_hud_hide":     "Masquer la barre d’infos",
+        "btn_exif_show":    "Afficher les détails",
+        "btn_exif_hide":    "Masquer les détails",
         "preview_none":     "Aucun aperçu disponible",
         "caption_prefix":   "Légende :",
         "caption_empty":    "<aucune légende>",
@@ -187,6 +193,7 @@ _REMOTE_HTML = """\
     --text-sec:      #94a3b8;
     --text-muted:    #475569;
     --text-disabled: #6d84a5;
+    --star-inactive: #30303b;
     --warn:          #7c5c1e;
     --warn-text:     #fcd34d;
   }
@@ -286,6 +293,14 @@ _REMOTE_HTML = """\
     border-color: var(--accent);
   }
   .play-btn:disabled { opacity: .25; cursor: not-allowed; }
+  /* Two-up row of play-style buttons (HUD + Details) */
+  .btn-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .btn-row .play-btn { grid-column: auto; }
 
   /* ── Picture Frame section ──────────────────────────── */
   .opt-item { padding: 14px 0; }
@@ -456,20 +471,23 @@ _REMOTE_HTML = """\
   }
   #previewPlaceholder svg { width: 48px; height: 48px; opacity: .6; }
   #previewBox.active #previewPlaceholder { display: none; }
-  #previewCounter {
+  #previewCounter, #previewRating {
     position: absolute;
-    left: 50%; bottom: 8px;
-    transform: translateX(-50%);
+    bottom: 8px;
     padding: 3px 10px;
     border-radius: 6px;
     background: rgba(0, 0, 0, 0.55);
     color: var(--text-primary);
     font-size: .8rem;
-    font-variant-numeric: tabular-nums;
     pointer-events: none;
     display: none;
   }
-  #previewBox.active #previewCounter { display: block; }
+  #previewCounter { left: 8px; font-variant-numeric: tabular-nums; }
+  #previewRating  { right: 8px; letter-spacing: 1px; }
+  #previewRating .star-on  { color: var(--accent-light); }
+  #previewRating .star-off { color: var(--star-inactive); }
+  #previewBox.active #previewCounter,
+  #previewBox.active #previewRating { display: block; }
   #previewCaption {
     margin-top: 8px;
     font-size: .82rem;
@@ -530,13 +548,24 @@ _REMOTE_HTML = """\
           <span data-i18n="preview_none">No preview available</span>
         </div>
         <div id="previewCounter">0 / 0</div>
+        <div id="previewRating"></div>
       </div>
       <div id="previewCaption"></div>
     </div>
-    <button class="play-btn" id="hudBtn" onclick="cmd('toggle-hud')" disabled>
-      <img src="/icon_hud.svg">
-      <span class="play-lbl" id="hudBtnLabel" data-i18n="btn_hud_show">Show Info Bar</span>
-    </button>
+    <div class="btn-row">
+      <button class="play-btn" id="hudBtn" onclick="cmd('toggle-hud')" disabled>
+        <img src="/icon_hud.svg">
+        <span class="play-lbl" id="hudBtnLabel" data-i18n="btn_hud_show">Show Info Bar</span>
+      </button>
+      <button class="play-btn" id="exifBtn" onclick="cmd('toggle-exif')" disabled>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" opacity="0.5"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span class="play-lbl" id="exifBtnLabel" data-i18n="btn_exif_show">Show Details</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -807,7 +836,7 @@ _REMOTE_HTML = """\
   function setOffline() {
     if (!_online) return;
     _online = false;
-    ['prevBtn', 'nextBtn', 'playBtn', 'hudBtn'].forEach(function(id) {
+    ['prevBtn', 'nextBtn', 'playBtn', 'hudBtn', 'exifBtn'].forEach(function(id) {
       document.getElementById(id).disabled = true;
     });
     ['previewImgA', 'previewImgB'].forEach(function(id) {
@@ -875,6 +904,12 @@ _REMOTE_HTML = """\
           }
           document.getElementById('previewCounter').textContent =
             (d.index + 1) + ' / ' + total;
+          var r = Math.max(0, Math.min(5, d.rating | 0));
+          var ratingHtml = '';
+          for (var i = 1; i <= 5; i++) {
+            ratingHtml += '<span class="' + (i <= r ? 'star-on' : 'star-off') + '">★</span>';
+          }
+          document.getElementById('previewRating').innerHTML = ratingHtml;
           var capText = (d.caption && d.caption.length > 0)
             ? d.caption
             : _t('caption_empty');
@@ -900,6 +935,9 @@ _REMOTE_HTML = """\
         document.getElementById('hudBtn').disabled = !active;
         document.getElementById('hudBtnLabel').textContent =
           d.hud_visible ? _t('btn_hud_hide') : _t('btn_hud_show');
+        document.getElementById('exifBtn').disabled = !active;
+        document.getElementById('exifBtnLabel').textContent =
+          d.exif_visible ? _t('btn_exif_hide') : _t('btn_exif_show');
 
         // Picture Frame section
         if (_bgMode) {
@@ -958,7 +996,9 @@ class RemoteServer(QObject):
     transitionChangeRequested    = Signal(str)  # /control/transition — "fade"|"slide"|"zoom"|"fadeblack"
     rescanRequested              = Signal()     # /control/rescan received
     rescanIntervalChangeRequested = Signal(int) # /control/rescan-interval — seconds (0=off)
+    toggleExifRequested          = Signal()     # /toggle-exif received (QML toggles the EXIF panel)
     showStartedChanged           = Signal()     # show_started flag changed (QML binding)
+    exifVisibleChanged           = Signal()     # exif panel visibility (QML → remote)
 
     # ── Internal cross-thread signals (preview generation) ─────────────────────
     # Worker threads emit these; the connected slots run on the main Qt thread
@@ -983,6 +1023,7 @@ class RemoteServer(QObject):
         self._background_mode = background_mode
         self._show_active     = False
         self._show_started    = False   # background mode: window has been shown
+        self._exif_visible    = False   # mirrored from QML (SlideshowPage._exifVisible)
         self._rescan_interval = 0       # auto-rescan interval in seconds (0 = off)
         self._server          = QTcpServer(self)
         self._clients: list[QTcpSocket] = []
@@ -1040,6 +1081,17 @@ class RemoteServer(QObject):
             return
         self._show_started = started
         self.showStartedChanged.emit()
+
+    @Property(bool, notify=exifVisibleChanged)
+    def exifVisible(self) -> bool:
+        return self._exif_visible
+
+    @Slot(bool)
+    def setExifVisible(self, visible: bool) -> None:
+        if self._exif_visible == visible:
+            return
+        self._exif_visible = visible
+        self.exifVisibleChanged.emit()
 
     @Slot(int)
     def setRescanInterval(self, secs: int) -> None:
@@ -1197,6 +1249,9 @@ class RemoteServer(QObject):
             case "/toggle-hud":
                 ctrl.setHudVisible(not ctrl.hudVisible)
                 self._respond(sock, "200 OK", "text/plain", "ok")
+            case "/toggle-exif":
+                self.toggleExifRequested.emit()
+                self._respond(sock, "200 OK", "text/plain", "ok")
             case "/preview":
                 path = ctrl.currentImagePath()
                 if not path:
@@ -1219,7 +1274,9 @@ class RemoteServer(QObject):
                     "active":       self._show_active,
                     "scanning":     ctrl.scanning,
                     "hud_visible":  ctrl.hudVisible,
+                    "exif_visible": self._exif_visible,
                     "caption":      ctrl.imageCaption(ctrl.currentIndex) if ctrl.imageCount > 0 else "",
+                    "rating":       ctrl.imageRating(ctrl.currentIndex)  if ctrl.imageCount > 0 else 0,
                     # background mode fields (always present for simplicity)
                     "background_mode":  self._background_mode,
                     "show_started":     self._show_started,

@@ -41,6 +41,36 @@ Rectangle {
         leaveAnim.restart()
     }
 
+    // Toggle the EXIF/details panel — also bound to the comma key and to the
+    // remote-control "Details" button via main.qml's onToggleExifRequested.
+    function toggleExif() {
+        if (root._exifVisible) {
+            _setExifVisible(false)
+            exifPanel.close()
+            return
+        }
+        // Set data first so the panel pre-renders at full height,
+        // then open() defers the animation by one layout tick.
+        let rows = controller.imageExifInfo(controller.currentIndex)
+        // When the HUD is hidden, append HUD-only fields to the panel
+        if (!root.hudVisible) {
+            const rating = controller.imageRating(controller.currentIndex)
+            if (rating > 0) {
+                const stars = "★".repeat(rating) + "☆".repeat(5 - rating)
+                rows = rows.concat([{ label: qsTr("Rating"), value: stars }])
+            }
+            const dateTaken = controller.imageDateTaken(controller.currentIndex)
+            if (dateTaken.length > 0)
+                rows = rows.concat([{ label: qsTr("Date taken"), value: dateTaken }])
+            const caption = controller.imageCaption(controller.currentIndex)
+            if (caption.length > 0)
+                rows = rows.concat([{ label: qsTr("Caption"), value: caption, scroll: true }])
+        }
+        exifPanel.exifData = rows
+        _setExifVisible(true)
+        exifPanel.open()
+    }
+
     // ── State ─────────────────────────────────────────────────────────────────
     property bool showingA  : true   // which layer is currently the foreground
     property int  navDir    : 1      // +1 forward, -1 backward (for slide direction)
@@ -57,6 +87,13 @@ Rectangle {
         ? floatingHud._hudH + 40 : 0
 
     property bool   _exifVisible     : false
+    // Centralized setter — keeps the remote-control button label in sync.
+    // Use this instead of writing root._exifVisible directly.
+    function _setExifVisible(v) {
+        if (root._exifVisible === v) return
+        root._exifVisible = v
+        remoteServer.setExifVisible(v)
+    }
     property bool   _exiting         : false   // set on exit to suppress the play/pause popup
     property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
     property bool   _listLocked      : false   // true after first image shown; blocks onImagesChanged
@@ -94,7 +131,10 @@ Rectangle {
     // Linux/RPi the cursor stays visible at (0,0) until the first mouse move.
     // windowHelper.setCursorHidden() uses QGuiApplication.setOverrideCursor,
     // which takes effect immediately and works on all platforms.
-    Component.onDestruction: windowHelper.setCursorHidden(false)
+    Component.onDestruction: {
+        windowHelper.setCursorHidden(false)
+        remoteServer.setExifVisible(false)
+    }
 
     // Window.window is a QQuickWindow (not an Item) so it cannot be used as a
     // Connections target in QML. Use onVisibilityChanged directly on the Window
@@ -392,7 +432,7 @@ Rectangle {
             if (root.panoramaActive) _panoramaAbort()
             if (root._exifVisible) {
                 exifPanel.close()
-                root._exifVisible = false
+                _setExifVisible(false)
             }
             if (ratingOverlay.visible) {
                 ratingDimIn.stop(); ratingDimOut.start()
@@ -645,7 +685,7 @@ Rectangle {
             break
         case Qt.Key_Escape:
             if (root._exifVisible) {
-                root._exifVisible = false
+                _setExifVisible(false)
                 exifPanel.close()
             } else if (controller.kioskMode) {
                 kioskQuitDialog.open()
@@ -671,31 +711,7 @@ Rectangle {
                 startPanorama()
             break
         case Qt.Key_Comma:
-            if (root._exifVisible) {
-                root._exifVisible = false
-                exifPanel.close()
-            } else {
-                // Set data first so the panel pre-renders at full height,
-                // then open() defers the animation by one layout tick.
-                let rows = controller.imageExifInfo(controller.currentIndex)
-                // When the HUD is hidden, append HUD-only fields to the panel
-                if (!root.hudVisible) {
-                    const rating = controller.imageRating(controller.currentIndex)
-                    if (rating > 0) {
-                        const stars = "★".repeat(rating) + "☆".repeat(5 - rating)
-                        rows = rows.concat([{ label: qsTr("Rating"), value: stars }])
-                    }
-                    const dateTaken = controller.imageDateTaken(controller.currentIndex)
-                    if (dateTaken.length > 0)
-                        rows = rows.concat([{ label: qsTr("Date taken"), value: dateTaken }])
-                    const caption = controller.imageCaption(controller.currentIndex)
-                    if (caption.length > 0)
-                        rows = rows.concat([{ label: qsTr("Caption"), value: caption, scroll: true }])
-                }
-                exifPanel.exifData = rows
-                root._exifVisible = true
-                exifPanel.open()
-            }
+            toggleExif()
             break
         case Qt.Key_F1:
             root.openHelp()
@@ -731,7 +747,7 @@ Rectangle {
 
     function _closeExifIfOpen() {
         if (root._exifVisible) {
-            root._exifVisible = false
+            _setExifVisible(false)
             exifPanel.close()
         }
     }

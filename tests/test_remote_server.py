@@ -193,6 +193,15 @@ class TestHttpEndpoints:
         assert "hud_visible" in data
         assert data["hud_visible"] == ctrl.hudVisible
 
+    def test_toggle_exif_emits_signal(self, server_and_ctrl, qtbot):
+        _, srv, port = server_and_ctrl
+        received = []
+        srv.toggleExifRequested.connect(lambda: received.append(True))
+        status, _ = _http_get(qtbot, f"http://127.0.0.1:{port}/toggle-exif")
+        assert status == 200
+        qtbot.waitUntil(lambda: len(received) > 0, timeout=3000)
+        assert received
+
     def test_preview_returns_404_when_no_images(self, server_and_ctrl, qtbot):
         _, _, port = server_and_ctrl
         assert _http_status(qtbot, f"http://127.0.0.1:{port}/preview") == 404
