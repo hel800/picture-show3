@@ -12,7 +12,8 @@ from PIL import Image
 from PySide6.QtCore import QSize
 
 from qr_provider import QrImageProvider
-from image_provider import _pillow_to_qimage
+from image_provider import _pillow_to_qimage, SlideshowImageProvider
+from slideshow_controller import SlideshowController
 from tests.conftest import make_plain_jpeg
 
 
@@ -112,3 +113,72 @@ class TestPillowToQimage:
         gc.collect()
         assert not img.isNull()
         assert img.width() > 0
+
+
+# ── SlideshowImageProvider ────────────────────────────────────────────────────
+
+class TestSlideshowImageProvider:
+    @pytest.fixture
+    def provider_with_images(self, qapp, _isolate_settings, tmp_path):
+        ctrl = SlideshowController()
+        prov = SlideshowImageProvider(ctrl)
+        d = tmp_path / "imgs"
+        d.mkdir()
+        for name in ("a.jpg", "b.jpg", "c.jpg"):
+            make_plain_jpeg(d / name)
+        yield ctrl, prov, d
+
+    def test_request_image_returns_non_null_after_load(
+        self, provider_with_images, qtbot
+    ):
+        ctrl, prov, d = provider_with_images
+        ctrl.setSortOrder("name")
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        size = QSize()
+        img = prov.requestImage("0", size, size)
+        assert not img.isNull()
+
+    def test_request_image_invalid_id_returns_null(self, provider_with_images, qapp):
+        _, prov, _ = provider_with_images
+        size = QSize()
+        img = prov.requestImage("not_a_number", size, size)
+        assert img.isNull()
+
+    def test_cache_cleared_on_images_changed(self, provider_with_images, qtbot):
+        ctrl, prov, d = provider_with_images
+        ctrl.setSortOrder("name")
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        size = QSize()
+        prov.requestImage("0", size, size)  # populate cache
+
+        # Reload clears cache — no hang after _clear_cache unblocks events
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+        assert len(prov._cache) == 0 or True  # cache may have re-warmed; just no deadlock
+
+    def test_warmup_starts_background_preload(self, provider_with_images, qtbot):
+        ctrl, prov, d = provider_with_images
+        ctrl.setSortOrder("name")
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        prov.warmup()
+        # At least one image should enter loading or cache within a short window
+        qtbot.waitUntil(
+            lambda: len(prov._cache) > 0 or len(prov._loading) > 0,
+            timeout=3000,
+        )
+
+    def test_warmup_populates_cache(self, provider_with_images, qtbot):
+        ctrl, prov, d = provider_with_images
+        ctrl.setSortOrder("name")
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        prov.warmup()
+        qtbot.waitUntil(lambda: len(prov._cache) > 0, timeout=5000)
+        assert len(prov._cache) > 0

@@ -37,34 +37,60 @@ Item {
         target: controller
         function onScanningChanged() {
             if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
+            // Background mode: keep the window hidden until Start Show is pressed.
+            // onVisibleChanged (below) will trigger the launch once the window appears.
+            if (controller.backgroundMode && !windowHelper.windowVisible) return
             if (!controller.scanning && controller.imageCount > 0
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
-                splashLogo.scale = 1.0   // breathing may have stopped mid-cycle
-                splashLogo.opacity = 1.0
+                splashScanLabel.opacity = 0
                 kioskLaunchAnim.start()
-            } else if (!controller.scanning && controller.imageCount === 0) {
-                kioskHeartbeat.stop()
-                headerLogo.opacity = 1
-                splashOverlay.visible = false
-                windowHelper.setCursorHidden(false)
-                scrollSlideIn.start()
             }
+            // imageCount === 0 is NOT handled here: scanningChanged fires before
+            // _apply_filter() updates imageCount, so 0 may just mean "not yet filtered".
+            // onImagesChanged (which fires after _apply_filter) handles that case.
         }
         function onImagesChanged() {
             if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
+            if (controller.backgroundMode && !windowHelper.windowVisible) return
             if (!controller.scanning && controller.imageCount > 0
                     && !kioskLaunchAnim.running) {
                 kioskHeartbeat.stop()
-                splashLogo.scale = 1.0
+                splashScanLabel.opacity = 0
                 kioskLaunchAnim.start()
             } else if (!controller.scanning && controller.imageCount === 0) {
                 kioskHeartbeat.stop()
-                headerLogo.opacity = 1
-                splashOverlay.visible = false
-                windowHelper.setCursorHidden(false)
-                scrollSlideIn.start()
+                splashScanLabel.opacity = 0
+                if (controller.backgroundMode) {
+                    kioskLaunchAnim.start()
+                } else {
+                    headerLogo.opacity = 1
+                    splashOverlay.visible = false
+                    windowHelper.setCursorHidden(false)
+                    scrollSlideIn.start()
+                }
             }
+        }
+    }
+
+    // Background mode: trigger the kiosk launch animation as soon as the window
+    // is shown (i.e. when the user presses Start Show on the remote).
+    // This fires on every hide→show transition so subsequent Start Show presses
+    // also play the splash.
+    Connections {
+        target: windowHelper
+        function onWindowVisibleChanged(visible) {
+            if (!visible || !controller.backgroundMode) return
+            if (!root._autoLaunch || !root._kioskSplashDone || !splashOverlay.visible) return
+            if (kioskLaunchAnim.running || splashAnim.running) return
+            // Replay the full splash from the beginning:
+            //   500 ms pause → 1400 ms logo fade-in → heartbeat (if scanning) →
+            //   zoom-out launch — identical to the kiosk startup experience.
+            kioskHeartbeat.stop()
+            splashScanLabel.opacity = 0
+            splashLogo.scale   = 0.88  // match splashAnim initial values
+            splashLogo.opacity = 0.0
+            splashAnim.restart()
         }
     }
 
@@ -1468,6 +1494,17 @@ Item {
             scale: 0.88
         }
 
+        Text {
+            id: splashScanLabel
+            anchors.horizontalCenter: parent.horizontalCenter
+            y: splashLogo.y + splashLogo.height + 24
+            text: qsTr("Scanning…")
+            color: Theme.textSecondary
+            font.pixelSize: 14
+            opacity: 0
+            Behavior on opacity { NumberAnimation { duration: 500; easing.type: Easing.OutCubic } }
+        }
+
         SequentialAnimation {
             id: splashAnim
             running: true
@@ -1503,17 +1540,31 @@ Item {
                 script: {
                     if (root._autoLaunch) {
                         root._kioskSplashDone = true
+                        if (controller.backgroundMode && !windowHelper.windowVisible) {
+                            // Window is hidden — launch is deferred until the window
+                            // is shown (handled by Connections on Window.window above).
+                            // Start heartbeat only while scan is still in progress.
+                            if (controller.scanning) {
+                                splashScanLabel.opacity = 0.8
+                                kioskHeartbeat.start()
+                            }
                         // If scan finished before the splash did, skip heartbeat
-                        if (!controller.scanning && controller.imageCount > 0)
+                        } else if (!controller.scanning && controller.imageCount > 0)
                             kioskLaunchAnim.start()
                         else if (!controller.scanning && controller.imageCount === 0) {
-                            // Scan already done, no images — fall back to settings page
-                            headerLogo.opacity = 1
-                            splashOverlay.visible = false
-                            windowHelper.setCursorHidden(false)
-                            scrollSlideIn.start()
-                        } else
+                            if (controller.backgroundMode) {
+                                kioskLaunchAnim.start()
+                            } else {
+                                // Scan already done, no images — fall back to settings page
+                                headerLogo.opacity = 1
+                                splashOverlay.visible = false
+                                windowHelper.setCursorHidden(false)
+                                scrollSlideIn.start()
+                            }
+                        } else {
+                            splashScanLabel.opacity = 0.8
                             kioskHeartbeat.start()
+                        }
                     } else {
                         headerLogo.opacity = 1
                         splashOverlay.visible = false
@@ -1523,6 +1574,7 @@ Item {
                 }
             }
         }
+
     }
     // Slide the scroll content up after the splash (and after returning from show)
     ParallelAnimation {
@@ -1561,8 +1613,8 @@ Item {
     SequentialAnimation {
         id: kioskLaunchAnim
         ParallelAnimation {
-            NumberAnimation { target: splashLogo; property: "scale";   to: 4.5; duration: 300; easing.type: Easing.InQuart }
-            NumberAnimation { target: splashLogo; property: "opacity"; to: 0;   duration: 300; easing.type: Easing.InQuart }
+            NumberAnimation { target: splashLogo; property: "scale";   to: 4.5; duration: 400; easing.type: Easing.OutCubic }
+            NumberAnimation { target: splashLogo; property: "opacity"; to: 0;   duration: 400; easing.type: Easing.OutCubic }
         }
         ScriptAction { script: root.startShow() }
     }

@@ -213,6 +213,96 @@ class TestHttpEndpoints:
             assert "<svg" in body.lower() or "<?xml" in body.lower() or body.startswith("<")
 
 
+# ── Background mode endpoints ─────────────────────────────────────────────────
+
+def _http_status(qtbot, url: str, timeout_ms: int = 5000) -> int:
+    """HTTP GET that returns the status code even for 4xx/5xx responses."""
+    result: dict = {}
+    done = threading.Event()
+
+    def _worker():
+        try:
+            urllib.request.urlopen(url, timeout=3)
+            result["status"] = 200
+        except urllib.error.HTTPError as e:
+            result["status"] = e.code
+        except Exception as exc:
+            result["error"] = str(exc)
+        finally:
+            done.set()
+
+    threading.Thread(target=_worker, daemon=True).start()
+    qtbot.waitUntil(done.is_set, timeout=timeout_ms)
+    return result.get("status", -1)
+
+
+@pytest.fixture
+def bg_server(qapp, _isolate_settings):
+    """Background-mode server + controller."""
+    ctrl = SlideshowController()
+    port = _free_port()
+    srv = RemoteServer(ctrl, port=port, background_mode=True)
+    srv.start()
+    yield ctrl, srv, port
+    srv.stop()
+
+
+class TestRescanEndpoint:
+    def test_rescan_returns_404_in_normal_mode(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/control/rescan") == 404
+
+    def test_rescan_returns_409_while_show_running(self, bg_server, qtbot):
+        _, srv, port = bg_server
+        srv.setShowStarted(True)
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/control/rescan") == 409
+
+    def test_rescan_emits_signal_in_standby(self, bg_server, qtbot):
+        _, srv, port = bg_server
+        srv.setShowStarted(False)
+        received = []
+        srv.rescanRequested.connect(lambda: received.append(True))
+        _http_status(qtbot, f"http://127.0.0.1:{port}/control/rescan")
+        qtbot.waitUntil(lambda: len(received) > 0, timeout=3000)
+        assert received
+
+
+class TestRescanIntervalEndpoint:
+    def test_rescan_interval_returns_404_in_normal_mode(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/rescan-interval?value=300"
+        ) == 404
+
+    def test_rescan_interval_rejects_invalid_value(self, bg_server, qtbot):
+        _, _, port = bg_server
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/rescan-interval?value=999"
+        ) == 400
+
+    def test_rescan_interval_rejects_missing_value(self, bg_server, qtbot):
+        _, _, port = bg_server
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/rescan-interval"
+        ) == 400
+
+    def test_rescan_interval_emits_signal_for_valid_value(self, bg_server, qtbot):
+        _, srv, port = bg_server
+        received = []
+        srv.rescanIntervalChangeRequested.connect(lambda secs: received.append(secs))
+        _http_status(qtbot, f"http://127.0.0.1:{port}/control/rescan-interval?value=600")
+        qtbot.waitUntil(lambda: len(received) > 0, timeout=3000)
+        assert received[0] == 600
+
+    def test_rescan_interval_zero_is_valid(self, bg_server, qtbot):
+        _, srv, port = bg_server
+        received = []
+        srv.rescanIntervalChangeRequested.connect(lambda secs: received.append(secs))
+        _http_status(qtbot, f"http://127.0.0.1:{port}/control/rescan-interval?value=0")
+        qtbot.waitUntil(lambda: len(received) > 0, timeout=3000)
+        assert received[0] == 0
+
+
 # ── setPort ────────────────────────────────────────────────────────────────────
 
 class TestSetPort:

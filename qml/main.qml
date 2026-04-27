@@ -60,7 +60,7 @@ ApplicationWindow {
         target: controller
         function onSettingsChanged() {
             remoteServer.setPort(controller.remotePort)
-            if (controller.remoteEnabled)
+            if (controller.remoteEnabled || controller.backgroundMode)
                 remoteServer.start()
             else
                 remoteServer.stop()
@@ -290,8 +290,27 @@ ApplicationWindow {
                 stack.pop()
                 sp.triggerSlideIn()
             }
+            // Background mode: pop the stack after the leave animation finishes.
+            // Python defers win.hide() by the full animation duration so the GPU
+            // framebuffer contains the clean SettingsPage + splashOverlay before hide.
+            onLeaveAnimDone: { root._leavingShow = false; stack.pop(null, StackView.Immediate) }
             onOpenHelp: if (!controller.kioskMode) { helpOverlay.fromSettings = false; helpOverlay.open() }
             onOpenQuitDialog: quitDialog.open()
+        }
+    }
+
+    // Background mode: start the leave animation on End Show.
+    // _leavingShow guards against a second /control/stop arriving mid-animation.
+    // The animation signals leaveAnimDone when done (resets _leavingShow, handled above).
+    property bool _leavingShow: false
+    Connections {
+        target: remoteServer
+        function onStopShowRequested() {
+            if (!controller.backgroundMode) return
+            if (stack.depth > 1 && !root._leavingShow) {
+                root._leavingShow = true
+                stack.currentItem.startLeaveAnim()
+            }
         }
     }
 }

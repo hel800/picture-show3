@@ -88,10 +88,11 @@ class SlideshowController(QObject):
     _progressUpdate     = Signal(int)           # files processed so far
 
     # ── Init ──────────────────────────────────────────────────────────────────
-    def __init__(self, kiosk_mode: bool = False, jump_start: bool = False, parent: QObject | None = None) -> None:
+    def __init__(self, kiosk_mode: bool = False, jump_start: bool = False, background_mode: bool = False, parent: QObject | None = None) -> None:
         super().__init__(parent)
         self._kiosk_mode      : bool             = kiosk_mode
         self._jump_start      : bool             = jump_start
+        self._background_mode : bool             = background_mode
         self._folder          : str              = ""
         self._images          : list[str]        = []
         self._current_index   : int              = 0
@@ -123,6 +124,12 @@ class SlideshowController(QObject):
         self._scan_phase          : str          = ""   # "scan", "sort", "filter"
         self._scan_progress       : int          = 0   # files processed (metadata phase only)
         self._cancel_event        : threading.Event = threading.Event()
+        # Pre-rescan snapshot — set in loadFolder, consumed in _apply_filter
+        self._pre_rescan_paths    : frozenset[str] = frozenset()
+        self._pre_rescan_order    : list[str]      = []
+        self._pre_rescan_index    : int            = 0
+        self._pre_rescan_sort     : str            = "name"
+        self._images_unchanged    : bool           = False
 
         self._timer = QTimer(self)
         self._timer.timeout.connect(self.nextImage)
@@ -132,6 +139,7 @@ class SlideshowController(QObject):
         self._progressUpdate.connect(self._on_progress_update)
 
         self._cli_overrides: dict[str, object] = {}  # INI key → original saved value
+        self._suppress_next_play_anim: bool = False  # consumed by takePlayAnimSuppression()
         self._load_settings()
 
     # ── Persistence ───────────────────────────────────────────────────────────
@@ -321,6 +329,9 @@ class SlideshowController(QObject):
     @Property(bool, constant=True)
     def jumpStart(self) -> bool: return self._jump_start
 
+    @Property(bool, constant=True)
+    def backgroundMode(self) -> bool: return self._background_mode
+
     @Property(list, notify=settingsChanged)
     def availableLanguages(self) -> list[dict]:
         """
@@ -370,6 +381,12 @@ class SlideshowController(QObject):
             return
 
         self._folder = str(Path(path))
+        # Snapshot before clearing so _on_sort_complete can detect a no-op rescan.
+        self._pre_rescan_paths = frozenset(self._all_images)
+        self._pre_rescan_order = list(self._all_images)
+        self._pre_rescan_index = self._current_index
+        self._pre_rescan_sort  = self._sort_order
+        self._images_unchanged = False
         # Clear immediately so imageCount == 0 during the async scan
         self._all_images = []
         self._images = []
@@ -562,6 +579,13 @@ class SlideshowController(QObject):
         if gen != self._scan_generation:
             return
         self._all_images = result["images"]
+        # If the file set and sort order are both unchanged, restore the pre-rescan
+        # image order (preserving the existing random shuffle) and flag _apply_filter
+        # to restore the current index instead of resetting to 0.
+        if (frozenset(self._all_images) == self._pre_rescan_paths
+                and result["order"] == self._pre_rescan_sort):
+            self._all_images = list(self._pre_rescan_order)
+            self._images_unchanged = True
         # If the user changed sort order while we were sorting, re-sort
         if result["order"] != self._sort_order:
             self._sort_in_background()
@@ -655,7 +679,12 @@ class SlideshowController(QObject):
                 p for p in self._all_images
                 if self._get_cached_rating(p) >= self._min_rating
             ]
-        self._current_index = 0
+        if self._images_unchanged:
+            # No-op rescan: restore the position the show was at before the scan.
+            self._current_index = min(self._pre_rescan_index, max(0, len(self._images) - 1))
+            self._images_unchanged = False
+        else:
+            self._current_index = 0
         self.imagesChanged.emit()
         self.currentIndexChanged.emit()
 
@@ -860,6 +889,26 @@ class SlideshowController(QObject):
         self._timer.stop()
         self._is_playing = False
         self.isPlayingChanged.emit()
+
+    @Slot()
+    def suppressNextPlayAnim(self) -> None:
+        """
+        Call from Python immediately before startShow() / stopShow() to prevent
+        the play/pause popup from appearing for that one state change.
+        Consumed and cleared by takePlayAnimSuppression() in QML.
+        """
+        self._suppress_next_play_anim = True
+
+    @Slot(result=bool)
+    def takePlayAnimSuppression(self) -> bool:
+        """
+        Called from QML's onIsPlayingChanged to check and consume the one-shot
+        suppression flag. Returns True (and clears the flag) if the next popup
+        should be skipped; False otherwise.
+        """
+        val = self._suppress_next_play_anim
+        self._suppress_next_play_anim = False
+        return val
 
     @Slot()
     def togglePlay(self) -> None:

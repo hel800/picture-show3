@@ -12,17 +12,34 @@ import "."
 //  10       HudBar (bottom bar)
 //  11       ExifPanel (above HudBar)
 //  20       playPausePopup (above all panels)
+//  25       noImagesOverlay (covers everything when no images available or current file missing)
 //  30       jumpOverlay / ratingOverlay / captionOverlay / kioskQuitDialog (top tier)
+//  50       leaveOverlay (background mode leave animation — above everything)
 // ─────────────────────────────────────────────────────────────────────────────
 Rectangle {
     id: root
-    color: "black"
+    color: Theme.bgDeep
     focus: true
     clip: true   // keep sliding layers from painting outside the window
 
     signal exitShow()
     signal openHelp()
     signal openQuitDialog()
+    signal leaveAnimDone()   // background mode: emitted when the leave animation finishes
+
+    // ── Background mode leave animation ───────────────────────────────────────
+    // Triggered by main.qml when /control/stop is received.
+    // Sequence: image fades to dark (600 ms) → logo visible (2 000 ms) →
+    //           logo shrinks + fades (1 000 ms) → leaveAnimDone emitted.
+    function startLeaveAnim() {
+        windowHelper.setCursorHidden(true)
+        // Reset to initial state before (re-)starting
+        leaveOverlay.opacity = 0
+        leaveLogo.opacity    = 0
+        leaveLogo.scale      = 1.0
+        leaveOverlay.visible = true
+        leaveAnim.restart()
+    }
 
     // ── State ─────────────────────────────────────────────────────────────────
     property bool showingA  : true   // which layer is currently the foreground
@@ -42,6 +59,10 @@ Rectangle {
     property bool   _exifVisible     : false
     property bool   _exiting         : false   // set on exit to suppress the play/pause popup
     property bool   _suppressPlayAnim: false   // set while quit dialog pauses/resumes silently
+    property bool   _listLocked      : false   // true after first image shown; blocks onImagesChanged
+
+    // True when the frontmost image layer failed to load (file missing/unreadable).
+    readonly property bool _activeImgError: (showingA ? imgA : imgB).status === Image.Error
 
     // ── Interval edit state (play/pause popup in edit mode) ───────────────────
     property bool _ppEditMode      : false
@@ -115,7 +136,7 @@ Rectangle {
         width: parent.width; height: parent.height
         opacity: 1; z: 1
 
-        Rectangle { anchors.fill: parent; color: "black" }   // prevents bleed-through
+        Rectangle { anchors.fill: parent; color: Theme.bgDeep }   // prevents bleed-through
         Image {
             id: imgA
             anchors.fill: parent
@@ -134,7 +155,7 @@ Rectangle {
         width: parent.width; height: parent.height
         opacity: 0; z: 0
 
-        Rectangle { anchors.fill: parent; color: "black" }
+        Rectangle { anchors.fill: parent; color: Theme.bgDeep }
         Image {
             id: imgB
             anchors.fill: parent
@@ -270,6 +291,7 @@ Rectangle {
     }
 
     function showImage(withTransition) {
+        if (controller.imageCount === 0) return
         stopAll()
         resetLayers()
 
@@ -354,10 +376,11 @@ Rectangle {
     Connections {
         target: controller
         function onImagesChanged() {
-            // Covers kiosk-mode (show started before images available) and any
-            // sort/filter completing while the show is active.  _apply_filter also
-            // emits currentIndexChanged right after, so showImage may be called
-            // twice in quick succession — that is harmless (stopAll/resetLayers first).
+            // Covers kiosk-mode (show started before images available).
+            // Once the list is locked (_listLocked = true after first image shown),
+            // ignore further imagesChanged signals so re-scans or re-sorts during
+            // the show don't reset the current image.
+            if (root._listLocked) return
             if (controller.imageCount > 0)
                 showImage(true)
         }
@@ -606,14 +629,16 @@ Rectangle {
             break
         case Qt.Key_0: case Qt.Key_1: case Qt.Key_2:
         case Qt.Key_3: case Qt.Key_4: case Qt.Key_5:
-            if (!playPauseAnim.running || controller.isPlaying)
+            if (!root._activeImgError && (!playPauseAnim.running || controller.isPlaying))
                 openRating(event.key - Qt.Key_0)
             break
         case Qt.Key_C:
-            if (root.hudStyle === "floating" && root.hudVisible)
-                floatingHud.openEdit()
-            else
-                openCaption()
+            if (!root._activeImgError) {
+                if (root.hudStyle === "floating" && root.hudVisible)
+                    floatingHud.openEdit()
+                else
+                    openCaption()
+            }
             break
         case Qt.Key_Q:
             root.openQuitDialog()
@@ -982,6 +1007,59 @@ Rectangle {
         scrollLeftAnim.start()
     }
 
+    // ── No-images / missing-image overlay ────────────────────────────────────
+    // Shown when imageCount==0 (empty folder, aggressive filter, background mode
+    // before first start) or when the current image file is missing/unreadable.
+    Rectangle {
+        id: noImagesOverlay
+        anchors.fill: parent
+        color: Theme.bgDeep
+        z: 25
+
+        readonly property bool _active: (controller.imageCount === 0 && !controller.scanning)
+                                        || root._activeImgError
+        visible: _active
+        opacity: _active ? 1.0 : 0.0
+        Behavior on opacity { NumberAnimation { duration: 300; easing.type: Easing.InOutQuad } }
+
+        Column {
+            anchors.centerIn: parent
+            spacing: 20
+
+            ThemedIcon {
+                anchors.horizontalCenter: parent.horizontalCenter
+                source: "../img/icon_picture.svg"
+                size: 64
+                iconColor: root._activeImgError ? Theme.statusWarn : Theme.textDisabled
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root._activeImgError ? qsTr("Image not available")
+                                           : qsTr("No images available")
+                color: Theme.textPrimary
+                font.pixelSize: 22
+                font.weight: Font.Medium
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: controller.imagePath(controller.currentIndex).split(/[/\\]/).pop()
+                color: Theme.textSecondary
+                font.pixelSize: 13
+                visible: root._activeImgError
+            }
+
+            Text {
+                anchors.horizontalCenter: parent.horizontalCenter
+                text: root._activeImgError ? qsTr("The file may have been moved or deleted.")
+                                           : qsTr("Check the folder path or filter settings.")
+                color: Theme.textSecondary
+                font.pixelSize: 14
+            }
+        }
+    }
+
     HudBar {
         id: hud
         hudScale      : root.hudScale
@@ -1035,7 +1113,8 @@ Rectangle {
     Connections {
         target: controller
         function onIsPlayingChanged() {
-            if (!root._exiting && !root._suppressPlayAnim && !root._ppEditMode) {
+            if (!root._exiting && !root._suppressPlayAnim && !root._ppEditMode
+                    && !controller.takePlayAnimSuppression()) {
                 // Set progress synchronously before restart() so the animation
                 // always starts from the correct value (binding on `from` is
                 // not reliably re-evaluated inside a ParallelAnimation group).
@@ -1831,7 +1910,7 @@ Rectangle {
     Rectangle {
         id: introOverlay
         anchors.fill: parent
-        color: "black"
+        color: Theme.bgDeep
         z: 50
         opacity: 1
 
@@ -1852,7 +1931,64 @@ Rectangle {
         // windowed mode the cursor should remain visible.
         windowHelper.setCursorHidden(Window.visibility !== Window.Windowed)
         showImage(true)
+        root._listLocked = true
         introFadeOut.start()
         root.forceActiveFocus()
+    }
+
+    // ── Background mode leave animation (z:50 — above everything) ────────────
+    Rectangle {
+        id: leaveOverlay
+        anchors.fill: parent
+        color: Theme.bgDeep
+        z: 50
+        visible: false
+        opacity: 0
+
+        Image {
+            id: leaveLogo
+            anchors.centerIn: parent
+            source: "../img/logo.svg"
+            fillMode: Image.PreserveAspectFit
+            width: 420; height: 126
+            sourceSize.width: 1000; sourceSize.height: 300
+            smooth: true; mipmap: true
+            opacity: 0
+            scale: 1.0
+        }
+
+        SequentialAnimation {
+            id: leaveAnim
+
+            // Phase 1 (600 ms): screen fades to dark while logo fades in
+            ParallelAnimation {
+                NumberAnimation {
+                    target: leaveOverlay; property: "opacity"
+                    from: 0; to: 1; duration: 600; easing.type: Easing.InOutQuad
+                }
+                NumberAnimation {
+                    target: leaveLogo; property: "opacity"
+                    from: 0; to: 1; duration: 600; easing.type: Easing.OutCubic
+                }
+            }
+
+            // Phase 2 (2 000 ms): logo visible
+            PauseAnimation { duration: 1000 }
+
+            // Phase 3 (1 000 ms): logo shrinks and fades simultaneously
+            ParallelAnimation {
+                NumberAnimation {
+                    target: leaveLogo; property: "opacity"
+                    to: 0; duration: 1000; easing.type: Easing.InCubic
+                }
+                NumberAnimation {
+                    target: leaveLogo; property: "scale"
+                    to: 0.55; duration: 1000; easing.type: Easing.InCubic
+                }
+            }
+
+            // Signal completion — main.qml pops the stack; Python hides the window
+            ScriptAction { script: root.leaveAnimDone() }
+        }
     }
 }

@@ -21,7 +21,7 @@ Context property `controller` — the single source of truth exposed to QML.
 - Navigation: `nextImage()`, `prevImage()`, `goTo(index)`
 - Metadata accessors: `imagePath(index)`, `imageDateTaken(index)`, `imageCaption(index)`, `imageRating(index)`, `imageExifInfo(index)`
 - `imageExifInfo(index)` → list of `{label, value}` dicts for the EXIF panel; labels/values wrapped in `self.tr()` for the active locale; reads Make, Model, FNumber, ExposureTime, ISO, FocalLength, ExposureProgram, Flash, PixelX/Y; exposure program strings resolved via `_exposure_program_str()`
-- `apply_cli_overrides(overrides: dict)` — applies session-only CLI flags without writing to the INI file. Saves the current saved value for each overridden key in `_cli_overrides`; `_save_settings` restores those originals so the INI is never modified. When the user changes a setting via the GUI, the corresponding setter pops its key from `_cli_overrides`, making the new value permanent. `togglePlay` spends the `autoplay`/`interval` overrides on the first manual stop so that returning to settings and relaunching does not auto-start again.
+- `apply_cli_overrides(overrides: dict)` — applies session-only CLI flags without writing to the INI file. Saves the current saved value for each overridden key in `_cli_overrides`; `_save_settings` restores those originals so the INI is never modified. When the user changes a setting via the GUI, the corresponding setter pops its key from `_cli_overrides`, making the new value permanent. `togglePlay` spends the `autoplay`/`interval` overrides on the first manual stop so that returning to settings and relaunching does not auto-start again. In background mode, `_on_stop_show()` (`main.py`) captures `isPlaying` before `stopShow()` clears it and calls `setAutoplay(was_playing)` — the live play state always wins over the spent override when the show restarts.
 - `scanning` (bool) — True during any pipeline phase; `scanningChanged` signal
 - `scanPhase` (str) — `"scan"` / `"sort"` / `"filter"` / `""` (idle); notified via `scanningChanged`
 - `scanProgress` (int) — files processed in current metadata phase (0 outside metadata phases); `scanProgressChanged` signal
@@ -51,6 +51,8 @@ Validates path, calls `_write_iptc_caption`, invalidates `_exif_cache` for that 
 - Deferred initial scan: `_load_settings()` sets `_scanning = True` synchronously then defers `_scan_images()` via `QTimer.singleShot(0, ...)` so the window renders before I/O begins
 - `kioskMode`: `@Property(bool, notify=kioskModeChanged)` — CLI flag only, not persisted; suppresses folder history update in `startShow` and skips loading `_folder_history[0]` on init
 - `jumpStart`: `@Property(bool, constant=True)` — True when started with a bare `<picture_dir>` argument; same init behaviour as kiosk but Esc exits to settings and history is updated normally
+- `backgroundMode`: `@Property(bool, constant=True)` — True when started with `--background`; GUI starts hidden; checked in `main.qml` `onStartShow` to skip the normal show-start sequence (Python handles it instead). Also causes `kiosk_mode=True` in `main.py` (`kiosk_mode = kiosk_folder is not None or background_folder is not None`) so that `kioskMode` drives `_autoLaunch` and history suppression for background mode.
+- `suppressNextPlayAnim()` slot — sets a one-shot `_suppress_next_play_anim` flag; `takePlayAnimSuppression()` slot (returns bool, clears flag) — called by `SlideshowPage.onIsPlayingChanged` to skip the play/pause popup on remote-triggered start/stop
 
 ---
 
@@ -77,10 +79,14 @@ Custom `QQuickImageProvider` at `image://qr/<url-encoded-text>`.
 
 Built-in HTTP server (Qt `QTcpServer`, no extra dependencies) — context property `remoteServer`.
 - Serves a touch-friendly web page at the machine's LAN IP on a configurable port (default 8765)
-- Endpoints: `GET /` (UI), `/next`, `/prev`, `/toggle`, `/status` (JSON), `/logo.svg`, `/icon_play.svg`, `/icon_pause.svg`
-- `/status` returns `{ index, total, playing, active }` — `active` drives button enable/disable in the browser
-- Started on `SettingsPage.onCompleted` (not show start) so the QR code is always scannable
-- `setShowActive(bool)` slot enables/disables browser buttons; `setPort(int)` allows dynamic port changes
+- Standard endpoints: `GET /` (UI), `/next`, `/prev`, `/toggle`, `/status` (JSON), SVG assets
+- Background mode adds: `/control/start`, `/control/stop`, `/control/interval?value=N` (10 000–86 400 000 ms), `/control/scale?value=V` (`fit`/`fill`), `/control/rescan` (409 if show running), `/control/rescan-interval?value=N` (seconds; valid set: {0, 300, 600, 1800, 3600, 10800, 21600, 32400, 43200, 86400}); `/control/schedule/*` reserved (501)
+- `/status` returns `{ index, total, playing, active }` — `active` drives button enable/disable in the browser; extended in background mode with `background_mode`, `show_started`, `scanning`, `interval`, `scale`, `rescan_interval`
+- Signals: `startShowRequested`, `stopShowRequested`, `intervalChangeRequested(int)`, `scaleChangeRequested(str)`, `rescanRequested`, `rescanIntervalChangeRequested(int)`, `showStartedChanged`
+- `setShowActive(bool)` enables/disables browser nav buttons; `setShowStarted(bool)` / `showStarted` property track whether the show window is currently visible; `setRescanInterval(int)` syncs the current auto-rescan interval into server state for `/status` reporting
+- `setPort(int)` allows dynamic port changes; `setShowActive(bool)` slot controls button state
+- In background mode the server always starts regardless of the `remoteEnabled` setting
+- The web UI shows two tabs: **Remote** (standard nav controls) and **Picture Frame** (Start/Stop Show buttons, non-linear interval slider 10 s–24 h, Fit/Fill scale chips, **Rescan in Background** section: interval dropdown Off/5 min…24 h + manual **Scan Now** button — rescan disabled while show is running or scan is in progress); the browser detects an offline server via `AbortController` 2.5 s timeout and disables all buttons
 - SVG files served via `_read_img(filename)`: reads from `qrc:/img/` (frozen) or `img/` folder (dev)
 
 ---
@@ -92,6 +98,7 @@ Tracks fullscreen state independently of the OS window to avoid Qt timing issues
 - Restores saved windowed geometry 50 ms after leaving fullscreen (deferred to let the window settle)
 - `freeze()` called at quit to prevent state flip during the close sequence
 - `setCursorHidden(bool)` — `QGuiApplication.setOverrideCursor` (global) + `QWindow.setCursor` (per-window, forces immediate platform dispatch)
+- `windowVisibleChanged = Signal(bool)` — emitted in `_on_vis_changed`; `windowVisible: @Property(bool, notify=windowVisibleChanged)` — consumed by `SettingsPage` via `Connections { target: windowHelper }` to re-trigger the splash animation on each background-mode Start Show. Note: `Window.window` (a `QQuickWindow`) cannot be used as a Connections target in QML — this signal/property pair is the correct bridge.
 
 ---
 
@@ -103,7 +110,7 @@ Tracks fullscreen state independently of the OS window to avoid Qt timing issues
 - **Frozen** (built exe): `import resources_rc` registers all QML and SVG files under `qrc:/`; QML loaded from `qrc:/qml/main.qml`; SVGs read via `QFile(":/img/<name>")` in `_read_img()`
 - QML `../img/` relative paths work unchanged in both modes
 
-`_parse_args()` uses `argparse` and returns a 5-tuple `(kiosk_folder, start_folder, force_fullscreen, overrides, qt_argv)`. `overrides` is a dict of INI keys → values for show options passed on the CLI; it is passed to `controller.apply_cli_overrides()` after the controller is initialised. Unknown flags are forwarded to Qt via `qt_argv` so Qt's own flag handling still works.
+`_parse_args()` uses `argparse` and returns an 8-tuple `(kiosk_folder, start_folder, background_folder, force_fullscreen, overrides, qt_argv, on_show_start, on_show_stop)`. `overrides` is a dict of INI keys → values for show options passed on the CLI; it is passed to `controller.apply_cli_overrides()` after the controller is initialised. Unknown flags are forwarded to Qt via `qt_argv` so Qt's own flag handling still works. `on_show_start` / `on_show_stop` are `str | None` — shell commands wired into `_setup_background_mode()` for display power control (see below).
 
 Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`, runs make_icon → compile_resources → PyInstaller → Inno Setup → cleanup. `a.binaries` is filtered in the spec to strip large unused Qt DLLs (e.g. `Qt6WebEngineCore.dll` at 193 MB); translations are stripped from `a.datas` the same way.
 
@@ -132,6 +139,8 @@ Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`,
 **`_canStart`**: `controller.imageCount > 0 && !controller.scanning`. Start button disabled and relabelled "Scanning…" while scanning. Scanning status row: hourglass + "Scanning… N / total" driven by `scanProgress`.
 
 **Kiosk / jump-start**: `_autoLaunch: controller.kioskMode || controller.jumpStart` — logo stays centred in splash (no drift to header), key/mouse events absorbed during splash. After splash: if images are loaded, `kioskLaunchAnim` fires; otherwise a breathing pulse plays until `onScanningChanged` or `onImagesChanged` confirms both `scanning=false` and `imageCount>0`. Both handlers check `&& splashOverlay.visible` — `triggerSlideIn()` sets `splashOverlay.visible = false` on return from show, permanently blocking re-launch on subsequent scans. `onScanningChanged` fires before `_apply_filter` sets `imageCount`, so both handlers are needed and the one that fires last triggers launch.
+
+**Background mode** also has `_autoLaunch = True` (because `kioskMode = True`). Both `onScanningChanged` and `onImagesChanged` add a guard `if (controller.backgroundMode && !windowHelper.windowVisible) return` — launch is deferred until the window becomes visible. A `Connections { target: windowHelper; function onWindowVisibleChanged(visible) }` block in `SettingsPage` triggers `splashAnim.restart()` followed by `kioskLaunchAnim` on each hide→show transition, so the full splash animation plays on every Start Show press.
 
 **Cursor**: `Window.onVisibilityChanged` calls `windowHelper.setCursorHidden(Window.visibility === Window.FullScreen)`. `triggerSlideIn()` unconditionally calls `setCursorHidden(false)` on return from show.
 
@@ -166,11 +175,15 @@ Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`,
 
 **Play/pause popup** (`z: 20`): fixed 300×88 px overlay; triggered by `isPlayingChanged`; fades in 120 ms, holds 3 s (with depleting countdown border on the icon), fades out 400 ms. While the **play** popup is visible, `↑`/`↓` or `1`–`9` pause autoplay and enter interval edit mode (`_ppEditMode`); `↵` confirms the new interval and restarts autoplay; `Esc` cancels and leaves autoplay stopped. `0`–`9` and `↑`/`↓` are blocked during the **pause** popup. The autoplay timer is frozen via `controller.pauseInterval()` when the popup appears and restarted via `controller.restartInterval()` in `playPauseAnim.onFinished`.
 
+**No-images overlay** (`z: 25`): shown when `controller.imageCount === 0 && !controller.scanning` **or when the currently displayed image file is missing/unreadable** (`_activeImgError: (showingA ? imgA : imgB).status === Image.Error`). In the error case the icon turns amber (`Theme.statusWarn`), the title reads "Image not available", a filename line is shown, and the subtitle reads "The file may have been moved or deleted." The `_listLocked` property (set in `Component.onCompleted` after the first `showImage`) prevents `onImagesChanged` from refreshing the image list during an active show — the list is frozen after first display.
+
 **Jump dialog** (`z: 30`): opened **J**; `IntValidator` (1–imageCount); pauses autoplay; Enter to jump, Esc to cancel.
 
 **Rating overlay** (`z: 30`): opened **0**–**5**. Stars cascade in one-by-one via a 55 ms interval `Timer` incrementing `_starsRevealedCount` 0→5; each star fades in 220 ms OutCubic + bounces up from 14 px via `transform: Translate { Behavior on y }`. The animation is skipped when the overlay is already open and the same rating is pressed again (`sameRating = ratingOverlay.visible && r === _pendingRating`). **↵** → `controller.writeImageRating`; **Esc** cancels. `onRatingWritten` restores `hudRating` QML binding via `Qt.binding()` so navigation keeps updating it.
 
 **Caption overlay** (`z: 30`): opened **C**; loads current caption into `TextInput`; closes EXIF panel if open; pauses autoplay. Double-Tab within 600 ms copies previous image's caption (`_lastTabMs` tracks first Tab). **↵** → `controller.writeImageCaption` then close. `onCaptionWritten` restores `hudCaption` binding via `Qt.binding()`. Closes without saving on image navigation.
+
+**Leave overlay** (`z: 50`, background mode only): triggered by `function startLeaveAnim()` (called from `main.qml` `Connections { target: remoteServer; onStopShowRequested }`). `SequentialAnimation`: fade to dark + logo fade-in (600 ms) → logo hold (2 s) → logo shrink+fade (1 s). `ScriptAction` at end emits `signal leaveAnimDone()`, which causes `main.qml` to call `stack.pop(null, StackView.Immediate)` for a clean GPU frame before Python defers `win.hide()` by 3700 ms (100 ms buffer over the 3600 ms animation total). A `_leavingShow` flag in `main.qml` prevents a second `/control/stop` from re-triggering the leave animation while it is already running. Before the animation begins, `_on_stop_show()` captures `controller.isPlaying` and calls `controller.setAutoplay(was_playing)` to persist the live play state for the next Start Show. `--on-show-start CMD` / `--on-show-stop CMD` CLI flags hook into `_setup_background_mode()`: the start command runs in a daemon thread before `_do_show()` is called (the Qt event loop stays responsive; the window only appears after `CMD` exits); the stop command is launched as a fire-and-forget daemon thread in `_finish_stop()` after `win.hide()`.
 
 **Panorama mode**: activated **P**; requires image aspect ratio ≥ 1.3× screen ratio. `startPanorama()` enables `layer.layer` at panorama resolution (capped 4096 px wide), then `panoramaEnterAnim` (1400 ms InOutCubic scales up + pans to right half). After enter, `_panoramaScrollRight()` / `_panoramaScrollLeft()` alternate via `onStopped`; speed 250 px/s. `stopPanorama()` sets `_panoCleanupPending = true`, stops scroll, runs `panoramaExitAnim` (800 ms OutCubic); `onStopped` disables layer and restores state. `_panoramaAbort()`: instant teardown on resize. Key handling while active: **P**/**Esc** → stop; **←**/**→** → `_pendingNav` then stop (navigation fires in exit `onStopped`); **I** → HUD; all other keys absorbed.
 
