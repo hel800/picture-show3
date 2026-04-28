@@ -306,6 +306,24 @@ When running the built exe, QML and SVGs are loaded from the compiled resource b
 
 ---
 
+## Building a standalone Linux AppImage
+
+```bash
+python install/linux/build.py
+```
+
+Output: `install/linux/dist/installer/picture-show3-<version>-x86_64.AppImage`
+
+**Build on your target distro.** Because picture-show3 uses Qt Quick for
+GPU-accelerated rendering, an AppImage built on Ubuntu will not work on Fedora
+and vice versa — the OpenGL/EGL stack is too tightly coupled to the host's GPU
+drivers. For multi-distro support, build once per distro in CI.
+
+See [docs/build-linux.md](docs/build-linux.md) for the full guide, including
+distrobox setup, all required system packages, and known limitations.
+
+---
+
 ## Command-line interface
 
 See [docs/cli.md](docs/cli.md) for the full CLI reference, including all launch modes and error handling.
