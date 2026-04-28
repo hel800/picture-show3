@@ -193,6 +193,23 @@ class TestHttpEndpoints:
         assert "hud_visible" in data
         assert data["hud_visible"] == ctrl.hudVisible
 
+    def test_status_caption_is_cached_per_path(self, server_and_ctrl, tmp_path, qtbot):
+        ctrl, srv, port = server_and_ctrl
+        d = tmp_path / "imgs"
+        d.mkdir()
+        make_plain_jpeg(d / "a.jpg")
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        # First call populates the cache
+        _http_get(qtbot, f"http://127.0.0.1:{port}/status")
+        cached_path = srv._caption_cache_path
+        assert cached_path != ""
+
+        # captionWritten signal must invalidate the cache
+        ctrl.captionWritten.emit(0)
+        assert srv._caption_cache_path == ""
+
     def test_interval_endpoint_sets_value(self, server_and_ctrl, qtbot):
         ctrl, _, port = server_and_ctrl
         status, _ = _http_get(qtbot, f"http://127.0.0.1:{port}/interval?value=12000")

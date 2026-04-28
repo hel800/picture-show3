@@ -1102,6 +1102,14 @@ class RemoteServer(QObject):
         self._previewReady.connect(self._send_preview_ok)
         self._previewFailed.connect(self._send_preview_err)
 
+        # Caption cache — /status is polled every ~3 s, but imageCaption()
+        # opens the JPEG and parses IPTC each call. Cache the value for the
+        # current path so polls with no index/folder change pay nothing.
+        self._caption_cache_path  = ""
+        self._caption_cache_value = ""
+        controller.imagesChanged.connect(self._invalidate_caption_cache)
+        controller.captionWritten.connect(lambda _: self._invalidate_caption_cache())
+
     # ── Public API ─────────────────────────────────────────────────────────────
     @Property(str, notify=serverStarted)
     def url(self) -> str:
@@ -1209,6 +1217,24 @@ class RemoteServer(QObject):
     def _json_error(self, sock: QTcpSocket, msg: str, status: str = "400 Bad Request") -> None:
         body = json.dumps({"error": msg})
         self._respond(sock, status, "application/json", body)
+
+    def _invalidate_caption_cache(self) -> None:
+        self._caption_cache_path = ""
+        self._caption_cache_value = ""
+
+    def _current_caption(self) -> str:
+        """Cached IPTC caption for the current image (avoids re-reading JPEG
+        metadata on every status poll). Cache is keyed by the current path
+        and invalidated on imagesChanged / captionWritten."""
+        if self._controller.imageCount == 0:
+            return ""
+        path = self._controller.currentImagePath()
+        if path and path == self._caption_cache_path:
+            return self._caption_cache_value
+        value = self._controller.imageCaption(self._controller.currentIndex)
+        self._caption_cache_path  = path
+        self._caption_cache_value = value
+        return value
 
     # ── Preview generation (worker thread + signal back to main thread) ────────
     def _gen_preview_async(self, sock: QTcpSocket, path: str) -> None:
@@ -1350,7 +1376,7 @@ class RemoteServer(QObject):
                     "scanning":     ctrl.scanning,
                     "hud_visible":  ctrl.hudVisible,
                     "exif_visible": self._exif_visible,
-                    "caption":      ctrl.imageCaption(ctrl.currentIndex) if ctrl.imageCount > 0 else "",
+                    "caption":      self._current_caption(),
                     "rating":       ctrl.imageRating(ctrl.currentIndex)  if ctrl.imageCount > 0 else 0,
                     # background mode fields (always present for simplicity)
                     "background_mode":  self._background_mode,
