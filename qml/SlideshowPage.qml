@@ -121,6 +121,7 @@ Rectangle {
     property bool _pendingPanorama     : false   // P pressed during a transition — start panorama when transition finishes
     property bool _autoPanoramaActive  : false   // true while auto-panorama single-sweep is running
     property bool _autoPanoramaSkip   : false   // true after user cancels auto-panorama; reset on next image
+    property bool _suppressPanoCheck  : false   // true while showImage() is tearing down an in-flight transition; blocks the explicit-stop()-triggered _checkPendingPanorama from starting a panorama on the layer that's about to fade out
     // When true, forces both images to PreserveAspectFit regardless of the
     // imageFill setting.  Used by fill-mode panorama so the full image width
     // is available for scrolling.  Avoids Qt.binding() closures whose
@@ -212,6 +213,10 @@ Rectangle {
     // ── Animations ────────────────────────────────────────────────────────────
 
     function _checkPendingPanorama() {
+        // Skip while showImage() is mid-teardown — fadeAnim.stop() inside stopAll()
+        // synchronously fires onStopped → this function. Without the guard we'd
+        // launch a panorama on the layer that's about to be reused/faded out.
+        if (root._suppressPanoCheck) return
         if (root._pendingPanorama) { root._pendingPanorama = false; startPanorama() }
         else root._tryAutoPanorama()
     }
@@ -348,6 +353,10 @@ Rectangle {
 
     function showImage(withTransition) {
         if (controller.imageCount === 0) return
+        // Block panorama checks fired by fadeAnim.onStopped during the explicit
+        // stop() below. Cleared after the new transition is set up so natural
+        // completion of the new animation still triggers _checkPendingPanorama.
+        root._suppressPanoCheck = true
         stopAll()
         resetLayers()
 
@@ -363,6 +372,7 @@ Rectangle {
             out.opacity = 0; out.x = 0; out.scale = 1; out.z = 1
             showingA = !showingA
             floatingHud.refreshDisplay()
+            root._suppressPanoCheck = false
             return
         }
 
@@ -426,6 +436,7 @@ Rectangle {
         }
 
         showingA = !showingA
+        root._suppressPanoCheck = false
     }
 
     // ── React to controller index changes (autoplay, remote, keyboard) ────────
