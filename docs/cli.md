@@ -136,6 +136,7 @@ schedule runner.
 | `GET /control/stop` | Stop the show and hide the window | `{"ok":true}` · 409 if not started |
 | `GET /control/interval?value=N` | Set autoplay interval to `N` ms (10 000–86 400 000) | `{"ok":true}` · 400 on invalid value |
 | `GET /control/scale?value=V` | Set scale mode (`fit` or `fill`) | `{"ok":true}` · 400 on invalid value |
+| `GET /control/transition?value=V` | Set transition style (`fade`, `slide`, `zoom`, `fadeblack`) | `{"ok":true}` · 400 on invalid value |
 | `GET /control/rescan` | Trigger an immediate folder rescan (standby only) | `{"ok":true}` · 409 if show is running |
 | `GET /control/rescan-interval?value=N` | Set auto-rescan interval in seconds (`0` = off; valid: 0, 300, 600, 1800, 3600, 10800, 21600, 32400, 43200, 86400) | `{"ok":true}` · 400 on invalid value |
 
@@ -148,10 +149,15 @@ The `/status` endpoint returns extended fields in background mode:
   "playing": true,
   "active": true,
   "scanning": false,
+  "hud_visible": false,
+  "exif_visible": false,
+  "caption": "Sunset over Lake Como",
+  "rating": 4,
+  "interval": 30000,
   "background_mode": true,
   "show_started": true,
-  "interval": 30000,
   "scale": "fit",
+  "transition": "fade",
   "rescan_interval": 1800
 }
 ```

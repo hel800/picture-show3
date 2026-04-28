@@ -312,5 +312,9 @@ ApplicationWindow {
                 stack.currentItem.startLeaveAnim()
             }
         }
+        function onToggleExifRequested() {
+            if (stack.depth > 1 && stack.currentItem.toggleExif)
+                stack.currentItem.toggleExif()
+        }
     }
 }

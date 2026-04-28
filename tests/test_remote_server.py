@@ -176,6 +176,82 @@ class TestHttpEndpoints:
         assert ctrl.isPlaying is True
         ctrl.stopShow()
 
+    def test_toggle_hud_endpoint(self, server_and_ctrl, qtbot):
+        ctrl, _, port = server_and_ctrl
+        initial = ctrl.hudVisible
+        status, _ = _http_get(qtbot, f"http://127.0.0.1:{port}/toggle-hud")
+        assert status == 200
+        assert ctrl.hudVisible is not initial
+        # Toggle back
+        _http_get(qtbot, f"http://127.0.0.1:{port}/toggle-hud")
+        assert ctrl.hudVisible is initial
+
+    def test_status_includes_hud_visible(self, server_and_ctrl, qtbot):
+        ctrl, _, port = server_and_ctrl
+        _, body = _http_get(qtbot, f"http://127.0.0.1:{port}/status")
+        data = json.loads(body)
+        assert "hud_visible" in data
+        assert data["hud_visible"] == ctrl.hudVisible
+
+    def test_status_caption_is_cached_per_path(self, server_and_ctrl, tmp_path, qtbot):
+        ctrl, srv, port = server_and_ctrl
+        d = tmp_path / "imgs"
+        d.mkdir()
+        make_plain_jpeg(d / "a.jpg")
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        # First call populates the cache
+        _http_get(qtbot, f"http://127.0.0.1:{port}/status")
+        cached_path = srv._caption_cache_path
+        assert cached_path != ""
+
+        # captionWritten signal must invalidate the cache
+        ctrl.captionWritten.emit(0)
+        assert srv._caption_cache_path == ""
+
+    def test_interval_endpoint_sets_value(self, server_and_ctrl, qtbot):
+        ctrl, _, port = server_and_ctrl
+        status, _ = _http_get(qtbot, f"http://127.0.0.1:{port}/interval?value=12000")
+        assert status == 200
+        assert ctrl.interval == 12000
+
+    def test_interval_rejects_out_of_range(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        # Below minimum
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/interval?value=500")  == 400
+        # Above maximum
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/interval?value=200000") == 400
+
+    def test_interval_rejects_missing_value(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/interval") == 400
+
+    def test_toggle_exif_emits_signal(self, server_and_ctrl, qtbot):
+        _, srv, port = server_and_ctrl
+        received = []
+        srv.toggleExifRequested.connect(lambda: received.append(True))
+        status, _ = _http_get(qtbot, f"http://127.0.0.1:{port}/toggle-exif")
+        assert status == 200
+        qtbot.waitUntil(lambda: len(received) > 0, timeout=3000)
+        assert received
+
+    def test_preview_returns_404_when_no_images(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        assert _http_status(qtbot, f"http://127.0.0.1:{port}/preview") == 404
+
+    def test_preview_returns_jpeg_when_image_loaded(self, server_and_ctrl, tmp_path, qtbot):
+        ctrl, _, port = server_and_ctrl
+        d = tmp_path / "imgs"
+        d.mkdir()
+        make_plain_jpeg(d / "a.jpg")
+        ctrl.loadFolder(str(d))
+        qtbot.waitUntil(lambda: not ctrl.scanning, timeout=3000)
+
+        status, body = _http_get(qtbot, f"http://127.0.0.1:{port}/preview")
+        assert status == 200
+        assert len(body) > 0
+
     def test_unknown_path_returns_404(self, server_and_ctrl, qtbot):
         _, _, port = server_and_ctrl
         try:
@@ -301,6 +377,44 @@ class TestRescanIntervalEndpoint:
         _http_status(qtbot, f"http://127.0.0.1:{port}/control/rescan-interval?value=0")
         qtbot.waitUntil(lambda: len(received) > 0, timeout=3000)
         assert received[0] == 0
+
+
+# ── /control/transition ────────────────────────────────────────────────────────
+
+class TestTransitionEndpoint:
+    def test_transition_returns_404_in_normal_mode(self, server_and_ctrl, qtbot):
+        _, _, port = server_and_ctrl
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/transition?value=fade"
+        ) == 404
+
+    def test_transition_rejects_invalid_value(self, bg_server, qtbot):
+        _, _, port = bg_server
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/transition?value=dissolve"
+        ) == 400
+
+    def test_transition_rejects_missing_value(self, bg_server, qtbot):
+        _, _, port = bg_server
+        assert _http_status(
+            qtbot, f"http://127.0.0.1:{port}/control/transition"
+        ) == 400
+
+    @pytest.mark.parametrize("style", ["fade", "slide", "zoom", "fadeblack"])
+    def test_transition_emits_signal_for_valid_style(self, bg_server, qtbot, style):
+        _, srv, port = bg_server
+        received = []
+        srv.transitionChangeRequested.connect(lambda s: received.append(s))
+        _http_status(qtbot, f"http://127.0.0.1:{port}/control/transition?value={style}")
+        qtbot.waitUntil(lambda: len(received) > 0, timeout=3000)
+        assert received[0] == style
+
+    def test_status_includes_transition(self, bg_server, qtbot):
+        ctrl, _, port = bg_server
+        _, body = _http_get(qtbot, f"http://127.0.0.1:{port}/status")
+        data = json.loads(body)
+        assert "transition" in data
+        assert data["transition"] == ctrl.transitionStyle
 
 
 # ── setPort ────────────────────────────────────────────────────────────────────

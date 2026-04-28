@@ -12,9 +12,11 @@ Requires Python >= 3.14
 """
 from __future__ import annotations
 
+import io
 import json
 import socket
 import sys
+import threading
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
 
@@ -54,6 +56,13 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Next",
         "play_play":        "Play",
         "play_pause":       "Pause",
+        "btn_hud_show":     "Show Info Bar",
+        "btn_hud_hide":     "Hide Info Bar",
+        "btn_exif_show":    "Show Details",
+        "btn_exif_hide":    "Hide Details",
+        "preview_none":     "No preview available",
+        "caption_prefix":   "Caption:",
+        "caption_empty":    "<no caption>",
         "pf_warn_title":    "No images available",
         "pf_warn_sub":      "Check the folder path or filter settings.",
         "lbl_show_control": "Show Control",
@@ -65,6 +74,11 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "Image scale",
         "chip_fit":         "Fit",
         "chip_fill":        "Fill",
+        "lbl_transition":   "Transition",
+        "chip_fade":        "Fade",
+        "chip_slide":       "Slide",
+        "chip_zoom":        "Zoom",
+        "chip_fadeblack":   "Fade/Black",
         "btn_rescan":       "Scan Now",
         "btn_rescan_lbl":   "Rescan:",
         "lbl_rescan_bg":    "Rescan in Background",
@@ -83,6 +97,13 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Weiter",
         "play_play":        "Play",
         "play_pause":       "Pause",
+        "btn_hud_show":     "Info-Leiste zeigen",
+        "btn_hud_hide":     "Info-Leiste verbergen",
+        "btn_exif_show":    "Details zeigen",
+        "btn_exif_hide":    "Details verbergen",
+        "preview_none":     "Keine Vorschau verf\u00fcgbar",
+        "caption_prefix":   "Beschriftung:",
+        "caption_empty":    "<keine Beschriftung>",
         "pf_warn_title":    "Keine Bilder verf\u00fcgbar",
         "pf_warn_sub":      "Ordnerpfad oder Filtereinstellungen pr\u00fcfen.",
         "lbl_show_control": "Show-Steuerung",
@@ -94,6 +115,11 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "Bildskalierung",
         "chip_fit":         "Einpassen",
         "chip_fill":        "F\u00fcllen",
+        "lbl_transition":   "\u00dcbergang",
+        "chip_fade":        "Einblenden",
+        "chip_slide":       "Schieben",
+        "chip_zoom":        "Zoomen",
+        "chip_fadeblack":   "Schwarz",
         "btn_rescan":       "Jetzt scannen",
         "btn_rescan_lbl":   "Rescan:",
         "lbl_rescan_bg":    "Hintergrundscan",
@@ -112,6 +138,13 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "btn_next":         "Suivant",
         "play_play":        "Lecture",
         "play_pause":       "Pause",
+        "btn_hud_show":     "Afficher la barre d’infos",
+        "btn_hud_hide":     "Masquer la barre d’infos",
+        "btn_exif_show":    "Afficher les détails",
+        "btn_exif_hide":    "Masquer les détails",
+        "preview_none":     "Aucun aperçu disponible",
+        "caption_prefix":   "Légende :",
+        "caption_empty":    "<aucune légende>",
         "pf_warn_title":    "Aucune image disponible",
         "pf_warn_sub":      "V\u00e9rifiez le dossier ou les param\u00e8tres de filtre.",
         "lbl_show_control": "Contr\u00f4le du diaporama",
@@ -123,6 +156,11 @@ _TRANSLATIONS: dict[str, dict[str, str]] = {
         "opt_scale":        "\u00c9chelle de l\u2019image",
         "chip_fit":         "Adapter",
         "chip_fill":        "Remplir",
+        "lbl_transition":   "Transition",
+        "chip_fade":        "Fondu",
+        "chip_slide":       "Glissement",
+        "chip_zoom":        "Zoom",
+        "chip_fadeblack":   "Fondu noir",
         "btn_rescan":       "Scanner maintenant",
         "btn_rescan_lbl":   "Rescan\u00a0:",
         "lbl_rescan_bg":    "Rescan en arri\u00e8re-plan",
@@ -155,6 +193,7 @@ _REMOTE_HTML = """\
     --text-sec:      #94a3b8;
     --text-muted:    #475569;
     --text-disabled: #6d84a5;
+    --star-inactive: #30303b;
     --warn:          #7c5c1e;
     --warn-text:     #fcd34d;
   }
@@ -254,6 +293,28 @@ _REMOTE_HTML = """\
     border-color: var(--accent);
   }
   .play-btn:disabled { opacity: .25; cursor: not-allowed; }
+  /* Two-up row of play-style buttons (HUD + Details) */
+  .btn-row {
+    grid-column: 1 / -1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+  .btn-row .play-btn { grid-column: auto; }
+  /* Interval slider on the Remote tab */
+  #intervalWrap { grid-column: 1 / -1; padding: 4px 4px 0; }
+  #intervalWrap.disabled .interval-row { opacity: .45; }
+  .interval-row {
+    display: flex; justify-content: space-between; align-items: baseline;
+    font-size: 12px;
+  }
+  .interval-row span:first-child { color: var(--text-sec); }
+  #intervalLabel {
+    color: var(--accent-light);
+    font-variant-numeric: tabular-nums;
+  }
+  /* Divider used inside the Remote grid (spans both columns) */
+  .remote-grid .divider { grid-column: 1 / -1; }
 
   /* ── Picture Frame section ──────────────────────────── */
   .opt-item { padding: 14px 0; }
@@ -380,6 +441,20 @@ _REMOTE_HTML = """\
     border: 2px solid var(--accent);
     cursor: pointer;
   }
+  input[type=range]:disabled {
+    opacity: .35;
+    cursor: not-allowed;
+  }
+  input[type=range]:disabled::-webkit-slider-thumb {
+    background: var(--text-muted);
+    border-color: var(--text-disabled);
+    cursor: not-allowed;
+  }
+  input[type=range]:disabled::-moz-range-thumb {
+    background: var(--text-muted);
+    border-color: var(--text-disabled);
+    cursor: not-allowed;
+  }
 
   /* Warning banner */
   #pfWarning {
@@ -395,6 +470,62 @@ _REMOTE_HTML = """\
   .warn-icon { color: var(--warn-text); flex-shrink: 0; margin-top: 1px; }
   .warn-title { font-size: .88rem; font-weight: 600; color: var(--warn-text); margin-bottom: 3px; }
   .warn-sub { font-size: .78rem; color: rgba(252, 211, 77, 0.6); line-height: 1.4; }
+
+  /* Image preview */
+  #previewWrap { grid-column: 1 / -1; }
+  #previewBox {
+    position: relative;
+    aspect-ratio: 16 / 9;
+    width: 100%;
+    background: var(--surface);
+    border-radius: 10px;
+    overflow: hidden;
+  }
+  #previewBox img {
+    position: absolute; inset: 0;
+    width: 100%; height: 100%;
+    object-fit: contain;
+    opacity: 0;
+    transition: opacity .7s ease;
+  }
+  #previewBox img.loaded { opacity: 1; }
+  #previewPlaceholder {
+    position: absolute; inset: 0;
+    display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: .85rem;
+  }
+  #previewPlaceholder svg { width: 48px; height: 48px; opacity: .6; }
+  #previewBox.active #previewPlaceholder { display: none; }
+  #previewCounter, #previewRating {
+    position: absolute;
+    bottom: 8px;
+    padding: 3px 10px;
+    border-radius: 6px;
+    background: rgba(0, 0, 0, 0.55);
+    color: var(--text-primary);
+    font-size: .8rem;
+    pointer-events: none;
+    display: none;
+  }
+  #previewCounter { left: 8px; font-variant-numeric: tabular-nums; }
+  #previewRating  { right: 8px; letter-spacing: 1px; }
+  #previewRating .star-on  { color: var(--accent-light); }
+  #previewRating .star-off { color: var(--star-inactive); }
+  #previewBox.active #previewCounter,
+  #previewBox.active #previewRating { display: block; }
+  #previewCaption {
+    margin-top: 8px;
+    font-size: .82rem;
+    color: var(--text-sec);
+    text-align: center;
+    line-height: 1.4;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
 
   footer { font-size: .7rem; color: var(--surface); text-align: center; }
 </style>
@@ -431,6 +562,47 @@ _REMOTE_HTML = """\
       <img id="playBtnIcon" src="/icon_play.svg">
       <span class="play-lbl" id="playBtnLabel" data-i18n="play_play">Play</span>
     </button>
+    <div id="intervalWrap">
+      <div class="interval-row">
+        <span data-i18n="lbl_interval">Interval</span>
+        <span id="intervalLabel">5s</span>
+      </div>
+      <input type="range" id="intervalSlider" min="1" max="99" value="5"
+             oninput="intervalInput(this.value)" onchange="intervalCommit(this.value)" disabled>
+    </div>
+    <div class="divider"></div>
+    <div id="previewWrap">
+      <div id="previewBox">
+        <img id="previewImgA" src="" alt="">
+        <img id="previewImgB" src="" alt="">
+        <div id="previewPlaceholder">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <path d="M21 15l-5-5L5 21"/>
+            <line x1="3" y1="3" x2="21" y2="21"/>
+          </svg>
+          <span data-i18n="preview_none">No preview available</span>
+        </div>
+        <div id="previewCounter">0 / 0</div>
+        <div id="previewRating"></div>
+      </div>
+      <div id="previewCaption"></div>
+    </div>
+    <div class="btn-row">
+      <button class="play-btn" id="hudBtn" onclick="cmd('toggle-hud')" disabled>
+        <img src="/icon_hud.svg">
+        <span class="play-lbl" id="hudBtnLabel" data-i18n="btn_hud_show">Show Info Bar</span>
+      </button>
+      <button class="play-btn" id="exifBtn" onclick="cmd('toggle-exif')" disabled>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10" opacity="0.5"/>
+          <line x1="12" y1="16" x2="12" y2="12"/>
+          <line x1="12" y1="8" x2="12.01" y2="8"/>
+        </svg>
+        <span class="play-lbl" id="exifBtnLabel" data-i18n="btn_exif_show">Show Details</span>
+      </button>
+    </div>
   </div>
 </div>
 
@@ -495,6 +667,27 @@ _REMOTE_HTML = """\
           <img src="/icon_scale_fill.svg" alt=""><span data-i18n="chip_fill">Fill</span>
         </button>
       </div>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <!-- TRANSITION -->
+  <div class="opt-item">
+    <div class="opt-lbl"><div class="opt-bar"></div><span data-i18n="lbl_transition">Transition</span></div>
+    <div class="chip-group">
+      <button class="chip" id="pfTransFadeChip" onclick="pfTransition('fade')">
+        <img src="/icon_trans_fade.svg" alt=""><span data-i18n="chip_fade">Fade</span>
+      </button>
+      <button class="chip" id="pfTransSlideChip" onclick="pfTransition('slide')">
+        <img src="/icon_trans_slide.svg" alt=""><span data-i18n="chip_slide">Slide</span>
+      </button>
+      <button class="chip" id="pfTransZoomChip" onclick="pfTransition('zoom')">
+        <img src="/icon_trans_zoom.svg" alt=""><span data-i18n="chip_zoom">Zoom</span>
+      </button>
+      <button class="chip" id="pfTransFadeblackChip" onclick="pfTransition('fadeblack')">
+        <img src="/icon_trans_fadeblack.svg" alt=""><span data-i18n="chip_fadeblack">Fade/Black</span>
+      </button>
     </div>
   </div>
 
@@ -617,6 +810,23 @@ _REMOTE_HTML = """\
     document.getElementById('pfFillChip').classList.toggle('active', mode === 'fill');
   }
 
+  // ── Transition chips ────────────────────────────────────────
+  function pfTransition(mode) {
+    fetch('/control/transition?value=' + mode).catch(function(){});
+    updateTransitionChips(mode);
+  }
+  function updateTransitionChips(mode) {
+    var map = {
+      'fade':      'pfTransFadeChip',
+      'slide':     'pfTransSlideChip',
+      'zoom':      'pfTransZoomChip',
+      'fadeblack': 'pfTransFadeblackChip',
+    };
+    Object.keys(map).forEach(function(m) {
+      document.getElementById(map[m]).classList.toggle('active', mode === m);
+    });
+  }
+
   // ── Start / stop / rescan ───────────────────────────────────
   function pfStart()  { fetch('/control/start').catch(function(){}); setTimeout(poll, 300); }
   function pfStop()   { fetch('/control/stop').catch(function(){});  setTimeout(poll, 300); }
@@ -637,6 +847,20 @@ _REMOTE_HTML = """\
     document.getElementById('pfSection').style.display     = tab === 'picframe' ? '' : 'none';
     document.getElementById('tabRemote').classList.toggle('active',   tab === 'remote');
     document.getElementById('tabPicframe').classList.toggle('active', tab === 'picframe');
+    try { localStorage.setItem('ps_tab', tab); } catch(e) {}
+  }
+
+  // ── Remote-tab interval slider (1–99 s) ─────────────────────
+  var _ivCommitTimer = null;
+  function intervalInput(v) {
+    document.getElementById('intervalLabel').textContent = v + 's';
+    sliderFill(document.getElementById('intervalSlider'));
+    clearTimeout(_ivCommitTimer);
+    _ivCommitTimer = setTimeout(function() { intervalCommit(v); }, 600);
+  }
+  function intervalCommit(v) {
+    clearTimeout(_ivCommitTimer);
+    fetch('/interval?value=' + (parseInt(v) * 1000)).catch(function(){});
   }
 
   // ── Standard remote ─────────────────────────────────────────
@@ -646,21 +870,39 @@ _REMOTE_HTML = """\
   }
 
   // ── Polling ───────────────────────────────────────────────
-  var _bgMode    = __BACKGROUND_MODE__;
-  var _firstPoll = true;
-  var _online    = true;
+  var _bgMode     = __BACKGROUND_MODE__;
+  var _firstPoll  = true;
+  var _online     = true;
+  var _lastIndex  = -1;
 
-  if (_bgMode) document.getElementById('tabBar').style.display = '';
+  if (_bgMode) {
+    document.getElementById('tabBar').style.display = '';
+    try {
+      var _savedTab = localStorage.getItem('ps_tab');
+      if (_savedTab === 'picframe') switchTab('picframe');
+    } catch(e) {}
+  }
 
   function setOffline() {
     if (!_online) return;
     _online = false;
-    ['prevBtn', 'nextBtn', 'playBtn'].forEach(function(id) {
+    ['prevBtn', 'nextBtn', 'playBtn', 'hudBtn', 'exifBtn', 'intervalSlider'].forEach(function(id) {
       document.getElementById(id).disabled = true;
     });
+    document.getElementById('intervalWrap').classList.add('disabled');
+    ['previewImgA', 'previewImgB'].forEach(function(id) {
+      var im = document.getElementById(id);
+      im.classList.remove('loaded');
+      im.removeAttribute('src');
+    });
+    document.getElementById('previewBox').classList.remove('active');
+    document.getElementById('previewCaption').textContent = '';
+    _lastIndex = -1;
     if (_bgMode) {
       ['pfStartBtn', 'pfStopBtn', 'pfRescanBtn',
-       'pfIntervalSlider', 'pfFitChip', 'pfFillChip', 'pfRescanSelect'].forEach(
+       'pfIntervalSlider', 'pfFitChip', 'pfFillChip',
+       'pfTransFadeChip', 'pfTransSlideChip', 'pfTransZoomChip', 'pfTransFadeblackChip',
+       'pfRescanSelect'].forEach(
         function(id) { document.getElementById(id).disabled = true; }
       );
     }
@@ -692,6 +934,47 @@ _REMOTE_HTML = """\
         document.getElementById('prevBtn').disabled = !navEnabled;
         document.getElementById('nextBtn').disabled = !navEnabled;
         document.getElementById('playBtn').disabled = !navEnabled;
+        var previewBox = document.getElementById('previewBox');
+        var imgA = document.getElementById('previewImgA');
+        var imgB = document.getElementById('previewImgB');
+        if (navEnabled) {
+          if (d.index !== _lastIndex) {
+            // Cross-fade: load into whichever <img> is currently hidden,
+            // then swap .loaded classes when the new image is ready so both
+            // fades run in lockstep for a clean, fixed-duration 700 ms swap.
+            var next = imgA.classList.contains('loaded') ? imgB : imgA;
+            var curr = imgA.classList.contains('loaded') ? imgA : imgB;
+            next.onload = function() {
+              next.classList.add('loaded');
+              curr.classList.remove('loaded');
+              previewBox.classList.add('active');
+            };
+            next.onerror = function() {};
+            next.src = '/preview?t=' + Date.now();
+            _lastIndex = d.index;
+          }
+          document.getElementById('previewCounter').textContent =
+            (d.index + 1) + ' / ' + total;
+          var r = Math.max(0, Math.min(5, d.rating | 0));
+          var ratingHtml = '';
+          for (var i = 1; i <= 5; i++) {
+            ratingHtml += '<span class="' + (i <= r ? 'star-on' : 'star-off') + '">★</span>';
+          }
+          document.getElementById('previewRating').innerHTML = ratingHtml;
+          var capText = (d.caption && d.caption.length > 0)
+            ? d.caption
+            : _t('caption_empty');
+          document.getElementById('previewCaption').textContent =
+            _t('caption_prefix') + ' ' + capText;
+        } else {
+          imgA.classList.remove('loaded');
+          imgA.removeAttribute('src');
+          imgB.classList.remove('loaded');
+          imgB.removeAttribute('src');
+          previewBox.classList.remove('active');
+          document.getElementById('previewCaption').textContent = '';
+          _lastIndex = -1;
+        }
         document.getElementById('status').textContent = active && total > 0
           ? _t('status_photo').replace('{n}', d.index + 1).replace('{total}', total) +
             '\u2002(' + (playing ? _t('status_playing') : _t('status_paused')) + ')'
@@ -700,6 +983,25 @@ _REMOTE_HTML = """\
           playing ? '/icon_pause.svg' : '/icon_play.svg';
         document.getElementById('playBtnLabel').textContent =
           playing ? _t('play_pause') : _t('play_play');
+        document.getElementById('hudBtn').disabled = !active;
+        document.getElementById('hudBtnLabel').textContent =
+          d.hud_visible ? _t('btn_hud_hide') : _t('btn_hud_show');
+        document.getElementById('exifBtn').disabled = !active;
+        document.getElementById('exifBtnLabel').textContent =
+          d.exif_visible ? _t('btn_exif_hide') : _t('btn_exif_show');
+
+        // Interval slider — only changeable while autoplay is OFF
+        var ivSlider = document.getElementById('intervalSlider');
+        ivSlider.disabled = !active || playing;
+        document.getElementById('intervalWrap').classList.toggle('disabled', ivSlider.disabled);
+        if (!ivSlider.matches(':active')) {
+          var s = Math.max(1, Math.min(99, Math.round(d.interval / 1000)));
+          if (parseInt(ivSlider.value) !== s) {
+            ivSlider.value = s;
+            document.getElementById('intervalLabel').textContent = s + 's';
+          }
+          sliderFill(ivSlider);
+        }
 
         // Picture Frame section
         if (_bgMode) {
@@ -712,6 +1014,10 @@ _REMOTE_HTML = """\
           document.getElementById('pfIntervalSlider').disabled = false;
           document.getElementById('pfFitChip').disabled   = false;
           document.getElementById('pfFillChip').disabled  = false;
+          document.getElementById('pfTransFadeChip').disabled      = false;
+          document.getElementById('pfTransSlideChip').disabled     = false;
+          document.getElementById('pfTransZoomChip').disabled      = false;
+          document.getElementById('pfTransFadeblackChip').disabled = false;
 
           document.getElementById('pfWarning').style.display =
             (!scanning && total === 0) ? 'flex' : 'none';
@@ -725,6 +1031,7 @@ _REMOTE_HTML = """\
             sliderFill(slider);
           }
           updateScaleChips(d.scale);
+          updateTransitionChips(d.transition);
           if (_firstPoll) updateRescanSelect(d.rescan_interval || 0);
         }
         _firstPoll = false;
@@ -750,9 +1057,20 @@ class RemoteServer(QObject):
     stopShowRequested            = Signal()     # /control/stop received
     intervalChangeRequested      = Signal(int)  # /control/interval — ms value
     scaleChangeRequested         = Signal(str)  # /control/scale — "fit" | "fill"
+    transitionChangeRequested    = Signal(str)  # /control/transition — "fade"|"slide"|"zoom"|"fadeblack"
     rescanRequested              = Signal()     # /control/rescan received
     rescanIntervalChangeRequested = Signal(int) # /control/rescan-interval — seconds (0=off)
+    toggleExifRequested          = Signal()     # /toggle-exif received (QML toggles the EXIF panel)
     showStartedChanged           = Signal()     # show_started flag changed (QML binding)
+    exifVisibleChanged           = Signal()     # exif panel visibility (QML → remote)
+
+    # ── Internal cross-thread signals (preview generation) ─────────────────────
+    # Worker threads emit these; the connected slots run on the main Qt thread
+    # (Qt.QueuedConnection auto-marshalling) so QTcpSocket writes stay on the
+    # thread that owns the socket. This keeps Pillow off the UI thread, so the
+    # slideshow's own fade animations don't stutter while generating previews.
+    _previewReady   = Signal(object, bytes)     # (sock, jpeg_bytes)
+    _previewFailed  = Signal(object)            # (sock,)
 
     def __init__(
         self,
@@ -769,10 +1087,28 @@ class RemoteServer(QObject):
         self._background_mode = background_mode
         self._show_active     = False
         self._show_started    = False   # background mode: window has been shown
+        self._exif_visible    = False   # mirrored from QML (SlideshowPage._exifVisible)
         self._rescan_interval = 0       # auto-rescan interval in seconds (0 = off)
         self._server          = QTcpServer(self)
         self._clients: list[QTcpSocket] = []
         self._server.newConnection.connect(self._on_new_connection)
+
+        # Preview cache (bytes for the most recently generated thumbnail).
+        # Keyed by absolute file path so the same image is never re-encoded
+        # across multiple /preview hits.
+        self._preview_lock         = threading.Lock()
+        self._preview_cache_path   = ""
+        self._preview_cache_data: bytes | None = None
+        self._previewReady.connect(self._send_preview_ok)
+        self._previewFailed.connect(self._send_preview_err)
+
+        # Caption cache — /status is polled every ~3 s, but imageCaption()
+        # opens the JPEG and parses IPTC each call. Cache the value for the
+        # current path so polls with no index/folder change pay nothing.
+        self._caption_cache_path  = ""
+        self._caption_cache_value = ""
+        controller.imagesChanged.connect(self._invalidate_caption_cache)
+        controller.captionWritten.connect(lambda _: self._invalidate_caption_cache())
 
     # ── Public API ─────────────────────────────────────────────────────────────
     @Property(str, notify=serverStarted)
@@ -817,6 +1153,17 @@ class RemoteServer(QObject):
             return
         self._show_started = started
         self.showStartedChanged.emit()
+
+    @Property(bool, notify=exifVisibleChanged)
+    def exifVisible(self) -> bool:
+        return self._exif_visible
+
+    @Slot(bool)
+    def setExifVisible(self, visible: bool) -> None:
+        if self._exif_visible == visible:
+            return
+        self._exif_visible = visible
+        self.exifVisibleChanged.emit()
 
     @Slot(int)
     def setRescanInterval(self, secs: int) -> None:
@@ -871,6 +1218,67 @@ class RemoteServer(QObject):
         body = json.dumps({"error": msg})
         self._respond(sock, status, "application/json", body)
 
+    def _invalidate_caption_cache(self) -> None:
+        self._caption_cache_path = ""
+        self._caption_cache_value = ""
+
+    def _current_caption(self) -> str:
+        """Cached IPTC caption for the current image (avoids re-reading JPEG
+        metadata on every status poll). Cache is keyed by the current path
+        and invalidated on imagesChanged / captionWritten."""
+        if self._controller.imageCount == 0:
+            return ""
+        path = self._controller.currentImagePath()
+        if path and path == self._caption_cache_path:
+            return self._caption_cache_value
+        value = self._controller.imageCaption(self._controller.currentIndex)
+        self._caption_cache_path  = path
+        self._caption_cache_value = value
+        return value
+
+    # ── Preview generation (worker thread + signal back to main thread) ────────
+    def _gen_preview_async(self, sock: QTcpSocket, path: str) -> None:
+        """Worker-thread entry: produce a JPEG thumbnail, then emit a signal."""
+        with self._preview_lock:
+            if self._preview_cache_path == path and self._preview_cache_data:
+                self._previewReady.emit(sock, self._preview_cache_data)
+                return
+        try:
+            from PIL import Image, ImageOps
+            img = Image.open(path)
+            img = ImageOps.exif_transpose(img)
+            if img.mode not in ("RGB", "L"):
+                img = img.convert("RGB")
+            img.thumbnail((800, 800), Image.LANCZOS)
+            buf = io.BytesIO()
+            img.save(buf, format="JPEG", quality=75, optimize=True)
+            data = buf.getvalue()
+        except Exception:
+            self._previewFailed.emit(sock)
+            return
+        with self._preview_lock:
+            self._preview_cache_path = path
+            self._preview_cache_data = data
+        self._previewReady.emit(sock, data)
+
+    @Slot(object, bytes)
+    def _send_preview_ok(self, sock: QTcpSocket, data: bytes) -> None:
+        if sock not in self._clients:
+            return  # client disconnected before we finished encoding
+        try:
+            self._respond(sock, "200 OK", "image/jpeg", data)
+        except RuntimeError:
+            pass  # underlying C++ socket was deleted
+
+    @Slot(object)
+    def _send_preview_err(self, sock: QTcpSocket) -> None:
+        if sock not in self._clients:
+            return
+        try:
+            self._respond(sock, "500 Internal Server Error", "text/plain", "preview unavailable")
+        except RuntimeError:
+            pass
+
     def _handle(self, sock: QTcpSocket) -> None:
         raw   = bytes(sock.readAll()).decode("utf-8", errors="ignore")
         parts = raw.split("\r\n", maxsplit=1)[0].split(" ") if raw else []
@@ -903,10 +1311,20 @@ class RemoteServer(QObject):
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_play.svg"))
             case "/icon_pause.svg":
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_pause.svg"))
+            case "/icon_hud.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_hud_fundamental.svg"))
             case "/icon_scale_fit.svg":
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_scale_fit.svg"))
             case "/icon_scale_fill.svg":
                 self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_scale_fill.svg"))
+            case "/icon_trans_fade.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_trans_fade.svg"))
+            case "/icon_trans_slide.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_trans_slide.svg"))
+            case "/icon_trans_zoom.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_trans_zoom.svg"))
+            case "/icon_trans_fadeblack.svg":
+                self._respond(sock, "200 OK", "image/svg+xml", _read_img("icon_trans_fadeblack.svg"))
 
             # ── standard remote control ───────────────────────────────────
             case "/next":
@@ -918,6 +1336,37 @@ class RemoteServer(QObject):
             case "/toggle":
                 ctrl.togglePlay()
                 self._respond(sock, "200 OK", "text/plain", "ok")
+            case "/toggle-hud":
+                ctrl.setHudVisible(not ctrl.hudVisible)
+                self._respond(sock, "200 OK", "text/plain", "ok")
+            case "/interval":
+                try:
+                    ms = int(qs.get("value", [""])[0])
+                except (ValueError, IndexError):
+                    self._json_error(sock, "missing or invalid 'value' parameter")
+                    return
+                if not (1_000 <= ms <= 99_000):
+                    self._json_error(sock, "value out of range (1000–99000 ms)")
+                    return
+                ctrl.setInterval(ms)
+                self._json_ok(sock)
+            case "/toggle-exif":
+                self.toggleExifRequested.emit()
+                self._respond(sock, "200 OK", "text/plain", "ok")
+            case "/preview":
+                path = ctrl.currentImagePath()
+                if not path:
+                    self._respond(sock, "404 Not Found", "text/plain", "no image")
+                    return
+                # Off-thread: heavy Pillow work would otherwise block the Qt
+                # event loop and stutter the slideshow's own fade animations.
+                threading.Thread(
+                    target=self._gen_preview_async,
+                    args=(sock, path),
+                    daemon=True,
+                ).start()
+                # No response here — the worker emits a signal which the slot
+                # delivers on the main thread.
             case "/status":
                 body = json.dumps({
                     "index":        ctrl.currentIndex,
@@ -925,11 +1374,16 @@ class RemoteServer(QObject):
                     "playing":      ctrl.isPlaying,
                     "active":       self._show_active,
                     "scanning":     ctrl.scanning,
+                    "hud_visible":  ctrl.hudVisible,
+                    "exif_visible": self._exif_visible,
+                    "caption":      self._current_caption(),
+                    "rating":       ctrl.imageRating(ctrl.currentIndex)  if ctrl.imageCount > 0 else 0,
                     # background mode fields (always present for simplicity)
                     "background_mode":  self._background_mode,
                     "show_started":     self._show_started,
                     "interval":         ctrl.interval,
                     "scale":            "fill" if ctrl.imageFill else "fit",
+                    "transition":       ctrl.transitionStyle,
                     "rescan_interval":  self._rescan_interval,
                 })
                 self._respond(sock, "200 OK", "application/json", body)
@@ -978,6 +1432,17 @@ class RemoteServer(QObject):
                         self._json_error(sock, "value must be 'fit' or 'fill'")
                         return
                     self.scaleChangeRequested.emit(value)
+                    self._json_ok(sock)
+
+            case "/control/transition":
+                if not self._background_mode:
+                    self._json_error(sock, "not in background mode", "404 Not Found")
+                else:
+                    value = qs.get("value", [""])[0]
+                    if value not in ("fade", "slide", "zoom", "fadeblack"):
+                        self._json_error(sock, "value must be one of: fade, slide, zoom, fadeblack")
+                        return
+                    self.transitionChangeRequested.emit(value)
                     self._json_ok(sock)
 
             case "/control/rescan":

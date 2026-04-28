@@ -906,140 +906,140 @@
         <translation type="vanished">Lecture (%1 s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1039"/>
+        <location filename="../qml/SlideshowPage.qml" line="1055"/>
         <source>No images available</source>
         <translation>Aucune image disponible</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1056"/>
+        <location filename="../qml/SlideshowPage.qml" line="1072"/>
         <source>Check the folder path or filter settings.</source>
         <translation>Vérifiez le chemin du dossier ou les paramètres de filtre.</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1038"/>
+        <location filename="../qml/SlideshowPage.qml" line="1054"/>
         <source>Image not available</source>
         <translation>Image non disponible</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1055"/>
+        <location filename="../qml/SlideshowPage.qml" line="1071"/>
         <source>The file may have been moved or deleted.</source>
         <translation>Le fichier a peut-être été déplacé ou supprimé.</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1236"/>
+        <location filename="../qml/SlideshowPage.qml" line="1252"/>
         <source>Auto play</source>
         <translation>Lecture auto</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1245"/>
-        <location filename="../qml/SlideshowPage.qml" line="1247"/>
+        <location filename="../qml/SlideshowPage.qml" line="1261"/>
+        <location filename="../qml/SlideshowPage.qml" line="1263"/>
         <source>Timer: %1 s</source>
         <translation>Minuterie : %1 s</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1248"/>
+        <location filename="../qml/SlideshowPage.qml" line="1264"/>
         <source>Pause</source>
         <translation>Pause</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1248"/>
+        <location filename="../qml/SlideshowPage.qml" line="1264"/>
         <source>Last image</source>
         <translation>Dernière image</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1278"/>
+        <location filename="../qml/SlideshowPage.qml" line="1294"/>
         <source>start</source>
         <translation>démarrer</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1395"/>
+        <location filename="../qml/SlideshowPage.qml" line="1411"/>
         <source>JUMP TO IMAGE</source>
         <translation>ALLER À L&apos;IMAGE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1460"/>
+        <location filename="../qml/SlideshowPage.qml" line="1476"/>
         <source>go</source>
         <translation>aller</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1463"/>
-        <location filename="../qml/SlideshowPage.qml" line="1621"/>
-        <location filename="../qml/SlideshowPage.qml" line="1749"/>
+        <location filename="../qml/SlideshowPage.qml" line="1479"/>
+        <location filename="../qml/SlideshowPage.qml" line="1637"/>
+        <location filename="../qml/SlideshowPage.qml" line="1765"/>
         <source>cancel</source>
         <translation>annuler</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1574"/>
+        <location filename="../qml/SlideshowPage.qml" line="1590"/>
         <source>RATE IMAGE</source>
         <translation>NOTER L&apos;IMAGE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1583"/>
+        <location filename="../qml/SlideshowPage.qml" line="1599"/>
         <source>Remove rating</source>
         <translation>Supprimer la note</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1584"/>
+        <location filename="../qml/SlideshowPage.qml" line="1600"/>
         <source>%1 star(s)</source>
         <translation>%1 étoile(s)</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1618"/>
+        <location filename="../qml/SlideshowPage.qml" line="1634"/>
         <source>confirm</source>
         <translation>confirmer</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1623"/>
+        <location filename="../qml/SlideshowPage.qml" line="1639"/>
         <source>0–5 change</source>
         <translation>0–5 modifier</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1689"/>
+        <location filename="../qml/SlideshowPage.qml" line="1705"/>
         <source>EDIT CAPTION</source>
         <translation>MODIFIER LA LÉGENDE</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1746"/>
+        <location filename="../qml/SlideshowPage.qml" line="1762"/>
         <source>save</source>
         <translation>enregistrer</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1752"/>
+        <location filename="../qml/SlideshowPage.qml" line="1768"/>
         <source>copy prev caption</source>
         <translation>Copier légende préc.</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1838"/>
+        <location filename="../qml/SlideshowPage.qml" line="1854"/>
         <source>Exit Application</source>
         <translation>Quitter l&apos;application</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1845"/>
+        <location filename="../qml/SlideshowPage.qml" line="1861"/>
         <source>Do you want to exit the application?</source>
         <translation>Voulez-vous quitter l&apos;application ?</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1871"/>
+        <location filename="../qml/SlideshowPage.qml" line="1887"/>
         <source>Yes</source>
         <translation>Oui</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="1894"/>
+        <location filename="../qml/SlideshowPage.qml" line="1910"/>
         <source>No</source>
         <translation>Non</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="686"/>
+        <location filename="../qml/SlideshowPage.qml" line="60"/>
         <source>Rating</source>
         <translation>Évaluation</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="690"/>
+        <location filename="../qml/SlideshowPage.qml" line="64"/>
         <source>Date taken</source>
         <translation>Date de prise de vue</translation>
     </message>
     <message>
-        <location filename="../qml/SlideshowPage.qml" line="693"/>
+        <location filename="../qml/SlideshowPage.qml" line="67"/>
         <source>Caption</source>
         <translation>Légende</translation>
     </message>
