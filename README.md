@@ -140,7 +140,7 @@ The image zooms to fill the window height and then scrolls left↔right continuo
 
 - `P` or `Esc` — stop panorama and return to normal view
 - `←` / `→` — stop panorama and navigate to the adjacent image
-- Autoplay is paused while panorama is active and resumes when it stops
+- The autoplay timer is paused for the duration of the sweep but the playing state itself is preserved — pressing Pause during the sweep ends the show on the current image after it completes
 - Fullscreen toggle and the HUD work normally during panorama
 
 ### Auto panorama
@@ -161,9 +161,21 @@ The remote is available as soon as the app launches — scan the QR code or open
 (e.g. `http://192.168.1.42:8765`) in any browser on the same Wi-Fi.
 The remote buttons are disabled until the picture show is started, then activate automatically.
 
+**Remote tab**
 - ◀ Previous · ▶ Next · Play/Pause
+- Autoplay interval slider (1–99 s, disabled while autoplay is running)
+- Live image preview — 16:9 cross-fade with placeholder, image counter (bottom-left) and star rating (bottom-right), one-line caption below
+- Show/Hide Info Bar and Show/Hide Details toggle buttons (mirror the `I` and `,` keys)
 - Live status (current photo, total, playing state)
-- **Picture Frame tab** (background mode only): Start/End Show · interval slider (10 s–24 h) · Fit/Fill scale · Rescan in Background (periodic auto-rescan dropdown + manual Scan Now button)
+
+**Picture Frame tab** (background mode only)
+- Start Show / End Show buttons
+- Interval slider (10 s – 24 h, non-linear)
+- Fit / Fill scale chips
+- Transition chips (Fade / Slide / Zoom / Fade-Black)
+- Rescan in Background (periodic auto-rescan dropdown + manual Scan Now button)
+
+The active tab is remembered across page reloads.
 
 ---
 

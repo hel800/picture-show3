@@ -124,7 +124,21 @@ entirely via the remote control web page or the `/control/` HTTP API.
   unavailable), the show window displays a "No images available" message; the
   **Start Show** button on the remote is disabled until images are found.
 
-#### `/control/` HTTP API
+#### Standard endpoints
+
+These are available in every mode (whenever the remote server is running):
+
+| Endpoint | Description | Response |
+|---|---|---|
+| `GET /` | Touch-friendly remote control web page | HTML |
+| `GET /next` · `GET /prev` · `GET /toggle` | Advance · go back · toggle play/pause | `text/plain "ok"` |
+| `GET /toggle-hud` | Toggle the in-show HUD info bar | `text/plain "ok"` |
+| `GET /toggle-exif` | Toggle the in-show EXIF / details panel (mirrors `,` key) | `text/plain "ok"` |
+| `GET /interval?value=N` | Set autoplay interval to `N` ms (1 000–99 000) | `{"ok":true}` · 400 on invalid value |
+| `GET /preview` | JPEG thumbnail of the current image (max 800×800, generated off-thread, per-path cached) | `image/jpeg` · 404 if no image · 500 on read error |
+| `GET /status` | Live JSON state (see below) | `application/json` |
+
+#### `/control/` HTTP API (background mode only)
 
 All background mode control operations are available as plain HTTP GET requests,
 making them easy to call from scripts, home-automation systems, or a future

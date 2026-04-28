@@ -187,7 +187,18 @@ Build: `python install/windows/build.py` — reads `APP_VERSION` from `main.py`,
 
 **Panorama mode**: activated **P**; requires image aspect ratio ≥ 1.3× screen ratio. `startPanorama()` enables `layer.layer` at panorama resolution (capped 4096 px wide), then `panoramaEnterAnim` (1400 ms InOutCubic scales up + pans to right half). After enter, `_panoramaScrollRight()` / `_panoramaScrollLeft()` alternate via `onStopped`; speed 250 px/s. `stopPanorama()` sets `_panoCleanupPending = true`, stops scroll, runs `panoramaExitAnim` (800 ms OutCubic); `onStopped` disables layer and restores state. `_panoramaAbort()`: instant teardown on resize. Key handling while active: **P**/**Esc** → stop; **←**/**→** → `_pendingNav` then stop (navigation fires in exit `onStopped`); **I** → HUD; all other keys absorbed.
 
-**Auto panorama** (`controller.autoPanorama`, `_autoPanoramaActive`): when enabled and autoplay is running, `_tryAutoPanorama()` starts a single-sweep panorama — enter animation + one right-scroll, then `stopPanorama()` + `_pendingNav = 1` to auto-advance. Triggered from `_checkPendingPanorama()` (after each transition), imgA/imgB `onStatusChanged` (slow-loading images), and `onIsPlayingChanged` (Space starts autoplay while suitable image is already on screen). `_autoPanoramaSkip` prevents restart on the same image after **Esc**/**P**/**←** cancellation; cleared on forward navigation (`navDir >= 0` in `onCurrentIndexChanged`). `_suppressPlayAnim` is checked in `onIsPlayingChanged` to prevent `_tryAutoPanorama()` firing mid-exit-animation when `panoramaExitAnim.onStopped` calls `togglePlay()`.
+**Auto panorama** (`controller.autoPanorama`, `_autoPanoramaActive`): when enabled and autoplay is running, `_tryAutoPanorama()` starts a single-sweep panorama — enter animation + one right-scroll, then `stopPanorama()` + `_pendingNav = 1` to auto-advance. Triggered from `_checkPendingPanorama()` (after each transition), imgA/imgB `onStatusChanged` (slow-loading images), and `onIsPlayingChanged` (Space starts autoplay while suitable image is already on screen).
+
+Guards:
+- **`_autoPanoramaSkip`** — prevents restart on the same image after **Esc**/**P**/**←** cancellation; cleared on forward navigation (`navDir >= 0` in `onCurrentIndexChanged`).
+- **`_suppressPlayAnim`** — checked in `onIsPlayingChanged` to skip `_tryAutoPanorama()` during silent play-state changes from the quit dialog. Panorama itself no longer toggles play (it uses `controller.pauseInterval()` / `restartInterval()`), so this flag is no longer set or cleared by panorama code.
+- **`_suppressPanoCheck`** — set at the top of `showImage()` and cleared at every return path. Blocks `_checkPendingPanorama()` from running while `stopAll()`'s explicit `fadeAnim.stop()` synchronously fires `onStopped`. Without it, navigating away from a fade-in to a panorama image would launch a panorama on the layer that's about to be reused, producing a simultaneous fade + scroll.
+- **`_pendingShowAfterPano`** — set in `onCurrentIndexChanged` when external navigation (remote prev/next, jump-to) arrives while `panoramaActive` is true. The handler calls `stopPanorama()` to run the 800 ms zoom-back animation; the cleanup picks up `pendingShow` and calls `showImage(true)` to display the already-changed `currentIndex`. Replaces the old `_panoramaAbort()` instant teardown.
+- **`_pendingManualNav`** — set by the keyboard panorama-mode Right/Left handlers so the cleanup advances unconditionally regardless of `controller.isPlaying`. Auto-panorama leaves it false so the natural-exit advance is gated on `isPlaying` (user-paused-mid-sweep ends the show on the current image).
+
+`_autoPanoramaActive` is cleared unconditionally at the top of `panoramaExitAnim.onStopped` (belt-and-suspenders) — without this guard, the graceful external-nav path would leave the flag stuck true and silently suppress all future auto-panorama sweeps until app restart.
+
+The play/pause popup also gates its timer restart on `!panoramaActive`: `playPauseAnim.onFinished: if (controller.isPlaying && !root.panoramaActive) controller.restartInterval()`. Without that, the ~3.3 s popup could restart the autoplay timer mid-sweep on a longer panorama and fire `nextImage()` before the panorama finished, advancing one image too early.
 
 ---
 
@@ -218,3 +229,11 @@ Two-column modal: settings-page shortcuts on left, slideshow shortcuts on right.
 `KeyHint`: bordered rounded-rect key-cap badge; properties `label` (str), `uiScale` (real, default 1.0).
 
 `ThemedIcon`: SVG icon with `MultiEffect` color tinting; properties `source`, `size`, `iconColor`. SVG style guide: `icon_play/pause/jump.svg` use 32×32 viewBox + rounded-rect border (`rx="6"`, stroke 50% opacity); all other icons use 24×24, no border.
+
+---
+
+## See also
+
+- [README.md](../README.md) — user-facing feature overview, setup, build, and translations
+- [cli.md](cli.md) — full command-line reference, launch modes, and the HTTP control API
+- [user-flow.md](user-flow.md) — page state diagram, keyboard maps, overlay z-order
