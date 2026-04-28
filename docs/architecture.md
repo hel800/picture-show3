@@ -1,6 +1,6 @@
 # Architecture reference
 
-Full per-component deep dives. For a one-paragraph summary of each component see `CLAUDE.md`.
+Full per-component deep dives.
 
 ---
 
