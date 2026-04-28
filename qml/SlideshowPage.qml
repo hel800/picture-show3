@@ -112,9 +112,10 @@ Rectangle {
 
     // ── Panorama mode state ───────────────────────────────────────────────────
     property bool panoramaActive      : false
-    property bool _panoWasPlaying     : false
     property bool _panoCleanupPending : false
     property int  _pendingNav         : 0       // 0=none  1=next  -1=prev
+    property bool _pendingManualNav   : false   // set when _pendingNav came from a manual key (always navigate, regardless of isPlaying)
+    property bool _pendingShowAfterPano: false  // set when external nav (remote/jump) changed currentIndex mid-panorama — exit anim then showImage()
     property var  _panoLayer          : null    // the layer currently being animated
     property real _panoScrollRange     : 0       // pre-computed at panorama start, stable even if image reloads
     property bool _pendingPanorama     : false   // P pressed during a transition — start panorama when transition finishes
@@ -289,6 +290,12 @@ Rectangle {
         onStopped: {
             if (!root._panoCleanupPending) return
             root._panoCleanupPending = false
+            // Belt-and-suspenders: ensure the runtime auto-pano flag is always
+            // cleared at end-of-sweep. Most callers clear it before stopPanorama(),
+            // but the external-nav graceful path can't, so do it unconditionally
+            // here — without this, _autoPanoramaActive could get stuck true and
+            // silently suppress all future auto-panorama sweeps.
+            root._autoPanoramaActive = false
             // In fill mode the exit animation keeps scale=s; reset it together with the
             // other properties in one synchronous block so no intermediate frame is shown.
             root.panoramaActive = false
@@ -299,17 +306,26 @@ Rectangle {
             }
             root._panoLayer = null
             root._panoScrollRange = 0
-            var wasPlaying = root._panoWasPlaying
-            root._panoWasPlaying = false
-            var pendingNav = root._pendingNav
+            var pendingNav    = root._pendingNav
+            var manualNav     = root._pendingManualNav
+            var pendingShow   = root._pendingShowAfterPano
             root._pendingNav = 0
-            if (wasPlaying) {
-                root._suppressPlayAnim = true
-                controller.togglePlay()
-                root._suppressPlayAnim = false
+            root._pendingManualNav = false
+            root._pendingShowAfterPano = false
+            // Decision matrix:
+            //   pendingShow      → external nav already changed currentIndex; display it.
+            //   manualNav        → keyboard nav inside the panorama key block; always navigate.
+            //   isPlaying + nav  → auto-panorama natural exit; advance to next image.
+            //   isPlaying + 0    → manual panorama with no nav (P key); just restart the timer.
+            //   !isPlaying + 0   → user paused during the sweep — end on current image.
+            if (pendingShow) {
+                showImage(true)
+                if (controller.isPlaying) controller.restartInterval()
+            } else if (manualNav || controller.isPlaying) {
+                if (pendingNav === 1)       { root.navDir = 1;  controller.nextImage() }
+                else if (pendingNav === -1) { root.navDir = -1; controller.prevImage() }
+                else if (controller.isPlaying) { controller.restartInterval() }
             }
-            if (pendingNav === 1)       { root.navDir = 1;  controller.nextImage() }
-            else if (pendingNav === -1) { root.navDir = -1; controller.prevImage() }
             root._forceFit = false
         }
     }
@@ -429,7 +445,20 @@ Rectangle {
             // Backward navigation (LEFT key) keeps it set so auto panorama is suppressed.
             // navDir is reset to 1 below so autoplay always counts as forward on the next call.
             if (root.navDir >= 0) root._autoPanoramaSkip = false
-            if (root.panoramaActive) _panoramaAbort()
+            if (root.panoramaActive) {
+                // External navigation (remote prev/next, jump-to, etc.) changed the
+                // current index while a panorama sweep was in progress. Don't tear
+                // the panorama down instantly — animate it back to fit first, then
+                // display the already-changed image. The cleanup at the end of the
+                // exit animation will pick up _pendingShowAfterPano and call
+                // showImage() to display the new index.
+                root._pendingShowAfterPano = true
+                root._pendingNav = 0           // index already changed externally
+                root._pendingManualNav = false
+                root._autoPanoramaActive = false // we're interrupting an auto-pano sweep
+                if (!root._panoCleanupPending) stopPanorama()
+                return
+            }
             if (root._exifVisible) {
                 exifPanel.close()
                 _setExifVisible(false)
@@ -454,9 +483,8 @@ Rectangle {
         function onIsPlayingChanged() {
             // When autoplay is toggled on while a panorama-suitable image is already
             // displayed (e.g. Space key pressed in slideshow), trigger auto panorama.
-            // Must respect _suppressPlayAnim: panorama start/exit call togglePlay()
-            // with that flag set — firing _tryAutoPanorama() mid-sequence would
-            // immediately start a new panorama and corrupt the autoplay state.
+            // Skip when _suppressPlayAnim is set so that silent play-state changes
+            // (e.g. the quit dialog's pause/resume) don't trigger a panorama.
             if (controller.isPlaying && !root._suppressPlayAnim) root._tryAutoPanorama()
         }
         function onRatingWritten(index) {
@@ -589,6 +617,7 @@ Rectangle {
                 if (!root._panoCleanupPending) {
                     root._autoPanoramaActive = false
                     root._pendingNav = 1
+                    root._pendingManualNav = true
                     stopPanorama()
                 }
                 break
@@ -597,6 +626,7 @@ Rectangle {
                 if (!root._panoCleanupPending) {
                     root._autoPanoramaActive = false
                     root._pendingNav = -1
+                    root._pendingManualNav = true
                     stopPanorama()
                 }
                 break
@@ -908,7 +938,7 @@ Rectangle {
         if (img.implicitWidth / img.implicitHeight < root.width / root.height * 1.3) return
         root._autoPanoramaActive = true
         startPanorama()
-        // startPanorama() resets _pendingNav to 0 and captures _panoWasPlaying.
+        // startPanorama() resets _pendingNav to 0 and pauses the autoplay timer.
         // Override: always advance to next image when the sweep ends.
         root._pendingNav = 1
     }
@@ -923,12 +953,11 @@ Rectangle {
         var scrollRange = root.height * imgAspect - root.width
         root._panoLayer = layer
         root._panoScrollRange = scrollRange
-        root._panoWasPlaying = controller.isPlaying
-        if (controller.isPlaying) {
-            root._suppressPlayAnim = true
-            controller.togglePlay()
-            root._suppressPlayAnim = false
-        }
+        // Pause the autoplay timer for the duration of the sweep — but DO NOT
+        // change isPlaying. The remote/HUD should keep showing "playing" while
+        // the panorama runs. If the user hits Space mid-sweep, isPlaying flips
+        // normally and the cleanup below decides whether to advance.
+        controller.pauseInterval()
         // Setting panoramaActive = true switches imgA/imgB fillMode to PreserveAspectFit
         // (via binding) so the full image width is available for the layer to render.
         root.panoramaActive = true
@@ -994,8 +1023,9 @@ Rectangle {
             root._panoLayer = null
         }
         root._panoScrollRange = 0
-        root._panoWasPlaying = false
         root._pendingNav = 0
+        root._pendingManualNav = false
+        root._pendingShowAfterPano = false
         root._forceFit = false
     }
 
@@ -1332,7 +1362,10 @@ Rectangle {
 
             // Reset the autoplay countdown so the first image advance is a full
             // interval after the popup disappears, not after Space was pressed.
-            onFinished: if (controller.isPlaying) controller.restartInterval()
+            // Skip while a panorama is in progress — restarting the timer here
+            // would fire nextImage() mid-sweep. The panorama cleanup itself
+            // restarts (or stops) the timer at the end of the sweep.
+            onFinished: if (controller.isPlaying && !root.panoramaActive) controller.restartInterval()
         }
         // Drives canvas repaints every frame while autoplay popup is live.
         // More reliable than onProgressChanged → requestPaint() which can be skipped.
