@@ -6,6 +6,7 @@
 stateDiagram-v2
     [*] --> Splash : app launch
     Splash --> Settings : animation completes
+    Splash --> Slideshow : _autoLaunch (kiosk / jump-start / background)
 
     Settings --> Slideshow : Enter (start / resume)
     Slideshow --> Settings : Esc (pop — Resume button shown)
@@ -13,6 +14,10 @@ stateDiagram-v2
     Settings --> QuitDialog : Esc
     QuitDialog --> [*] : Y / Enter
     QuitDialog --> Settings : N / Esc
+
+    Slideshow --> KioskQuitDialog : Esc (kiosk mode) / Q
+    KioskQuitDialog --> [*] : Y / Enter
+    KioskQuitDialog --> Slideshow : N / Esc
 
     Settings --> AdvancedSettings : V
     AdvancedSettings --> Settings : Esc / Enter on Done
@@ -64,8 +69,12 @@ stateDiagram-v2
 | `J` | Jump-to-image dialog |
 | `0`–`5` | Rating overlay (↵ confirm · Esc cancel) |
 | `C` | Caption editor overlay (↵ save · Esc cancel · Tab Tab copy prev) |
+| `P` | Start panorama (wide images only) / cancel pending panorama |
+| `Q` | Quit confirmation dialog (kiosk mode) |
 | `F1` | Help overlay |
-| `Esc` | Close open overlay → exit to settings |
+| `Esc` | Close open overlay → exit to settings (or quit dialog in kiosk mode) |
+| Left click | Next image (when mouse navigation enabled) |
+| Right click | Previous image (when mouse navigation enabled) |
 | Double-click | Toggle fullscreen |
 
 ## Overlay z-order (SlideshowPage)
