@@ -47,6 +47,9 @@ Item {
         closeAnim.stop()
         _stoppingForReopen = false
         openAnim.stop()
+        // Refresh the buffered display values — crossfadeContent() skips updates
+        // while the HUD is hidden, so the buffer can be stale on first show.
+        refreshDisplay()
         root.opacity      = 0
         root._slideOffset = Theme.animSlideOffset
         openAnim.start()
