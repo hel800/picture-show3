@@ -266,17 +266,17 @@
 <context>
     <name>FloatingHud</name>
     <message>
-        <location filename="../qml/FloatingHud.qml" line="336"/>
+        <location filename="../qml/FloatingHud.qml" line="339"/>
         <source>save</source>
         <translation>enregistrer</translation>
     </message>
     <message>
-        <location filename="../qml/FloatingHud.qml" line="339"/>
+        <location filename="../qml/FloatingHud.qml" line="342"/>
         <source>cancel</source>
         <translation>annuler</translation>
     </message>
     <message>
-        <location filename="../qml/FloatingHud.qml" line="342"/>
+        <location filename="../qml/FloatingHud.qml" line="345"/>
         <source>copy prev caption</source>
         <translation>Copier légende préc.</translation>
     </message>
