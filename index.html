@@ -120,6 +120,10 @@
       font-weight: 500;
     }
     nav a.btn-nav:hover { background: var(--accent-light); color: var(--bg-deep); }
+    nav li.nav-sep { margin-left: 1.25rem; }
+    @media (max-width: 680px) {
+      nav li.nav-sep { margin-left: 0; }
+    }
     .nav-hamburger {
       display: none;
       background: none;
@@ -516,7 +520,8 @@
     <li><a href="#features">Features</a></li>
     <li><a href="#roadmap">Roadmap</a></li>
     <li><a href="#deploy">Deploy</a></li>
-<li><a href="https://github.com/hel800/picture-show3" target="_blank" rel="noopener">GitHub</a></li>
+    <li><a href="picture-frame.html">Picture Frame</a></li>
+    <li class="nav-sep"><a href="https://github.com/hel800/picture-show3" target="_blank" rel="noopener">GitHub</a></li>
     <li><a href="https://github.com/hel800/picture-show3/releases" target="_blank" rel="noopener" class="btn-nav">Download</a></li>
   </ul>
 </nav>
@@ -563,6 +568,7 @@
       <li>A complete makeover of picture show 2 — rebuilt from scratch with a cleaner architecture and a modern look.</li>
       <li>Built on the newest stack: Python&nbsp;3.14, PySide6&nbsp;6.8, and Qt&nbsp;Quick for GPU-accelerated rendering.</li>
       <li>Designed from day one to run natively across platforms with ease.</li>
+      <li><span>Doubles as an always-on <a href="picture-frame.html" style="color:var(--accent-light);text-decoration:underline;text-underline-offset:3px">digital picture frame</a> — controlled from any phone, perfect for a Raspberry Pi DIY build.</span></li>
     </ul>
   </div>
 </section>
@@ -709,7 +715,7 @@
           <line x1="12" y1="17" x2="12" y2="20" stroke="currentColor" stroke-width="1.5"/>
         </svg></div>
         <h3>Digital Picture Frame</h3>
-        <p>Launch with <kbd>--background</kbd> for unattended picture-frame mode. Start the show from any phone, browser, or HTTP API; auto-resumes after power loss with periodic background rescan.</p>
+        <p>Launch with <kbd>--background</kbd> for unattended picture-frame mode. Start the show from any phone, browser, or HTTP API; auto-resumes after power loss with periodic background rescan. <a href="picture-frame.html" style="color:var(--accent-light);text-decoration:none;border-bottom:1px dotted var(--accent-light)">Learn more →</a></p>
       </div>
 
       <div class="card">
