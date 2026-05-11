@@ -153,11 +153,19 @@ def _exclude_bin(name: str) -> bool:
 
 a.binaries = [b for b in a.binaries if not _exclude_bin(b[0])]
 
-# Strip translations — the app has no localization
+# Strip Qt-bundled translations — the app uses its own .qm files (added below).
 a.datas = [
     d for d in a.datas
     if "/translations/" not in d[0].replace("\\", "/").lower()
 ]
+
+# Bundle the app's compiled translations so QTranslator can load them from
+# sys._MEIPASS/translations/ at runtime (see main.py:_install_translator).
+_translations_src = os.path.join(ROOT, "translations")
+if os.path.isdir(_translations_src):
+    for _f in os.listdir(_translations_src):
+        if _f.startswith("picture-show3_") and _f.endswith(".qm"):
+            a.datas.append((f"translations/{_f}", os.path.join(_translations_src, _f), "DATA"))
 
 pyz = PYZ(a.pure, a.zipped_data, cipher=block_cipher)
 
