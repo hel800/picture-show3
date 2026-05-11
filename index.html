@@ -619,7 +619,7 @@
           <circle cx="12" cy="14.036" r="0.9" fill="currentColor"/>
         </svg></div>
         <h3>Smartphone Remote</h3>
-        <p>Scan the QR code or open the URL in any browser on the same Wi-Fi. Control the show from your phone without installing anything.</p>
+        <p>Scan the QR code or open the URL in any browser on the same Wi-Fi — no app to install.</p>
       </div>
       <div class="card">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -629,7 +629,7 @@
           <path d="M19 12 L16 9 M19 12 L16 15" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>
         </svg></div>
         <h3>Panorama Mode</h3>
-        <p>Wide images are detected automatically and scrolled smoothly across the screen. Press <kbd>P</kbd> to activate.</p>
+        <p>Wide images scroll smoothly across the screen. Press <kbd>P</kbd>, or enable <em>Auto Panorama</em> to pan them automatically during autoplay.</p>
       </div>
       <div class="card">
         <div class="card-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -638,7 +638,7 @@
           <path d="M17 16 L20.5 12.5 L21.5 13.5 L18 17 Z M20.5 12.5 L21.8 11.2 Q22.4 10.6 21.8 10 L21 9.2 Q20.4 8.6 19.8 9.2 L18.5 10.5 Z" fill="currentColor"/>
         </svg></div>
         <h3>Star Ratings</h3>
-        <p>Filter the playlist to images at or above a minimum rating. Press <kbd>0</kbd>–<kbd>5</kbd> during the show to set an XMP star rating — saved directly into the file.</p>
+        <p>Filter the playlist by minimum rating. Press <kbd>0</kbd>–<kbd>5</kbd> during the show to set an XMP star rating, written directly into the file.</p>
       </div>
       <div class="card">
         <div class="card-icon"><svg viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
@@ -671,8 +671,8 @@
           <line x1="5"  y1="17.5" x2="11" y2="17.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
           <line x1="13" y1="17.5" x2="19" y2="17.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round"/>
         </svg></div>
-        <h3>Customizable HUD</h3>
-        <p>Choose bar or floating pill style. Both show filename, caption, rating, and date. The floating HUD supports inline caption editing and crossfades content on image transitions.</p>
+        <h3>HUD &amp; EXIF Overlay</h3>
+        <p>Bar or floating pill HUD shows index, filename, caption, rating, and date. Press <kbd>,</kbd> for a detailed EXIF panel: camera, aperture, shutter, ISO, focal length, flash.</p>
       </div>
       <div class="card">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -700,17 +700,16 @@
 
       <div class="card">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Camera + info panel slide-out -->
-          <rect x="2" y="6" width="16" height="13" rx="2" stroke="currentColor" stroke-width="1.7"/>
-          <circle cx="10" cy="12.5" r="3.5" stroke="currentColor" stroke-width="1.5"/>
-          <path d="M6 6 L7.5 4 L12.5 4 L14 6" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-          <rect x="17" y="8" width="5" height="9" rx="1" fill="currentColor" opacity="0.35"/>
-          <line x1="18.2" y1="10.5" x2="20.8" y2="10.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
-          <line x1="18.2" y1="12.5" x2="20.8" y2="12.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
-          <line x1="18.2" y1="14.5" x2="20.8" y2="14.5" stroke="currentColor" stroke-width="1" stroke-linecap="round"/>
+          <!-- Digital picture frame: outer frame + inner image + stand -->
+          <rect x="2" y="3" width="20" height="14" rx="1.5" stroke="currentColor" stroke-width="1.8"/>
+          <rect x="4.5" y="5.5" width="15" height="9" rx="0.6" fill="currentColor" opacity="0.25"/>
+          <path d="M9 14.5 L11.5 11 L13.5 13 L15.5 10 L19.5 14.5" stroke="currentColor" stroke-width="1.2" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <circle cx="7.5" cy="8" r="1" fill="currentColor"/>
+          <line x1="10" y1="20" x2="14" y2="20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/>
+          <line x1="12" y1="17" x2="12" y2="20" stroke="currentColor" stroke-width="1.5"/>
         </svg></div>
-        <h3>EXIF Info Panel</h3>
-        <p>Press <kbd>,</kbd> during the show for a detailed overlay showing camera, aperture, shutter speed, ISO, focal length, flash, and image dimensions.</p>
+        <h3>Digital Picture Frame</h3>
+        <p>Launch with <kbd>--background</kbd> for unattended picture-frame mode. Start the show from any phone, browser, or HTTP API; auto-resumes after power loss with periodic background rescan.</p>
       </div>
 
       <div class="card">
@@ -762,27 +761,16 @@
 
       <div class="card">
         <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Panorama: wide landscape with expand arrows -->
-          <rect x="2" y="5" width="20" height="14" rx="2" stroke="currentColor" stroke-width="1.7"/>
-          <path d="M2 12 Q7 8 12 12 Q17 16 22 12" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" fill="none" opacity="0.5"/>
-          <path d="M5 9 L2 12 L5 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <path d="M19 9 L22 12 L19 15" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+          <!-- Calendar + clock: scheduled start/stop -->
+          <rect x="2" y="4" width="20" height="17" rx="2" stroke="currentColor" stroke-width="1.7"/>
+          <line x1="2" y1="9" x2="22" y2="9" stroke="currentColor" stroke-width="1.5"/>
+          <line x1="7" y1="2.5" x2="7" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <line x1="17" y1="2.5" x2="17" y2="6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"/>
+          <circle cx="16" cy="15.5" r="3.5" stroke="currentColor" stroke-width="1.4" fill="none"/>
+          <path d="M16 13.5 L16 15.5 L17.5 16.5" stroke="currentColor" stroke-width="1.3" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
         </svg></div>
-        <h3>Automatic Panorama Mode</h3>
-        <p>Wide images are detected automatically and displayed in a slow pan — bringing panoramic shots to life without any manual setup.</p>
-      </div>
-
-      <div class="card">
-        <div class="card-icon"><svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <!-- Smartphone with play/timer indicator -->
-          <rect x="5" y="2" width="14" height="20" rx="2.5" stroke="currentColor" stroke-width="1.6"/>
-          <line x1="5" y1="6" x2="19" y2="6" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-          <line x1="5" y1="18" x2="19" y2="18" stroke="currentColor" stroke-width="1" opacity="0.4"/>
-          <path d="M10 10 L15 12 L10 14 Z" fill="currentColor"/>
-          <circle cx="12" cy="12" r="5" stroke="currentColor" stroke-width="1.3" opacity="0.5"/>
-        </svg></div>
-        <h3>Remote Unsupervised Start</h3>
-        <p>Trigger the show from the smartphone remote without anyone at the computer — perfect for unattended presentations.</p>
+        <h3>Scheduled Start / Stop</h3>
+        <p>Plan daily on/off schedules for the digital picture frame so it powers up at sunrise and rests at night — no manual remote needed.</p>
       </div>
 
     </div>
