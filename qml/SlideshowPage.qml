@@ -515,30 +515,28 @@ Rectangle {
 
     // ── Keyboard control ──────────────────────────────────────────────────────
     Keys.onPressed: function(event) {
-        // Floating HUD inline edit — handle Enter/Esc as fallback if TextInput
+// Floating HUD inline edit — handle Enter/Esc as fallback if TextInput
         // lost focus transiently; re-force focus for any other key so typing works
         if (floatingHud.editing) {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
                 floatingHud.confirmEdit()
             else if (event.key === Qt.Key_Escape)
                 floatingHud.cancelEdit()
-            else if (event.key === Qt.Key_F)
-                toggleFullscreen()
             else
                 floatingHud.refocusEdit()
             event.accepted = true
             return
         }
 
-        // Caption popup is open — TextInput handles Enter/Esc/Tab; absorb everything else
+        // Caption popup is open — TextInput handles Enter/Esc/Tab; only absorb those keys
         if (captionOverlay.visible) {
-            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
+            if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter) {
                 confirmCaption()
-            else if (event.key === Qt.Key_Escape)
+                event.accepted = true
+            } else if (event.key === Qt.Key_Escape) {
                 closeCaption()
-            else if (event.key === Qt.Key_F)
-                toggleFullscreen()
-            event.accepted = true
+                event.accepted = true
+            }
             return
         }
 
@@ -548,15 +546,13 @@ Rectangle {
                 confirmRating()
             else if (event.key === Qt.Key_Escape)
                 closeRating()
-            else if (event.key === Qt.Key_F)
-                toggleFullscreen()
             else if (event.key >= Qt.Key_0 && event.key <= Qt.Key_5)
                 openRating(event.key - Qt.Key_0)   // update pending rating
             event.accepted = true
             return
         }
 
-        // Jump popup is open — handle Enter/Esc, absorb everything else
+        // Jump popup is open — handle Enter/Esc/Up/Down, absorb everything else
         if (jumpOverlay.visible) {
             if (event.key === Qt.Key_Return || event.key === Qt.Key_Enter)
                 jumpAndClose()
@@ -566,8 +562,6 @@ Rectangle {
                 adjustNumber(1)
             else if (event.key === Qt.Key_Down)
                 adjustNumber(-1)
-            else if (event.key === Qt.Key_F)
-                toggleFullscreen()
             event.accepted = true
             return
         }
@@ -1496,10 +1490,7 @@ Rectangle {
                                     if (acceptableInput) previewTimer.restart()
                                 }
                                 Keys.onPressed: function(event) {
-                                    if (event.key === Qt.Key_F) {
-                                        toggleFullscreen()
-                                        event.accepted = true
-                                    } else if (event.key === Qt.Key_J) {
+                                    if (event.key === Qt.Key_J) {
                                         closeJump()
                                         event.accepted = true
                                     }
@@ -1776,23 +1767,20 @@ Rectangle {
                         Keys.onReturnPressed: confirmCaption()
                         Keys.onEnterPressed:  confirmCaption()
                         Keys.onEscapePressed: closeCaption()
-                        Keys.onPressed: function(event) {
+Keys.onPressed: function(event) {
                             if (event.key === Qt.Key_Tab) {
                                 var now = Date.now()
                                 if (now - root._lastTabMs < 600) {
                                     // Double-tab within 600 ms: copy previous image's caption
                                     var prevIdx = controller.currentIndex > 0
-                                                  ? controller.currentIndex - 1
-                                                  : controller.imageCount - 1
+                                              ? controller.currentIndex - 1
+                                              : controller.imageCount - 1
                                     captionInput.text = controller.imageCaption(prevIdx)
                                     captionInput.selectAll()
                                     root._lastTabMs = 0   // reset so triple-tab doesn't trigger
                                 } else {
                                     root._lastTabMs = now
                                 }
-                                event.accepted = true
-                            } else if (event.key === Qt.Key_F) {
-                                toggleFullscreen()
                                 event.accepted = true
                             }
                         }
