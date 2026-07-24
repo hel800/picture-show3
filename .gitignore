@@ -26,6 +26,7 @@ translations/*.orig
 # IDE / editor
 .idea/
 .vscode/
+.opencode/
 *.swp
 *.swo
 *~
