@@ -1,0 +1,8 @@
+[Desktop Entry]
+Name=picture-show3
+Comment=Full-screen photo slideshow
+Exec=picture-show3
+Icon=picture-show3
+Type=Application
+Categories=Graphics;Viewer;
+Terminal=false
