@@ -119,6 +119,7 @@ class SlideshowController(QObject):
         self._update_check_enabled: bool         = True
         self._image_fill          : bool         = False
         self._recursive           : bool         = False
+        self._panorama_speed      : int          = 250   # px/s
         self._scan_generation     : int          = 0
         self._scanning            : bool         = False
         self._scan_phase          : str          = ""   # "scan", "sort", "filter"
@@ -165,6 +166,7 @@ class SlideshowController(QObject):
         self._image_fill           = s.value("imageFill",          False, type=bool)
         self._recursive            = s.value("recursive",          False, type=bool)
         self._auto_panorama        = s.value("autoPanorama",        False, type=bool)
+        self._panorama_speed     = s.value("panoramaSpeed",         250,  type=int)
 
         # QSettings returns a str for single-item lists, list for multiple
         raw = s.value("folderHistory", [])
@@ -211,6 +213,7 @@ class SlideshowController(QObject):
         s.setValue("imageFill",   _o.get("imageFill",   self._image_fill))
         s.setValue("recursive",   _o.get("recursive",   self._recursive))
         s.setValue("autoPanorama",_o.get("autoPanorama",self._auto_panorama))
+        s.setValue("panoramaSpeed",_o.get("panoramaSpeed",self._panorama_speed))
         s.setValue("folderHistory",      self._folder_history)
 
     def apply_cli_overrides(self, overrides: dict) -> None:
@@ -229,6 +232,7 @@ class SlideshowController(QObject):
             "sort":               "_sort_order",
             "imageFill":          "_image_fill",
             "autoPanorama":       "_auto_panorama",
+            "panoramaSpeed":      "_panorama_speed",
             "recursive":          "_recursive",
             "loop":               "_loop",
         }
@@ -283,6 +287,9 @@ class SlideshowController(QObject):
 
     @Property(int, notify=settingsChanged)
     def interval(self) -> int: return self._interval
+
+    @Property(int, notify=settingsChanged)
+    def panoramaSpeed(self) -> int: return self._panorama_speed
 
     @Property(bool, notify=settingsChanged)
     def mouseNavEnabled(self) -> bool: return self._mouse_nav
@@ -824,6 +831,13 @@ class SlideshowController(QObject):
         self._save_settings()
         self.settingsChanged.emit()
 
+    @Slot(int)
+    def setPanoramaSpeed(self, px_per_sec: int) -> None:
+        self._cli_overrides.pop("panoramaSpeed", None)
+        self._panorama_speed = px_per_sec
+        self._save_settings()
+        self.settingsChanged.emit()
+
     @Slot()
     def pauseInterval(self) -> None:
         """Stop the autoplay timer without changing playing state (call when popup appears)."""
@@ -923,6 +937,7 @@ class SlideshowController(QObject):
                 # manually restarting autoplay means the session override is spent.
                 self._interval = self._cli_overrides.pop("interval", self._interval)
                 self._timer.setInterval(self._interval)
+                self._panorama_speed = self._cli_overrides.pop("panoramaSpeed", self._panorama_speed)
                 self._timer.start()
                 self._is_playing = True
                 self.isPlayingChanged.emit()
