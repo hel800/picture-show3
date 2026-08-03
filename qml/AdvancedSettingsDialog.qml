@@ -87,12 +87,30 @@ BasePopup {
 
     // If the focused option becomes disabled (e.g. remote turned off while Port was focused),
     // fall back to the first option.
+    // NOTE: every controller setting shares the `settingsChanged` notify signal, so this
+    // handler fires on ANY settings change. Only react when the focused option really became
+    // disabled — otherwise changing any setting would yank the ScrollView back to the top.
     Connections {
         target: controller
         function onRemoteEnabledChanged() {
-            if (!controller.remoteEnabled && root._section === 3 && root._focusedOption === 1)
+            if (!controller.remoteEnabled && root._section === 3 && root._focusedOption === 1) {
                 root._focusedOption = 0
-            root._updateOptionFocus()
+                root._updateOptionFocus()
+            }
+        }
+    }
+
+    // Mouse clicks on interactive controls (sliders, switches, scroll bars) move active
+    // focus away from keyHandler, which silently breaks Up/Down selection navigation
+    // (the keys then scroll the view instead). Hand focus back to keyHandler whenever
+    // focus lands on such a control, unless the port field is being edited.
+    Connections {
+        target: root.parent ? root.parent.Window.window : null
+        function onActiveFocusItemChanged() {
+            var w = root.parent ? root.parent.Window.window : null
+            var f = w ? w.activeFocusItem : null
+            if (!f || !root.opened || f === keyHandler || f === portField) return
+            Qt.callLater(keyHandler.forceActiveFocus)
         }
     }
 
