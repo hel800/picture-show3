@@ -28,7 +28,7 @@ BasePopup {
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: Show=[duration,imageScale,autoPanorama] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[uiScale,language,updateCheck]
+    // Options per section: Show=[duration,imageScale,autoPanorama,panoramaSpeed] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[uiScale,language,updateCheck]
     readonly property var _optionCounts: [4, 1, 2, 2, 3]
 
     // Returns false for options that are currently inactive and should be skipped
@@ -671,9 +671,9 @@ BasePopup {
                             }
                             RowLayout {
                                 Layout.fillWidth: true
-                                Text { text: "Slowest"; color: Theme.textDisabled; font.pixelSize: 11 }
+                                Text { text: qsTr("Slowest"); color: Theme.textDisabled; font.pixelSize: 11 }
                                 Item { Layout.fillWidth: true }
-                                Text { text: "Fastest"; color: Theme.textDisabled; font.pixelSize: 11 }
+                                Text { text: qsTr("Fastest"); color: Theme.textDisabled; font.pixelSize: 11 }
                             }
                         }
                     }

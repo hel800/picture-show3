@@ -1038,7 +1038,7 @@ Rectangle {
         var layer = root._panoLayer
         var scrollRange = root._panoScrollRange
         if (!layer || !(scrollRange > 0)) return
-        var dur = Math.max(1, Math.round(scrollRange / controller.panoramaSpeed * 1000))
+        var dur = Math.max(1, Math.round(scrollRange / Math.max(1, controller.panoramaSpeed) * 1000))
         scrollRightAnim.target   = layer
         scrollRightAnim.from     = layer.x
         scrollRightAnim.to       = -scrollRange / 2
@@ -1050,7 +1050,7 @@ Rectangle {
         var layer = root._panoLayer
         var scrollRange = root._panoScrollRange
         if (!layer || !(scrollRange > 0)) return
-        var dur = Math.max(1, Math.round(scrollRange / controller.panoramaSpeed * 1000))
+        var dur = Math.max(1, Math.round(scrollRange / Math.max(1, controller.panoramaSpeed) * 1000))
         scrollLeftAnim.target   = layer
         scrollLeftAnim.from     = layer.x
         scrollLeftAnim.to       = scrollRange / 2
