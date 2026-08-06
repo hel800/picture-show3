@@ -28,8 +28,8 @@ BasePopup {
     property int  _focusedOption: 0 // index of focused option within current section
     property bool _doneFocused: false // Done button has keyboard focus
 
-    // Options per section: Show=[duration,imageScale,autoPanorama] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[uiScale,language,updateCheck]
-    readonly property var _optionCounts: [3, 1, 2, 2, 3]
+    // Options per section: Show=[duration,imageScale,autoPanorama,panoramaSpeed] Controls=[mouseNav] HUD=[size,style] Remote=[enable,port] Misc=[uiScale,language,updateCheck]
+    readonly property var _optionCounts: [4, 1, 2, 2, 3]
 
     // Returns false for options that are currently inactive and should be skipped
     function _optionEnabled(section, option) {
@@ -50,7 +50,7 @@ BasePopup {
         var item  = null
         if (root._section === 0) {
             flick = genScroll.contentItem
-            var g = [gen0Item, gen1Item, gen2Item]
+            var g = [gen0Item, gen1Item, gen2Item, gen3Item]
             item = g[root._focusedOption]
         } else if (root._section === 1) {
             flick = ctrlScroll.contentItem
@@ -65,7 +65,7 @@ BasePopup {
             item = r[root._focusedOption]
         } else if (root._section === 4) {
             flick = miscScroll.contentItem
-            var m = [misc0Item, misc1Item]
+            var m = [misc0Item, misc1Item, misc2Item]
             item = m[root._focusedOption]
         }
         if (!flick || !item) return
@@ -87,12 +87,30 @@ BasePopup {
 
     // If the focused option becomes disabled (e.g. remote turned off while Port was focused),
     // fall back to the first option.
+    // NOTE: every controller setting shares the `settingsChanged` notify signal, so this
+    // handler fires on ANY settings change. Only react when the focused option really became
+    // disabled — otherwise changing any setting would yank the ScrollView back to the top.
     Connections {
         target: controller
         function onRemoteEnabledChanged() {
-            if (!controller.remoteEnabled && root._section === 3 && root._focusedOption === 1)
+            if (!controller.remoteEnabled && root._section === 3 && root._focusedOption === 1) {
                 root._focusedOption = 0
-            root._updateOptionFocus()
+                root._updateOptionFocus()
+            }
+        }
+    }
+
+    // Mouse clicks on interactive controls (sliders, switches, scroll bars) move active
+    // focus away from keyHandler, which silently breaks Up/Down selection navigation
+    // (the keys then scroll the view instead). Hand focus back to keyHandler whenever
+    // focus lands on such a control, unless the port field is being edited.
+    Connections {
+        target: root.parent ? root.parent.Window.window : null
+        function onActiveFocusItemChanged() {
+            var w = root.parent ? root.parent.Window.window : null
+            var f = w ? w.activeFocusItem : null
+            if (!f || !root.opened || f === keyHandler || f === portField) return
+            Qt.callLater(keyHandler.forceActiveFocus)
         }
     }
 
@@ -197,6 +215,10 @@ BasePopup {
 
                     } else if (root._isOptionFocused(0, 2)) {
                         controller.setAutoPanorama(d > 0)
+
+                    } else if (root._isOptionFocused(0, 3)) {
+                        controller.setPanoramaSpeed(
+                            Math.max(50, Math.min(500, controller.panoramaSpeed + d * 10)))
 
                     } else if (root._isOptionFocused(4, 0)) {
                         controller.setUiScale(
@@ -573,6 +595,85 @@ BasePopup {
                                         }
                                     }
                                 }
+                            }
+                        }
+                    }
+
+                    Rectangle { Layout.fillWidth: true; height: 1; color: Theme.surface; Layout.topMargin: 4; Layout.bottomMargin: 4 }
+
+                    // Option 3: Panorama speed ─────────────────────────────
+                    Item {
+                        id: gen3Item
+                        Layout.fillWidth: true
+                        Layout.bottomMargin: 4
+                        implicitHeight: gen3Inner.implicitHeight + 24
+                        Rectangle {
+                            anchors.fill: parent; radius: 8
+                            color: root._isOptionFocused(0, 3)
+                                   ? Theme.surface : "transparent"
+                            Behavior on color { ColorAnimation { duration: 100 } }
+                        }
+                        ColumnLayout {
+                            id: gen3Inner
+                            anchors { left: parent.left; right: parent.right; top: parent.top; margins: 12 }
+                            spacing: 0
+
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 12; spacing: 8
+                                Rectangle {
+                                    width: 3; height: 11; radius: 1.5
+                                    color: root._isOptionFocused(0, 3)
+                                           ? Theme.accent : "transparent"
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                                Text {
+                                    text: qsTr("PANORAMA SPEED")
+                                    color: root._isOptionFocused(0, 3)
+                                           ? Theme.accentLight : Theme.textMuted
+                                    font.pixelSize: 11; font.weight: Font.Medium; font.letterSpacing: 1.4
+                                    Behavior on color { ColorAnimation { duration: 100 } }
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true; Layout.bottomMargin: 10
+                                Text { text: qsTr("Panorama scroll speed"); color: Theme.textPrimary; font.pixelSize: 14 }
+                                Item { Layout.fillWidth: true }
+                                Text {
+                                    text: panoramaSpeedSlider.value < 115 ? qsTr("Slowest") :
+                                          panoramaSpeedSlider.value < 180 ? qsTr("Slow") :
+                                          panoramaSpeedSlider.value < 245 ? qsTr("Slower") :
+                                          panoramaSpeedSlider.value < 310 ? qsTr("Normal") :
+                                          panoramaSpeedSlider.value < 375 ? qsTr("Faster") :
+                                          panoramaSpeedSlider.value < 440 ? qsTr("Fast") :
+                                          qsTr("Fastest")
+                                    color: Theme.accentLight; font.pixelSize: 13; font.weight: Font.Medium
+                                }
+                            }
+                            Slider {
+                                id: panoramaSpeedSlider
+                                Layout.fillWidth: true; Layout.bottomMargin: 6
+                                from: 50; to: 500; stepSize: 10
+                                value: controller.panoramaSpeed || 250
+                                onMoved: controller.setPanoramaSpeed(value)
+                                background: Rectangle {
+                                    x: panoramaSpeedSlider.leftPadding
+                                    y: panoramaSpeedSlider.topPadding + panoramaSpeedSlider.availableHeight / 2 - height / 2
+                                    width: panoramaSpeedSlider.availableWidth; height: 4; radius: 2
+                                    color: Theme.surface
+                                    Rectangle { width: panoramaSpeedSlider.visualPosition * parent.width; height: parent.height; color: Theme.accent; radius: 2 }
+                                }
+                                handle: Rectangle {
+                                    x: panoramaSpeedSlider.leftPadding + panoramaSpeedSlider.visualPosition * (panoramaSpeedSlider.availableWidth - width)
+                                    y: panoramaSpeedSlider.topPadding + panoramaSpeedSlider.availableHeight / 2 - height / 2
+                                    width: 22; height: 22; radius: 11
+                                    color: Theme.accentLight; border.color: Theme.accent; border.width: 2
+                                }
+                            }
+                            RowLayout {
+                                Layout.fillWidth: true
+                                Text { text: qsTr("Slowest"); color: Theme.textDisabled; font.pixelSize: 11 }
+                                Item { Layout.fillWidth: true }
+                                Text { text: qsTr("Fastest"); color: Theme.textDisabled; font.pixelSize: 11 }
                             }
                         }
                     }

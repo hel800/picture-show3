@@ -118,6 +118,16 @@ Rectangle {
     property bool _pendingShowAfterPano: false  // set when external nav (remote/jump) changed currentIndex mid-panorama — exit anim then showImage()
     property var  _panoLayer          : null    // the layer currently being animated
     property real _panoScrollRange     : 0       // pre-computed at panorama start, stable even if image reloads
+    // Speed weighting: sweep durations come from a weighted scroll range.
+    // - range ≤ _panoSaturatingRange: scroll at the nominal px/s (unchanged).
+    // - up to _panoSaturatingRange + _panoWideOffset: duration plateaus (the effective
+    //   speed scales with width), so mid-wide panoramas don't take minutes.
+    // - beyond that: duration resumes growing at the pixel rate minus _panoWideOffset,
+    //   so ultra-wide panoramas keep differentiating instead of all matching.
+    // _panoMaxDuration caps the slowest sweeps so Slowest never takes minutes.
+    property real _panoSaturatingRange  : 6000   // px
+    property real _panoWideOffset       : 1800   // px — subtracted from the range for ultra-wide panoramas
+    property real _panoMaxDuration       : 60000  // ms
     property bool _pendingPanorama     : false   // P pressed during a transition — start panorama when transition finishes
     property bool _autoPanoramaActive  : false   // true while auto-panorama single-sweep is running
     property bool _autoPanoramaSkip   : false   // true after user cancels auto-panorama; reset on next image
@@ -1034,11 +1044,22 @@ Rectangle {
         root._forceFit = false
     }
 
+    // Weighted sweep duration: scroll range compressed by the speed weighting and
+    // capped at _panoMaxDuration so Slowest never produces a minute-long sweep.
+    function _panoDuration() {
+        var range = root._panoScrollRange
+        var wide = range > root._panoSaturatingRange + root._panoWideOffset
+        var weighted = wide ? range - root._panoWideOffset
+                            : Math.min(range, root._panoSaturatingRange)
+        var speed = Math.max(1, controller.panoramaSpeed)
+        return Math.max(1, Math.min(Math.round(weighted / speed * 1000), root._panoMaxDuration))
+    }
+
     function _panoramaScrollRight() {
         var layer = root._panoLayer
         var scrollRange = root._panoScrollRange
         if (!layer || !(scrollRange > 0)) return
-        var dur = Math.max(1, Math.round(scrollRange / 250 * 1000))
+        var dur = root._panoDuration()
         scrollRightAnim.target   = layer
         scrollRightAnim.from     = layer.x
         scrollRightAnim.to       = -scrollRange / 2
@@ -1050,7 +1071,7 @@ Rectangle {
         var layer = root._panoLayer
         var scrollRange = root._panoScrollRange
         if (!layer || !(scrollRange > 0)) return
-        var dur = Math.max(1, Math.round(scrollRange / 250 * 1000))
+        var dur = root._panoDuration()
         scrollLeftAnim.target   = layer
         scrollLeftAnim.from     = layer.x
         scrollLeftAnim.to       = scrollRange / 2

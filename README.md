@@ -138,6 +138,9 @@ Settings are saved as a human-readable INI file at `%APPDATA%\picture-show3\pict
 Press `P` during the show when viewing a wide image (aspect ratio ≥ 1.3× the window aspect ratio).
 The image zooms to fill the window height and then scrolls left↔right continuously at a smooth pace.
 
+The scroll speed is configurable under **Advanced Settings → Show → Panorama speed**.
+Very wide images are time-capped so their sweep stays smooth and bounded instead of taking minutes.
+
 - `P` or `Esc` — stop panorama and return to normal view
 - `←` / `→` — stop panorama and navigate to the adjacent image
 - The autoplay timer is paused for the duration of the sweep but the playing state itself is preserved — pressing Pause during the sweep ends the show on the current image after it completes
