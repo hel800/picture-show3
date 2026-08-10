@@ -739,6 +739,10 @@ class TestSettingsSetters:
         ctrl.setInterval(3000)
         assert ctrl.interval == 3000
 
+    def test_set_panorama_speed(self, ctrl):
+        ctrl.setPanoramaSpeed(100)
+        assert ctrl.panoramaSpeed == 100
+
     def test_set_language(self, ctrl):
         ctrl.setLanguage("de")
         assert ctrl.language == "de"
@@ -1844,6 +1848,7 @@ class TestCliOverrides:
             "sort":               "date",
             "imageFill":          True,
             "autoPanorama":       True,
+            "panoramaSpeed":      200,
             "recursive":          True,
             "loop":               False,
         })
@@ -1854,6 +1859,7 @@ class TestCliOverrides:
         assert ctrl.sortOrder          == "date"
         assert ctrl.imageFill          is True
         assert ctrl.autoPanorama       is True
+        assert ctrl.panoramaSpeed      == 200
         assert ctrl.recursiveSearch     is True
         assert ctrl.loop               is False
 

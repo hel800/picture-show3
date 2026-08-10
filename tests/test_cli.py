@@ -211,6 +211,34 @@ class TestAutoPanorama:
         assert "autoPanorama" not in ov
 
 
+# ── Panorama speed ──────────────────────────────────────────────────────────
+
+class TestPanoramaSpeed:
+    def test_panorama_speed_sets_override(self):
+        _, _, _, _, ov, *_ = parse(["--panorama-speed", "100"])
+        assert ov["panoramaSpeed"] == 100
+
+    def test_panorama_speed_boundary_low(self):
+        _, _, _, _, ov, *_ = parse(["--panorama-speed", "50"])
+        assert ov["panoramaSpeed"] == 50
+
+    def test_panorama_speed_boundary_high(self):
+        _, _, _, _, ov, *_ = parse(["--panorama-speed", "500"])
+        assert ov["panoramaSpeed"] == 500
+
+    def test_panorama_speed_too_low_exits(self):
+        with pytest.raises(SystemExit):
+            parse(["--panorama-speed", "49"])
+
+    def test_panorama_speed_too_high_exits(self):
+        with pytest.raises(SystemExit):
+            parse(["--panorama-speed", "501"])
+
+    def test_no_flag_not_in_overrides(self):
+        _, _, _, _, ov, *_ = parse([])
+        assert "panoramaSpeed" not in ov
+
+
 # ── Recursive ────────────────────────────────────────────────────────────────
 
 class TestRecursive:

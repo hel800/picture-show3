@@ -265,6 +265,7 @@ Show options (session-only — never written to the settings file):
   --scale MODE         Set the image scale mode: fit | fill
   --auto-panorama      Enable automatic panorama sweep for wide images during autoplay.
   --no-auto-panorama   Disable automatic panorama sweep.
+  --panorama-speed PX  Panorama scroll speed in px/s (50–500). Default: 250.
   --recursive          Enable recursive subfolder scanning.
   --loop               Enable looping at the end of the show.
   --no-loop            Disable looping.
@@ -302,6 +303,16 @@ Examples:
 
 Full CLI reference: docs/cli.md
 """
+
+
+def _positive_range(lo: int, hi: int):
+    """Return an argparse type that accepts integers in [lo, hi]."""
+    def _check(v: str) -> int:
+        n = int(v)
+        if n < lo or n > hi:
+            raise ValueError(f"must be {lo}–{hi}, got {n}")
+        return n
+    return _check
 
 
 def _parse_args() -> tuple[str | None, str | None, str | None, bool, dict, list[str], str | None, str | None]:
@@ -348,6 +359,10 @@ def _parse_args() -> tuple[str | None, str | None, str | None, bool, dict, list[
         "--scale", choices=["fit", "fill"], default=None,
     )
     parser.add_argument("--auto-panorama", action=argparse.BooleanOptionalAction, default=None)
+    parser.add_argument(
+        "--panorama-speed", type=_positive_range(50, 500), metavar="PX", default=None,
+        help="Panorama scroll speed in px/s (50–500). Default: 250.",
+    )
     parser.add_argument("--recursive",     action="store_true", default=False)
     parser.add_argument("--loop",          action=argparse.BooleanOptionalAction, default=None)
     parser.add_argument("--fullscreen",    action="store_true", default=False)
@@ -389,6 +404,8 @@ def _parse_args() -> tuple[str | None, str | None, str | None, bool, dict, list[
         overrides["imageFill"] = (args.scale == "fill")
     if args.auto_panorama is not None:
         overrides["autoPanorama"] = args.auto_panorama
+    if args.panorama_speed is not None:
+        overrides["panoramaSpeed"] = args.panorama_speed
     if args.recursive:
         overrides["recursive"] = True
     if args.loop is not None:

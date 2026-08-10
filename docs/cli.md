@@ -32,6 +32,7 @@ These flags override the corresponding setting **for the current session only** 
 | `--scale MODE` | Set the image scale mode: `fit` · `fill` |
 | `--auto-panorama` | Enable automatic panorama sweep for wide images during autoplay |
 | `--no-auto-panorama` | Disable automatic panorama sweep |
+| `--panorama-speed PX` | Set the panorama scroll speed in px/s (50–500). Default: 250. |
 | `--recursive` | Enable recursive subfolder scanning |
 | `--loop` | Enable looping at the end of the show |
 | `--no-loop` | Disable looping |
